@@ -17,12 +17,13 @@ nav {
 	width: 100%;
 	/*border: 1px solid black;*/
 	position: relative;
-	height: 500px;
+	height: 480px;
+	padding: 10px 10px 10px 10px;
 	float: left;
 }
 
 #editor {
-	width: 65%;
+	width: 40%;
 	height: 100%;
 	/*border: 1px solid red;*/
 	position: relative;
@@ -30,11 +31,13 @@ nav {
 }
 
 #feedback {
-	border: 1px solid Grey;
+	border: 2px groove;
 	position: relative;
 	text-align: left;
 	float: right;
 	padding: 5px 3px 5px 8px;
-	width: 35%;
+	width: 60%;
 	height: 100%;
+  display: block;
+  white-space: pre;  
 }
