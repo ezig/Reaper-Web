@@ -1,16 +1,29 @@
 body {
-	text-align: center;
-	padding-top: 1rem;
-
+  background-color: #fff;
+  font: 14px/1.5 "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color:#727272;
+  text-align: center;
+  font-weight:400;
 }
 
-.starter-template {
-  padding: 0rem 1rem;
-  text-align: center;
+h1 {
+  color:#222;
+  margin:0 0 20px;
+  font-size: 24pt;
+}
+
+h3 {
+  color:#777;
+  margin:0 0 20px;
+  font-size: 12pt;
 }
 
 nav {
 	font-size: 10pt;
+}
+
+.container {
+	font-size: 12 pt;
 }
 
 #wrapper {
@@ -22,22 +35,76 @@ nav {
 	float: left;
 }
 
-#editor {
-	width: 40%;
-	height: 100%;
-	/*border: 1px solid red;*/
-	position: relative;
+#input-example {
+	width: 30%;
 	float: left;
+	text-align: center;
 }
 
-#feedback {
-	border: 2px groove;
-	position: relative;
-	text-align: left;
-	float: right;
-	padding: 5px 3px 5px 8px;
-	width: 60%;
-	height: 100%;
-  display: block;
-  white-space: pre;  
+label {
+	font-size: 5pt;
+}
+
+.tbl {
+	width: 90%;
+}
+
+#output-example {
+	width: 30%;
+	float: left;
+	text-align: center;
+}
+
+#viz {
+	width: 40%;
+	float: left;
+	text-align: center;
+}
+
+.d3-tip {
+  line-height: 1;
+  font-weight: bold;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  border-radius: 2px;
+}
+
+.bar rect {
+  fill: steelblue;
+  shape-rendering: crispEdges;
+}
+
+.bar rect:hover{
+  fill: rgba(0,0,0,.8);
+}
+
+.axis path, .axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.btn-file {
+  position: relative;
+  overflow: hidden;
+}
+
+.panel-btn {
+	width: 20pt;
+}
+
+.btn-file input[type=file] {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 100%;
+    min-height: 100%;
+    text-align: right;
+    filter: alpha(opacity=0);
+    opacity: 0;
+    outline: none;
+    background: white;
+    cursor: inherit;
+    display: block;
 }

@@ -20,6 +20,15 @@ def solve():
     query = request.form.get('query')
     return "asdf"
 
+# file upload 
+@app.route('/upload_file', methods = ['POST'])
+def upload_file():
+    file_content = request.form.get('content')
+    file_name = "../frontend/static/temp"
+    f = open(file_name, "w")
+    f.write(file_coddntent)
+    return file_name
+
 # Synthesizer api call
 @app.route('/scythe', methods = ['POST'])
 def synthesize():

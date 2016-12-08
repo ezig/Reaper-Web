@@ -1,108 +1,132 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-<title>Scythe</title>
-<link rel="stylesheet" type="text/css" href="./static/css/main.css" />
-<script src="./static/scripts/jquery-3.1.1.js" type="text/javascript" charset="utf-8"></script>
-<script src="./static/lib/ace-builds/src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
-<link href="./static/lib/bootstrap-4.0.0-alpha.5-dist/css/bootstrap.min.css" rel="stylesheet" />
-<!-- Include required JS files -->
-<script type="text/javascript" src="./static/lib/syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
- 
-<!--
-    At least one brush, here we choose JS. You need to include a brush for every 
-    language you want to highlight
--->
-<script type="text/javascript" src="./static/lib/syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
- 
-<!-- Include *at least* the core style and default theme -->
-<link href="./static/lib/syntaxhighlighter_3.0.83/styles/shCore.css" rel="stylesheet" type="text/css" />
-<link href="./static/lib/syntaxhighlighter_3.0.83/styles/shThemeDefault.css" rel="stylesheet" type="text/css" />
+  <title>Scythe</title>
+  <link href="./static/lib/bootstrap-4.0.0-alpha.5-dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" type="text/css" href="./static/css/main.css" />
+
+  <script src="./static/scripts/jquery-3.1.1.js" type="text/javascript" charset="utf-8"></script>
+  <script src="./static/lib/ace-builds/src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+  
+  <script src="./static/lib/d3/d3.js" type="text/javascript" charset="utf-8"></script>
+  <script src="./static/scripts/d3-tip.js" type="text/javascript" charset="utf-8"></script>
+
+  <script src="./static/scripts/util.js" type="text/javascript" charset="utf-8"></script>
+  
+  <script src="./static/lib/jquery-ui-1.12.1.custom/jquery-ui.js" type="text/javascript" charset="utf-8"></script>
+  <script src="./static/scripts/jquery.fileupload.js" type="text/javascript" charset="utf-8"></script>
+
+  <link rel="stylesheet" type="text/css" href="./static/lib/DataTables/media/css/jquery.datatables.css">
+  <script type="text/javascript" charset="utf8" src="./static/lib/DataTables/media/js/jquery.dataTables.js"></script>
 </head>
-
 <body>
-
-<nav class="navbar">
-  <ul class="nav navbar-nav">
-    <li class="nav-item active">
-      <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" href="#">About</a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" href="#">Contact</a>
-    </li>
-  </ul>
-</nav>
-
-<div class="starter-template">
-    <h1>Scythe</h1>
-    <p class="lead">Writing SQL Query with Input-Output Examples.</p>
-</div>
-
-<div class="container">
+  <nav class="navbar">
+    <ul class="nav navbar-nav">
+      <li class="nav-item active">
+        <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#">About</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#">Contact</a>
+      </li>
+    </ul>
+  </nav>
+  <h1>Scythe</h1>
+  <h3 class="subtitle">Building Your Visualization Using Examples.</h3>
+  <div class="panel">
+      <label class="btn btn-primary">
+        Load Data <input id="fileupload" type="file"  style="display: none;" name="files[]" multiple>
+      </label>
+      <label class="btn btn-success">
+        Synthesize <input id="synthesize" type="submit" style="display: none;">
+      </label>
+  </div>
+  <div class="container">
     <div id="wrapper">
-        <div id="editor"></div>
-        <pre id="feedback" class="brush: sql"></pre>
+      <div id="input-example">
+        <div class="tbl"></div>
+      </div>
+      <div id="output-example">
+        <div class="tbl"></div>
+      </div>
+      <div id="viz"></div>
     </div>
     <hr/>
-</div><!-- /.container -->
-<div><button type="button" class="btn btn-success submit-btn">Synthesize</button></div>
-
+  </div>
+  <!-- /.container -->
+</body>
 <script>
 
-    //default_editor_content = "SELECT city, COUNT(id) AS users_count \nFROM users \nWHERE group_name = 'salesman' AND created > '2011-05-21' \nGROUP BY 1 \nORDER BY 2 DESC";
-
-    var default_editor_content = "#input\r\n\r\n    | id   |  rev   |  content  |\r\n    |---------------------------|\r\n    | 1    |  1     |  A        |\r\n    | 2    |  1     |  B        |\r\n    | 1    |  2     |  C        |\r\n    | 1    |  3     |  D        |\r\n\r\n#output\r\n\r\n\t| c1   | c2   | c3   |\r\n    |--------------------|\r\n    |  1   |  3   |  D   |\r\n    |  2   |  1   |  B   |\r\n\r\n#constraint\r\n{\r\n\t\"constants\": []\r\n}";
-
-    // editor setting
-    $("#editor").text(default_editor_content);
-    var editor = ace.edit("editor");
-    editor.setTheme("ace/theme/chrome");
-    editor.getSession().setMode("ace/mode/sql");
-    editor.setOptions({
-      fontSize: "10pt"
+// handle "synthesize" event
+$(function () {
+  $('.submit-btn').click(function () {
+    var example = "";
+    $.ajax({
+      url: '/scythe',
+      method: 'POST',
+      data: {
+        "example": example
+      },
+      success: function (data) {
+        console.log(data);
+        $("#feedback").html(htmlForTextWithEmbeddedNewlines(data.substring(1, data.length - 1)));
+      }
     });
+  });
+});
 
-    String.prototype.replaceAll = function(search, replacement) {
-    var target = this;
-        return target.split(search).join(replacement);
-    };
-    
-    function htmlForTextWithEmbeddedNewlines(text) {
-        var htmls = [];
-        var lines = text.replaceAll("\\r", "").replaceAll("\t", "    ").replaceAll(/ /g, ' ').split(/\\n/);
-        // The temporary <div/> is to perform HTML entity encoding reliably.
-        //
-        // document.createElement() is *much* faster than jQuery('<div></div>')
-        // http://stackoverflow.com/questions/268490/
-        //
-        // You don't need jQuery but then you need to struggle with browser
-        // differences in innerText/textContent yourself
-        var tmpDiv = jQuery(document.createElement('div'));
-        for (var i = 0 ; i < lines.length ; i++) {
-            htmls.push(tmpDiv.text(lines[i]).html());
-        }
-        return htmls.join("<br>");
+// event handler for uploading files
+$(function () {
+  // Add click event handler to button
+  $('#fileupload' ).on("change", function () {
+    if ( ! window.FileReader ) {
+      return alert( 'FileReader API is not supported by your browser.' );
     }
+    var $i = $('#fileupload'), // Put file input ID here
+      input = $i[0]; // Getting the element from jQuery
+    if (input.files) {
+      for (var i = 0; i < input.files.length; i ++) {
+        (function(file) {
+          var reader = new FileReader();  
+          reader.onload = function () {
+          
+            // test displaying onload files
+            //$('#file-content').append( $( '<div/>' ).html( reader.result ));
 
-    $(function() {
-        $('.submit-btn').click(function() {
-            var example = editor.getValue();
-            $.ajax({
-                url: '/scythe',
-                method: 'POST',
-                data: {"example" : example},
-                success: function(data) {
-                    console.log(data);
-                    $("#feedback").html(htmlForTextWithEmbeddedNewlines(data.substring(1, data.length-1)));
-                }
-            });
-        });
-    });    
+            file_content = reader.result;
+            csvdata = d3.csvParse(file_content);
+            gen_histogram(csvdata, "#viz");
 
+            var input_table = tabulate(csvdata, ["xval", "yval"], "#input-example");
+            var output_table = tabulate(csvdata, ["xval", "yval"], "#output-example");
+
+          };
+          reader.readAsText(file, "UTF-8");
+        })(input.files[i]);          
+      }
+    } else {
+      // Handle errors here
+      alert( "File not selected or browser incompatible." )
+    }
+  });
+});
+
+$(document).ready( function () {
+
+  $('#table_id').DataTable( {
+      scrollY:        400,
+      scrollCollapse: true,
+      deferRender:    true,
+      paging:         false,
+      bFilter:        false, 
+      bInfo:          false
+  });
+
+  $('#table_id tbody').on( 'click', 'tr', function () {
+    $(this).toggleClass('selected');
+  });
+} );
 </script>
-</body>
 </html>
