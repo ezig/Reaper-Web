@@ -83,45 +83,53 @@ function htmlForTextWithEmbeddedNewlines(text) {
 }
 
 // creating histogram
-
 // plot a histogram from mpg data in a .csv file
 function gen_histogram(csvdata, div_id) {
-  var binsize = 2;
-  var minbin = 36;
-  var maxbin = 60;
+  var binsize = 1;
+  var minbin = 0;
+  var maxbin = csvdata.length;
+  console.log(csvdata);
   var numbins = (maxbin - minbin) / binsize;
 
   // whitespace on either side of the bars in units of MPG
   var binmargin = .2; 
-  var margin = {top: 10, right: 30, bottom: 50, left: 60};
+  var margin = {top: 20, right: 10, bottom: 40, left: 50};
   var width = $(div_id).width() - margin.left - margin.right;
   var height = 250 - margin.top - margin.bottom;
 
   // Set the limits of the x axis
-  var xmin = minbin - 1
-  var xmax = maxbin + 1
+  var xmin = minbin
+  var xmax = maxbin
 
   histdata = new Array(numbins);
   for (var i = 0; i < numbins; i++) {
-    histdata[i] = { numfill: 0, meta: "" };
+    histdata[i] = { 
+      numfill: parseFloat(csvdata[i].c2), 
+      meta: csvdata[i].c2 
+    };
   }
 
   // Fill histdata with y-axis values and meta data
-  csvdata.forEach(function(d) {
-    var bin = Math.floor((+d.yval - minbin) / binsize);
+  /*csvdata.forEach(function(d) {
+    var bin = Math.floor((+d.c2 - minbin) / binsize);
     if ((bin.toString() != "NaN") && (bin < histdata.length)) {
       histdata[bin].numfill += 1;
-      histdata[bin].meta += "<tr><td>" + d.xval + 
+      histdata[bin].meta += "<tr><td>" + d.c1 + 
         "</td><td>" + 
-        d.yval + " </td></tr>";
+        d.c2 + " </td></tr>";
     }
-  });
+  });*/
 
   // This scale is for determining the widths of the histogram bars
   // Must start at 0 or else x(binsize a.k.a dx) will be negative
   var x = d3.scaleLinear()
   .domain([0, (xmax - xmin)])
   .range([0, width]);
+
+  var ctnt = [];
+  for (var i = 0; i < numbins; i ++) {
+    ctnt.push(csvdata[i].c1);
+  }
 
   // Scale for the placement of the bars
   var x2 = d3.scaleLinear()
@@ -134,7 +142,12 @@ function gen_histogram(csvdata, div_id) {
           })])
   .range([height, 0]);
 
-  var xAxis = d3.axisBottom().scale(x2)
+  var xAxis = d3.axisBottom().scale(x2).tickFormat(function(d) { 
+                if (Number.isInteger(d-0.5)) {
+                  return ctnt[parseInt(d-0.5)];
+                }
+                return "";
+            });
   var yAxis = d3.axisLeft().scale(y).ticks(8);
 
   var tip = d3.tip()
@@ -180,7 +193,7 @@ function gen_histogram(csvdata, div_id) {
   .attr("class", "xlabel")
   .attr("text-anchor", "middle")
   .attr("x", width / 2)
-  .attr("y", height + margin.bottom)
+  .attr("y", height + margin.bottom - 5)
   .text("Diagram");
 
   // add the y axis and y-label
@@ -195,5 +208,5 @@ function gen_histogram(csvdata, div_id) {
   .attr("dy", "1em")
   .attr("transform", "rotate(-90)")
   .style("text-anchor", "middle")
-  .text("# of fill-ups");
+  .text("c2");
 }

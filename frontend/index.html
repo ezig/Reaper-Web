@@ -2,11 +2,12 @@
 <html lang="en">
 <head>
   <title>Scythe</title>
-  <link href="./static/lib/bootstrap-4.0.0-alpha.5-dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link rel="stylesheet" type="text/css" href="./static/css/main.css" />
-
   <script src="./static/scripts/jquery-3.1.1.js" type="text/javascript" charset="utf-8"></script>
-  <script src="./static/lib/ace-builds/src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+
+  <link href="./static/lib/bootstrap/css/bootstrap.css" rel="stylesheet" />
+  <script src="./static/lib/bootstrap/js/bootstrap.js" type="text/javascript" charset="utf-8"></script>
+
+  <link rel="stylesheet" type="text/css" href="./static/css/main.css" />
   
   <script src="./static/lib/d3/d3.js" type="text/javascript" charset="utf-8"></script>
   <script src="./static/scripts/d3-tip.js" type="text/javascript" charset="utf-8"></script>
@@ -16,48 +17,207 @@
   <script src="./static/lib/jquery-ui-1.12.1.custom/jquery-ui.js" type="text/javascript" charset="utf-8"></script>
   <script src="./static/scripts/jquery.fileupload.js" type="text/javascript" charset="utf-8"></script>
 
-  <link rel="stylesheet" type="text/css" href="./static/lib/DataTables/media/css/jquery.datatables.css">
   <script type="text/javascript" charset="utf8" src="./static/lib/DataTables/media/js/jquery.dataTables.js"></script>
+  <link rel="stylesheet" type="text/css" href="./static/lib/DataTables/media/css/jquery.datatables.css">
+
+  <script type="text/javascript" charset="utf8" src="./static/scripts/mindmup-editabletable.js"></script>
 </head>
+
 <body>
-  <nav class="navbar">
-    <ul class="nav navbar-nav">
-      <li class="nav-item active">
-        <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#">About</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#">Contact</a>
-      </li>
-    </ul>
-  </nav>
-  <h1>Scythe</h1>
-  <h3 class="subtitle">Building Your Visualization Using Examples.</h3>
-  <div class="panel">
-      <label class="btn btn-primary">
-        Load Data <input id="fileupload" type="file"  style="display: none;" name="files[]" multiple>
-      </label>
-      <label class="btn btn-success">
-        Synthesize <input id="synthesize" type="submit" style="display: none;">
-      </label>
-  </div>
-  <div class="container">
-    <div id="wrapper">
-      <div id="input-example">
-        <div class="tbl"></div>
+
+  <nav class="navbar navbar-inverse navbar-static-top navbar-full">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <div class="navbar-brand">Scythe</div> 
       </div>
-      <div id="output-example">
-        <div class="tbl"></div>
-      </div>
-      <div id="viz"></div>
+      <ul class="nav navbar-nav">
+        <li class="active"><a href="#">Home</a></li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right" style="padding: 0px 15px">
+        <li>
+          <label class="btn btn-success navbar-btn">
+            Load Data
+            <input id="fileupload" type="file"  style="display: none;" name="files[]">
+          </label>
+        </li>
+      </ul>
     </div>
-    <hr/>
+  </nav>
+
+  <div id="place_holder" class="dash-box-w-text" style="width: 98%; margin: 0 auto;"> Start By Uploading Your Data.</div>
+  <div id="wrapper" style="display:none">
+    <div id="input-example">
+      <div class="tbl"></div>
+    </div>
+    <div id="interactive-panels">
+      <div class="buttons">
+        <button id="add_panel" class="btn btn-success"><span class="glyphicon glyphicon-plus"></span> New Panel</button>
+        <button id="remove_panel" class="btn btn-danger"><span class="glyphicon glyphicon-minus"></span> Remove Panel</button>
+      </div>
   </div>
-  <!-- /.container -->
 </body>
+
 <script>
+
+var panel_id = 0;
+// global file content, set when the file is uploaded
+var input_csv = null;
+
+$(function() {
+  $('#add_panel').click(function () {
+    panel_content = 
+      "<div id=\"panel"  + panel_id + "\" class=\"ipanel dash-box\">\
+        <div class=\"output-example\" id=\"output-example" + panel_id + "\">\
+          <div class=\"tbl\">\
+            <table id=\"tbl" + panel_id + "\" class=\"cell-border compact dataTable no-footer\">\
+              <thead><tr><th class=\"col-md-2\">c1</th><th class=\"col-md-2\">c2</th></tr></thead>\
+              <tbody>\
+                <tr><td>a</td><td>1</td></tr>\
+                <tr><td>b</td><td>2</td></tr>\
+                <tr><td>c</td><td>3</td></tr>\
+                <tr><td>d</td><td>2</td></tr>\
+                <tr><td>e</td><td>1</td></tr>\
+              </tbody>\
+            </table>\
+          </div>\
+          <div class=\"buttons\">\
+            <button id=\"insert_row_btn" + panel_id + "\" class=\"btn btn-sm btn-default\"><span class=\"glyphicon glyphicon-plus\"></span> R</button>\
+            <button id=\"delete_row_btn" + panel_id + "\" class=\"btn btn-sm btn-default\"><span class=\"glyphicon glyphicon-minus\"></span> R</button>\
+            <button id=\"insert_col_btn" + panel_id + "\" class=\"btn btn-sm btn-default\"><span class=\"glyphicon glyphicon-plus\"></span> C</button>\
+            <button id=\"delete_col_btn" + panel_id + "\" class=\"btn btn-sm btn-default\"><span class=\"glyphicon glyphicon-minus\"></span> C</button>\
+          </div>\
+          <div class=\"buttons\">\
+            <button id=\"synthesize_btn" + panel_id + "\" class=\"btn btn-primary btn-block\">Synthesize</button>\
+          </div>\
+        </div>\
+        <div class=\"viz\" id=\"viz" + panel_id + "\"></div>\
+      </div>\
+      <br/>";
+
+    table_id = "tbl" + panel_id;
+    insert_row_btn_id = "insert_row_btn" + panel_id;
+    delete_row_btn_id = "delete_row_btn" + panel_id;
+    insert_col_btn_id = "insert_col_btn" + panel_id;
+    delete_col_btn_id = "delete_col_btn" + panel_id;
+    synthesize_btn_id = "synthesize_btn" + panel_id;
+
+    $("#interactive-panels").append(panel_content);
+    $("#" + table_id).editableTableWidget();
+    $(function () {
+      $('#' + insert_row_btn_id).click(function () {
+        //TODO: this is a potential bug, due to extraction number
+        id = this.id.substring(this.id.length-1);
+        row = "<tr>";
+        for (i = 0; i < $("#tbl" + id + " th").length; i ++) {
+          row += "<td>" + "null" + "</td>";
+        }
+        row += "</tr>";
+        if ($("#tbl" + id + ' tbody tr:last').length == 1) {
+          $("#tbl" + id + ' tbody tr:last').after(row);
+        } else {
+          $("#tbl" + id + ' tbody').append(row);
+        }
+        $("#tbl"+id).editableTableWidget();
+        $("#panel" + id).height($("#output-example" + id).height());
+      });
+    });
+
+    $(function () {
+      $('#' + delete_row_btn_id).click(function () {
+        id = this.id.substring(this.id.length-1);
+        $("#tbl" + id + ' tbody tr:last').remove();
+        $("#panel" + id).height($("#output-example" + id).height());
+      });
+    });
+
+    $(function () {
+      $('#' + insert_col_btn_id).click(function () {
+        id = this.id.substring(this.id.length-1);
+        var c = $("#tbl" + id + " tbody tr:first td").length;
+        //$("#" + table_id + " tbody tr:first").append("<td>" + (c+1)+"</td>");
+        $("#tbl" + id + " thead tr").append("<th class=\"col-md-2\">c" + (c+1) + "</th>");
+        $("#tbl" + id + " tbody tr").append("<td>null</td>");
+        $("#tbl" + id).editableTableWidget();
+        $("#panel" + id).height($("#output-example" + panel_id).height());
+      });
+    });
+
+    $(function () {
+      $('#' + delete_col_btn_id).click(function () {
+        id = this.id.substring(this.id.length-1);
+        $("#tbl" + id + " thead tr th:last").remove();
+        $("#tbl" + id + " tbody").find("tr").find("td:last").remove();
+      });
+    });
+
+    $(function() {
+      $("#" + synthesize_btn_id).click(function() {
+        id = this.id.substring(this.id.length-1);
+
+        // part 1: get input examples
+        var selected_rows = $("#input-example table .selected");
+        if (selected_rows.length == 0) {
+          return;
+        }
+        var csv_input = [];
+        // add header
+        var csv_header = [];
+        for (var key in selected_rows[0].__data__) { 
+          csv_header.push(key);
+        }
+        csv_input.push(csv_header.join(","));
+        for (var i = 0; i < selected_rows.length; i ++) {
+          var row_content = [];
+          for (var key in selected_rows[i].__data__) {
+            row_content.push(selected_rows[i].__data__[key]);
+          }
+          csv_input.push(row_content.join(","));
+        }
+        var input_example_csvstr = csv_input.join("\n");
+        
+        // part 2: get output examples in csv format
+        var oe_content = []
+        var row_content = [];
+        for (var j = 0; j < $("#tbl" + id + " thead tr:eq(" + 0 + ") th").length; j ++) {
+          row_content.push($("#tbl" + id + " thead tr:eq(" + 0 + ") th:eq(" + j + ")")[0].innerText);
+        }
+        oe_content.push(row_content.join(","));
+        for (var i = 0; i < $("#tbl" + id + " tbody tr").length; i ++) {
+          var row_content = [];
+          for (var j = 0; j < $("#tbl" + id + " tbody tr:eq(" + i + ") td").length; j ++) {
+            row_content.push($("#tbl" + id + " tbody tr:eq(" + i + ") td:eq(" + j + ")")[0].innerText);
+          }
+          oe_content.push(row_content.join(","));
+        }
+        var output_example_csvstr = oe_content.join("\n");
+        var scythe_str = "#input\n\n" + input_example_csvstr 
+                         + "\n\n#output\n\n" + output_example_csvstr
+                         + "\n\n#constraint\n"
+                         + "{\n  \"constants\": [],\n  \"aggregation_functions\": [\"sum\", \"max\"]\n}\n"
+                         + "\n\n#fullinput\n\n"
+                         + file_content;
+
+        console.log(d3.csvParse(output_example_csvstr));
+
+        $("#viz" + id).html("");
+        gen_histogram(d3.csvParse(output_example_csvstr), "#viz" + id);
+
+        console.log(scythe_str);
+
+      });
+    });
+    
+    $("#panel" + panel_id).height($("#output-example" + panel_id).height());
+
+    panel_id += 1;
+  });
+});
+
+$(function() {
+  $('#remove_panel').click(function () {
+      $("#interactive-panels .ipanel:last").remove();
+  });
+});
 
 // handle "synthesize" event
 $(function () {
@@ -70,7 +230,6 @@ $(function () {
         "example": example
       },
       success: function (data) {
-        console.log(data);
         $("#feedback").html(htmlForTextWithEmbeddedNewlines(data.substring(1, data.length - 1)));
       }
     });
@@ -81,7 +240,11 @@ $(function () {
 $(function () {
   // Add click event handler to button
   $('#fileupload' ).on("change", function () {
-    if ( ! window.FileReader ) {
+
+    $("#place_holder").remove();
+    $("#wrapper").attr("style", "display:block");
+
+    if (! window.FileReader ) {
       return alert( 'FileReader API is not supported by your browser.' );
     }
     var $i = $('#fileupload'), // Put file input ID here
@@ -96,11 +259,14 @@ $(function () {
             //$('#file-content').append( $( '<div/>' ).html( reader.result ));
 
             file_content = reader.result;
-            csvdata = d3.csvParse(file_content);
-            gen_histogram(csvdata, "#viz");
 
-            var input_table = tabulate(csvdata, ["xval", "yval"], "#input-example");
-            var output_table = tabulate(csvdata, ["xval", "yval"], "#output-example");
+            input_csv = file_content;
+
+            csvdata = d3.csvParse(file_content);
+
+            var input_table = tabulate(csvdata, csvdata.columns, "#input-example");
+            $("#input-example .dataTables_wrapper:last").before("<h3>"+file.name+"</h3>");
+            //var output_table = tabulate(csvdata, ["xval", "yval"], "#output-example");
 
           };
           reader.readAsText(file, "UTF-8");
