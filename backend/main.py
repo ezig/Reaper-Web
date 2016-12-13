@@ -36,8 +36,8 @@ def synthesize():
     text_file = open("tmp", "w")
     text_file.write(example)
     text_file.close()
-    p = Popen(['java', '-jar', 'Scythe.jar', 'tmp', 'StagedEnumerator'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    #p = subprocess.call(, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+
+    p = Popen(['java', '-jar', 'Scythe.jar', 'tmp', 'StagedEnumerator', '-aggr'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
     output, err = p.communicate("")
 
     lines = output.splitlines()
@@ -50,6 +50,4 @@ def synthesize():
             result = result + "\n"
         flag = True
         result += line + "\n" 
-    print result
-    #rc = p.returncode
     return repr(result)

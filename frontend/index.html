@@ -24,7 +24,6 @@
 </head>
 
 <body>
-
   <nav class="navbar navbar-inverse navbar-static-top navbar-full">
     <div class="container-fluid">
       <div class="navbar-header">
@@ -35,20 +34,17 @@
       </ul>
       <ul class="nav navbar-nav navbar-right" style="padding: 0px 15px">
         <li>
-          <label class="btn btn-success navbar-btn">
+          <!--<label class="btn btn-success navbar-btn">
             Load Data
             <input id="fileupload" type="file"  style="display: none;" name="files[]">
-          </label>
+          </label>-->
         </li>
       </ul>
     </div>
   </nav>
 
-  <div id="place_holder" class="dash-box-w-text" style="width: 98%; margin: 0 auto;"> Start By Uploading Your Data.</div>
-  <div id="wrapper" style="display:none">
-    <div id="input-example">
-      <div class="tbl"></div>
-    </div>
+  <!--<div id="place_holder" class="dash-box-w-text" style="width: 98%; margin: 0 auto;"> Start By Uploading Your Data.</div>-->
+  <div id="wrapper">
     <div id="interactive-panels">
       <div class="buttons">
         <button id="add_panel" class="btn btn-success"><span class="glyphicon glyphicon-plus"></span> New Panel</button>
@@ -67,16 +63,48 @@ $(function() {
   $('#add_panel').click(function () {
     panel_content = 
       "<div id=\"panel"  + panel_id + "\" class=\"ipanel dash-box\">\
+        <div class=\"input-example\" id=\"input-example" + panel_id + "\">\
+          <div class=\"tbl\">\
+            <table id=\"itbl" + panel_id + "\" class=\"cell-border compact dataTable no-footer\">\
+              <thead><tr><th class=\"col-md-2\">c1</th><th class=\"col-md-2\">c2</th></tr></thead>\
+              <tbody>\
+                <tr><td>empty</td><td>empty</td></tr>\
+                <tr><td>empty</td><td>empty</td></tr>\
+                <tr><td>empty</td><td>empty</td></tr>\
+                <tr><td>empty</td><td>empty</td></tr>\
+                <tr><td>empty</td><td>empty</td></tr>\
+                <tr><td>empty</td><td>empty</td></tr>\
+                <tr><td>empty</td><td>empty</td></tr>\
+                <tr><td>empty</td><td>empty</td></tr>\
+              </tbody>\
+            </table>\
+          </div>\
+          <div class=\"buttons\">\
+            <button id=\"iinsert_row_btn" + panel_id + "\" class=\"btn btn-sm btn-default\"><span class=\"glyphicon glyphicon-plus\"></span> R</button>\
+            <button id=\"idelete_row_btn" + panel_id + "\" class=\"btn btn-sm btn-default\"><span class=\"glyphicon glyphicon-minus\"></span> R</button>\
+            <button id=\"iinsert_col_btn" + panel_id + "\" class=\"btn btn-sm btn-default\"><span class=\"glyphicon glyphicon-plus\"></span> C</button>\
+            <button id=\"idelete_col_btn" + panel_id + "\" class=\"btn btn-sm btn-default\"><span class=\"glyphicon glyphicon-minus\"></span> C</button>\
+          </div>\
+          <div class=\"buttons\">\
+            <label class=\"btn btn-success btn-block\">\
+              Load Data\
+              <input class=\"fileupload\" id=\"fileupload" + panel_id + "\" type=\"file\"  style=\"display: none;\" name=\"files[]\">\
+            </label>\
+          </div>\
+        </div>\
         <div class=\"output-example\" id=\"output-example" + panel_id + "\">\
           <div class=\"tbl\">\
             <table id=\"tbl" + panel_id + "\" class=\"cell-border compact dataTable no-footer\">\
               <thead><tr><th class=\"col-md-2\">c1</th><th class=\"col-md-2\">c2</th></tr></thead>\
               <tbody>\
-                <tr><td>a</td><td>1</td></tr>\
-                <tr><td>b</td><td>2</td></tr>\
-                <tr><td>c</td><td>3</td></tr>\
-                <tr><td>d</td><td>2</td></tr>\
-                <tr><td>e</td><td>1</td></tr>\
+                <tr><td>empty</td><td>empty</td></tr>\
+                <tr><td>empty</td><td>empty</td></tr>\
+                <tr><td>empty</td><td>empty</td></tr>\
+                <tr><td>empty</td><td>empty</td></tr>\
+                <tr><td>empty</td><td>empty</td></tr>\
+                <tr><td>empty</td><td>empty</td></tr>\
+                <tr><td>empty</td><td>empty</td></tr>\
+                <tr><td>empty</td><td>empty</td></tr>\
               </tbody>\
             </table>\
           </div>\
@@ -91,6 +119,7 @@ $(function() {
           </div>\
         </div>\
         <div class=\"viz\" id=\"viz" + panel_id + "\"></div>\
+        </div>\
       </div>\
       <br/>";
 
@@ -100,16 +129,21 @@ $(function() {
     insert_col_btn_id = "insert_col_btn" + panel_id;
     delete_col_btn_id = "delete_col_btn" + panel_id;
     synthesize_btn_id = "synthesize_btn" + panel_id;
+    fileupload_id = "fileupload" + panel_id;
 
     $("#interactive-panels").append(panel_content);
+    $("#panel" + panel_id).height(360);
+
     $("#" + table_id).editableTableWidget();
+    $("#i" + table_id).editableTableWidget();
+
     $(function () {
       $('#' + insert_row_btn_id).click(function () {
         //TODO: this is a potential bug, due to extraction number
         id = this.id.substring(this.id.length-1);
         row = "<tr>";
         for (i = 0; i < $("#tbl" + id + " th").length; i ++) {
-          row += "<td>" + "null" + "</td>";
+          row += "<td>" + "empty" + "</td>";
         }
         row += "</tr>";
         if ($("#tbl" + id + ' tbody tr:last').length == 1) {
@@ -118,7 +152,8 @@ $(function() {
           $("#tbl" + id + ' tbody').append(row);
         }
         $("#tbl"+id).editableTableWidget();
-        $("#panel" + id).height($("#output-example" + id).height());
+        $("#panel" + id).height(Math.max($("#input-example" + id).height(), $("#output-example" + id).height(), 360));
+        $("#tabs" + id).height(Math.max($("#output-example" + id).height(), 360)*0.95);
       });
     });
 
@@ -126,7 +161,8 @@ $(function() {
       $('#' + delete_row_btn_id).click(function () {
         id = this.id.substring(this.id.length-1);
         $("#tbl" + id + ' tbody tr:last').remove();
-        $("#panel" + id).height($("#output-example" + id).height());
+        $("#panel" + id).height(Math.max($("#input-example" + id).height(), $("#output-example" + id).height(), 360));
+        $("#tabs" + id).height(Math.max($("#output-example" + id).height(), 360)*0.95);
       });
     });
 
@@ -136,9 +172,8 @@ $(function() {
         var c = $("#tbl" + id + " tbody tr:first td").length;
         //$("#" + table_id + " tbody tr:first").append("<td>" + (c+1)+"</td>");
         $("#tbl" + id + " thead tr").append("<th class=\"col-md-2\">c" + (c+1) + "</th>");
-        $("#tbl" + id + " tbody tr").append("<td>null</td>");
+        $("#tbl" + id + " tbody tr").append("<td>empty</td>");
         $("#tbl" + id).editableTableWidget();
-        $("#panel" + id).height($("#output-example" + panel_id).height());
       });
     });
 
@@ -150,12 +185,126 @@ $(function() {
       });
     });
 
+    $(function () {
+      $('#i' + insert_row_btn_id).click(function () {
+        //TODO: this is a potential bug, due to extraction number
+        id = this.id.substring(this.id.length-1);
+        row = "<tr>";
+        for (i = 0; i < $("#itbl" + id + " th").length; i ++) {
+          row += "<td>" + "empty" + "</td>";
+        }
+        row += "</tr>";
+        if ($("#itbl" + id + ' tbody tr:last').length == 1) {
+          $("#itbl" + id + ' tbody tr:last').after(row);
+        } else {
+          $("#itbl" + id + ' tbody').append(row);
+        }
+        $("#tbl"+id).editableTableWidget();
+        $("#panel" + id).height(Math.max($("#input-example" + id).height(), $("#output-example" + id).height(), 360));
+        $("#tabs" + id).height(Math.max($("#input-example" + id).height(), 360)*0.95);
+      });
+    });
+
+    $(function () {
+      $('#i' + delete_row_btn_id).click(function () {
+        id = this.id.substring(this.id.length-1);
+        $("#itbl" + id + ' tbody tr:last').remove();
+        $("#panel" + id).height(Math.max($("#input-example" + id).height(), $("#output-example" + id).height(), 360));
+        $("#tabs" + id).height(Math.max($("#input-example" + id).height(), 360)*0.95);
+      });
+    });
+
+    $(function () {
+      $('#i' + insert_col_btn_id).click(function () {
+        id = this.id.substring(this.id.length-1);
+        var c = $("#itbl" + id + " tbody tr:first td").length;
+        //$("#" + table_id + " tbody tr:first").append("<td>" + (c+1)+"</td>");
+        $("#itbl" + id + " thead tr").append("<th class=\"col-md-2\">c" + (c+1) + "</th>");
+        $("#itbl" + id + " tbody tr").append("<td>empty</td>");
+        $("#itbl" + id).editableTableWidget();
+      });
+    });
+
+    $(function () {
+      $('#i' + delete_col_btn_id).click(function () {
+        id = this.id.substring(this.id.length-1);
+        $("#itbl" + id + " thead tr th:last").remove();
+        $("#itbl" + id + " tbody").find("tr").find("td:last").remove();
+      });
+    });
+
+
+    // event handler for uploading files
+    $(function () {
+      // Add click event handler to button
+      $('#' + fileupload_id).on("change", function () {
+
+        id = this.id.substring(this.id.length-1);
+
+        //$("#place_holder").remove();
+        //$("#wrapper").attr("style", "display:block");
+
+        if (! window.FileReader ) {
+          return alert( 'FileReader API is not supported by your browser.' );
+        }
+        var $i = $('#fileupload' + id), // Put file input ID here
+          input = $i[0]; // Getting the element from jQuery
+        if (input.files) {
+          for (var i = 0; i < input.files.length; i ++) {
+            (function(file) {
+              var reader = new FileReader();  
+              reader.onload = function () {
+              
+                // test displaying onload files
+                //$('#file-content').append( $( '<div/>' ).html( reader.result ));
+
+                file_content = reader.result;
+                input_csv = file_content;
+                csvdata = d3.csvParse(file_content);
+
+                //var input_table = tabulate(csvdata, csvdata.columns, "#input-example");
+                //$("#input-example .dataTables_wrapper:last").before("<h3>"+file.name+"</h3>");
+                //var output_table = tabulate(csvdata, ["xval", "yval"], "#output-example");
+
+                header_str = "";
+                for (col in csvdata.columns) {
+                  header_str += "<th class=\"col-md-2\">" + csvdata.columns[col] + "</th>"
+                }
+                $("#input-example" + id + " .tbl table thead tr").html(header_str);
+                body_str = "";
+                for (var i = 0; i < csvdata.length; i ++) {
+                  tr_str = "<tr>";
+                  for (j in csvdata.columns) {
+                    var cell = csvdata[i][csvdata.columns[j]].length > 12? (csvdata[i][csvdata.columns[j]].substring(0,12) + "...") : csvdata[i][csvdata.columns[j]];
+                    tr_str += "<td>" + cell  + "</td>";
+                  }
+                  tr_str += "</tr>";
+                  body_str += tr_str;
+                }
+                $("#input-example" + id + " .tbl table tbody").html(body_str);
+                $("#itbl" + id).editableTableWidget();
+
+                $("#panel" + id).height(Math.max($("#input-example" + id).height(), $("#output-example" + id).height(), 360));
+
+                //build_pubviz(csvdata, "#input-example" + id);
+
+              };
+              reader.readAsText(file, "UTF-8");
+            })(input.files[i]);          
+          }
+        } else {
+          // Handle errors here
+          alert( "File not selected or browser incompatible." )
+        }
+      });
+    });
+
     $(function() {
       $("#" + synthesize_btn_id).click(function() {
         id = this.id.substring(this.id.length-1);
 
         // part 1: get input examples
-        var selected_rows = $("#input-example table .selected");
+        /*var selected_rows = $("#input-example table .selected");
         if (selected_rows.length == 0) {
           return;
         }
@@ -174,10 +323,26 @@ $(function() {
           csv_input.push(row_content.join(","));
         }
         var input_example_csvstr = csv_input.join("\n");
-        
+        */
+
+        var ie_content = []
+        var row_content = [];
+        for (var j = 0; j < $("#itbl" + id + " thead tr:eq(" + 0 + ") th").length; j ++) {
+          row_content.push($("#itbl" + id + " thead tr:eq(" + 0 + ") th:eq(" + j + ")")[0].innerText);
+        }
+        ie_content.push(row_content.join(","));
+        for (var i = 0; i < $("#itbl" + id + " tbody tr").length; i ++) {
+          var row_content = [];
+          for (var j = 0; j < $("#itbl" + id + " tbody tr:eq(" + i + ") td").length; j ++) {
+            row_content.push($("#itbl" + id + " tbody tr:eq(" + i + ") td:eq(" + j + ")")[0].innerText);
+          }
+          ie_content.push(row_content.join(","));
+        }
+        var input_example_csvstr = ie_content.join("\n");
+
         // part 2: get output examples in csv format
         var oe_content = []
-        var row_content = [];
+        row_content = [];
         for (var j = 0; j < $("#tbl" + id + " thead tr:eq(" + 0 + ") th").length; j ++) {
           row_content.push($("#tbl" + id + " thead tr:eq(" + 0 + ") th:eq(" + j + ")")[0].innerText);
         }
@@ -193,22 +358,51 @@ $(function() {
         var scythe_str = "#input\n\n" + input_example_csvstr 
                          + "\n\n#output\n\n" + output_example_csvstr
                          + "\n\n#constraint\n"
-                         + "{\n  \"constants\": [],\n  \"aggregation_functions\": [\"sum\", \"max\"]\n}\n"
-                         + "\n\n#fullinput\n\n"
-                         + file_content;
-
-        console.log(d3.csvParse(output_example_csvstr));
+                         + "{\n  \"constants\": [],\n  \"aggregation_functions\": [\"min\", \"max\"]\n}\n";
+                         //+ "\n\n#fullinput\n\n"
+                         //+ file_content;
 
         $("#viz" + id).html("");
-        gen_histogram(d3.csvParse(output_example_csvstr), "#viz" + id);
 
         console.log(scythe_str);
 
+        $.ajax({
+          url: '/scythe',
+          method: 'POST',
+          data: {
+            "example": scythe_str
+          },
+          success: function (data) {
+            content_str = 
+              "<div id=\"tabs" + id + "\">\
+                <ul>\
+                  <li><a href=\"#tabs" + id + "-1\">Query</a></li>\
+                  <li><a href=\"#tabs" + id + "-2\">Table Output</a></li>\
+                  <li><a href=\"#tabs" + id + "-3\">Visualization</a></li>\
+                </ul>\
+                <div id=\"tabs" + id + "-1\">\
+                  <pre class=\"feedback\"> </pre>\
+                </div>\
+                <div id=\"tabs" + id + "-2\">\
+                </div>\
+                <div id=\"tabs" + id + "-3\">\
+                </div>\
+              </div>";
+
+            $("#viz" + id).html(content_str);
+
+            $("#tabs" + id).height(Math.max($("#output-example" + id).height(), 360)*0.95);
+            $("#tabs" + id + "-3").height("80%");
+            $("#tabs" + id + "-3").width("90%");
+            gen_histogram(d3.csvParse(output_example_csvstr), "#tabs" + id + "-3");
+            $("#tabs" + id + "-1 .feedback").html(htmlForTextWithEmbeddedNewlines(data.substring(1, data.length - 1)));
+            $("#tabs" + id).tabs({ heightStyle: "fill" });
+          }
+        });
       });
     });
     
-    $("#panel" + panel_id).height($("#output-example" + panel_id).height());
-
+    $("#panel" + panel_id).height(Math.max($("#input-example" + panel_id).height(), $("#output-example" + panel_id).height(), 360));
     panel_id += 1;
   });
 });
@@ -223,66 +417,14 @@ $(function() {
 $(function () {
   $('.submit-btn').click(function () {
     var example = "";
-    $.ajax({
-      url: '/scythe',
-      method: 'POST',
-      data: {
-        "example": example
-      },
-      success: function (data) {
-        $("#feedback").html(htmlForTextWithEmbeddedNewlines(data.substring(1, data.length - 1)));
-      }
-    });
-  });
-});
-
-// event handler for uploading files
-$(function () {
-  // Add click event handler to button
-  $('#fileupload' ).on("change", function () {
-
-    $("#place_holder").remove();
-    $("#wrapper").attr("style", "display:block");
-
-    if (! window.FileReader ) {
-      return alert( 'FileReader API is not supported by your browser.' );
-    }
-    var $i = $('#fileupload'), // Put file input ID here
-      input = $i[0]; // Getting the element from jQuery
-    if (input.files) {
-      for (var i = 0; i < input.files.length; i ++) {
-        (function(file) {
-          var reader = new FileReader();  
-          reader.onload = function () {
-          
-            // test displaying onload files
-            //$('#file-content').append( $( '<div/>' ).html( reader.result ));
-
-            file_content = reader.result;
-
-            input_csv = file_content;
-
-            csvdata = d3.csvParse(file_content);
-
-            var input_table = tabulate(csvdata, csvdata.columns, "#input-example");
-            $("#input-example .dataTables_wrapper:last").before("<h3>"+file.name+"</h3>");
-            //var output_table = tabulate(csvdata, ["xval", "yval"], "#output-example");
-
-          };
-          reader.readAsText(file, "UTF-8");
-        })(input.files[i]);          
-      }
-    } else {
-      // Handle errors here
-      alert( "File not selected or browser incompatible." )
-    }
+    
   });
 });
 
 $(document).ready( function () {
 
   $('#table_id').DataTable( {
-      scrollY:        400,
+      scrollY:        360,
       scrollCollapse: true,
       deferRender:    true,
       paging:         false,

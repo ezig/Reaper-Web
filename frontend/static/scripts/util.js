@@ -88,37 +88,25 @@ function gen_histogram(csvdata, div_id) {
   var binsize = 1;
   var minbin = 0;
   var maxbin = csvdata.length;
-  console.log(csvdata);
   var numbins = (maxbin - minbin) / binsize;
 
   // whitespace on either side of the bars in units of MPG
   var binmargin = .2; 
-  var margin = {top: 20, right: 10, bottom: 40, left: 50};
+  var margin = {top: 40, right: 20, bottom: 40, left: 50};
   var width = $(div_id).width() - margin.left - margin.right;
-  var height = 250 - margin.top - margin.bottom;
+  var height = $(div_id).height() - margin.top - margin.bottom;
 
   // Set the limits of the x axis
-  var xmin = minbin
-  var xmax = maxbin
+  var xmin = minbin;
+  var xmax = maxbin;
 
   histdata = new Array(numbins);
   for (var i = 0; i < numbins; i++) {
     histdata[i] = { 
-      numfill: parseFloat(csvdata[i].c2), 
-      meta: csvdata[i].c2 
+      numfill: (! isNaN(csvdata[i].c2)) ? parseFloat(csvdata[i].c3) : 1, 
+      meta: csvdata[i].c2
     };
   }
-
-  // Fill histdata with y-axis values and meta data
-  /*csvdata.forEach(function(d) {
-    var bin = Math.floor((+d.c2 - minbin) / binsize);
-    if ((bin.toString() != "NaN") && (bin < histdata.length)) {
-      histdata[bin].numfill += 1;
-      histdata[bin].meta += "<tr><td>" + d.c1 + 
-        "</td><td>" + 
-        d.c2 + " </td></tr>";
-    }
-  });*/
 
   // This scale is for determining the widths of the histogram bars
   // Must start at 0 or else x(binsize a.k.a dx) will be negative
@@ -182,6 +170,13 @@ function gen_histogram(csvdata, div_id) {
   bar.append("rect")
   .attr("x", x(binmargin))
   .attr("width", x(binsize - 2 * binmargin))
+  .style("fill", function(d) {
+    if (! isNaN(d.meta)) {
+      return "#337ab7";
+    } else {
+      return "#d9534f";
+    }
+  })
   .attr("height", function(d) { return height - y(d.numfill); });
 
   // add the x axis and x-label
@@ -209,4 +204,132 @@ function gen_histogram(csvdata, div_id) {
   .attr("transform", "rotate(-90)")
   .style("text-anchor", "middle")
   .text("c2");
+}
+
+function build_pubviz(csvdata, div_id) {
+
+  // whitespace on either side of the bars in units of MPG
+  var binmargin = .2; 
+  var margin = {top: 40, right: 20, bottom: 40, left: 50};
+  var width = $(div_id).width() - margin.left - margin.right;
+  var height = $(div_id).height() - margin.top - margin.bottom;
+
+  var map = {};
+  var xvals = [];
+  var yvals = [];
+
+  var xydata = [];
+
+  var maxcnt = 1;
+
+  for (var i = 0; i < csvdata.length; i ++) {
+
+    if (csvdata[i].career_length == "" || csvdata[i].paper_year=="" 
+         || isNaN(csvdata[i].career_length) || isNaN(csvdata[i].paper_year))
+      continue;
+
+    x = Number.parseInt(csvdata[i].career_length);
+    y = Number.parseInt(csvdata[i].paper_year);
+
+    xvals.push(x);
+    yvals.push(y);
+
+    if (x in map) {
+      if (y in map[x]) {
+        map[x][y] += 1;
+        if (map[x][y] > maxcnt)
+          maxcnt = map[x][y]; 
+      } else {
+        map[x][y] = 1;
+        xydata.push([x,y]);
+      }
+    } else {
+      map[x] = {};
+      map[x][y] = 1;
+      xydata.push([x,y]);
+    }
+  }
+
+  // Set the limits of the x axis
+  var xmin = Math.min(...xvals);
+  var xmax = Math.max(...xvals);
+
+  // This scale is for determining the widths of the histogram bars
+  // Must start at 0 or else x(binsize a.k.a dx) will be negative
+  var x = d3.scaleLinear()
+            .domain([0, (xmax - xmin)])
+            .range([0, width]);
+
+  // Scale for the placement of the bars
+  var x2 = d3.scaleLinear()
+             .domain([xmin-1, xmax+1])
+             .range([0, width]);
+
+  var y = d3.scaleLinear()
+            .domain([Math.min(...yvals)-1, Math.max(...yvals)+1])
+            .range([height, 0]);
+
+  var xAxis = d3.axisBottom().scale(x2);
+  var yAxis = d3.axisLeft().scale(y).ticks(8);
+
+  var tip = d3.tip()
+  .attr('class', 'd3-tip')
+  .direction('e')
+  .offset([0, 20])
+  .html(function(d) {
+    return '<table id="tiptable"><tr><td>Career Length: ' + d[0] + "</td></tr><tr><td> Most Cited Paper Year: " + d[1] + "</td></tr><tr><td>Count: " + map[d[0]][d[1]] + "</td></tr></table>";
+  });
+
+  // put the graph in the "mpg" div
+  var svg = d3.select(div_id).append("svg")
+              .attr("width", width + margin.left + margin.right)
+              .attr("height", height + margin.top + margin.bottom)
+              .append("g")
+              .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  svg.call(tip);
+
+  // set up the bars
+  var bar = svg.selectAll(".circle")
+              .data(xydata)
+              .enter().append("g")
+              .attr("class", "circle")
+              .on('mouseover', tip.show)
+              .on('mouseout', tip.hide);
+
+  circle_radius = 0.98 * (height / (Math.max(...yvals)+2)) / 2;
+
+  // add rectangles of correct size at correct location
+  bar.append("circle")
+  .attr("cx", function (d) { return x2(d[0]); })
+  .attr("cy", function (d) { return y(d[1]); })
+  .attr("r", function (d) { return circle_radius; })
+  .style("fill", function(d) { return "#000000"; })
+  .style("opacity", function(d) {return 0.05 + 0.95 * map[d[0]][d[1]] / maxcnt; });
+
+  // add the x axis and x-label
+  svg.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + height + ")")
+    .call(xAxis);
+    svg.append("text")
+    .attr("class", "xlabel")
+    .attr("text-anchor", "middle")
+    .attr("x", width / 2)
+    .attr("y", height + margin.bottom - 5)
+    .text("Career Length");
+
+  // add the y axis and y-label
+  svg.append("g")
+    .attr("class", "y axis")
+    .attr("transform", "translate(0,0)")
+    .call(yAxis);
+    svg.append("text")
+    .attr("class", "ylabel")
+    .attr("y", 0 - margin.left) // x and y switched due to rotation
+    .attr("x", 0 - (height / 2))
+    .attr("dy", "1em")
+    .attr("transform", "rotate(-90)")
+    .style("text-anchor", "middle")
+    .text("Most Cited Paper Published Year");
 }

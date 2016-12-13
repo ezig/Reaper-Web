@@ -28,16 +28,17 @@ label {
 	text-align: center;
 }
 
-#input-example {
-	width: 40%;
-	height: 100%;
+.input-example {
+	width: 35%;
 	float: left;
+  text-align: center;
 	padding: 0px 10px 0px 10px;
   border-right: 1px dashed gray;
+  font-size: 10pt;
 }
 
 #interactive-panels {
-	width: 60%;
+	width: 100%;
 	float: left;
 	height: 100%;
   padding-left: 5px;
@@ -45,14 +46,17 @@ label {
 }
 
 .output-example {
-	width: 32%;
+	width: 20%;
 	float: left;
 	text-align: center;
 	padding: 0px 10px 0px 10px;
+  margin: 0 auto;
+  font-size: 10pt;
 }
 
 .viz {
-	width: 68%;
+  width: 43%;
+  min-height: 200px;
 	float: left;
 	text-align: center;
 	padding: 0px 10px 0px 10px;
@@ -152,13 +156,50 @@ table {
 
 .tbl {
   padding-bottom: 5px;
+  min-height:280px;
 }
 
 .ipanel {
   width: 98%;
+  height: 300px;
   margin: 0 auto;
 }
 
 .buttons {
   padding-bottom: 10px;
+}
+
+#exTab1 .tab-content {
+  color : white;
+  background-color: #428bca;
+  padding : 5px 15px;
+}
+
+.tabs h3 {
+  color : white;
+  background-color: #428bca;
+  padding : 5px 15px;
+}
+
+/* remove border radius for the tab */
+
+.tabs .nav-pills > li > a {
+  border-radius: 0;
+}
+
+/* change border radius for the tab , apply corners on top*/
+
+.tabs .nav-pills > li > a {
+  border-radius: 2px 2px 0 0 ;
+}
+
+.tabs .tab-content {
+  color : white;
+  border-radius: 1;
+  border-color: #428bca;
+  padding : 5px 15px;
+}
+
+pre {
+  text-align: left;
 }
