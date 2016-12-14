@@ -115,8 +115,8 @@ $(function() {
         </div>\
         <div class=\"viz\"  id=\"viz" + panel_id + "\">\
           <div style=\"padding: 12px 5px 5px 5px;\" class=\"buttons\">\
-            <button class=\"btn btn-xs btn-secondary\" id=\"viz-query-btn" + panel_id + "\">Query</button>\
             <button class=\"btn btn-xs btn-secondary\" id=\"viz-output-btn" + panel_id + "\">Vis-Ouput</button>\
+            <button class=\"btn btn-xs btn-secondary\" id=\"viz-query-btn" + panel_id + "\">Query</button>\
             <button class=\"btn btn-xs btn-secondary\" id=\"viz-full-btn" + panel_id + "\">Vis-Full</button>\
           </div>\
           <div id=\"query" + panel_id + "\" class=\"pnl\" style=\"display:none\">\
@@ -149,6 +149,9 @@ $(function() {
     $("#" + table_id).editableTableWidget();
     $("#i" + table_id).editableTableWidget();
 
+    draw_viz_out(panel_id);
+
+
     $(function () {
       $('#' + insert_row_btn_id).click(function () {
         //TODO: this is a potential bug, due to extraction number
@@ -166,6 +169,7 @@ $(function() {
         $("#tbl"+id).editableTableWidget();
         $("#panel" + id).height(Math.max($("#input-example" + id).height(), $("#output-example" + id).height(), 360));
         $("#tabs" + id).height(Math.max($("#output-example" + id).height(), 360)*0.95);
+        draw_viz_out(id);
       });
     });
 
@@ -175,6 +179,7 @@ $(function() {
         $("#tbl" + id + ' tbody tr:last').remove();
         $("#panel" + id).height(Math.max($("#input-example" + id).height(), $("#output-example" + id).height(), 360));
         $("#tabs" + id).height(Math.max($("#output-example" + id).height(), 360)*0.95);
+        draw_viz_out(id);
       });
     });
 
@@ -186,6 +191,7 @@ $(function() {
         $("#tbl" + id + " thead tr").append("<th class=\"col-md-2\">c" + (c+1) + "</th>");
         $("#tbl" + id + " tbody tr").append("<td>empty</td>");
         $("#tbl" + id).editableTableWidget();
+        draw_viz_out(id);
       });
     });
 
@@ -194,6 +200,7 @@ $(function() {
         id = this.id.substring(this.id.length-1);
         $("#tbl" + id + " thead tr th:last").remove();
         $("#tbl" + id + " tbody").find("tr").find("td:last").remove();
+        draw_viz_out(id);
       });
     });
 
@@ -277,9 +284,6 @@ $(function() {
 
         id = this.id.substring(this.id.length-1);
 
-        //$("#place_holder").remove();
-        //$("#wrapper").attr("style", "display:block");
-
         if (! window.FileReader ) {
           return alert( 'FileReader API is not supported by your browser.' );
         }
@@ -297,10 +301,6 @@ $(function() {
                 file_content = reader.result;
                 input_csv = file_content;
                 csvdata = d3.csvParse(file_content);
-
-                //var input_table = tabulate(csvdata, csvdata.columns, "#input-example");
-                //$("#input-example .dataTables_wrapper:last").before("<h3>"+file.name+"</h3>");
-                //var output_table = tabulate(csvdata, ["xval", "yval"], "#output-example");
 
                 header_str = "";
                 for (col in csvdata.columns) {
@@ -335,34 +335,65 @@ $(function() {
       });
     });
 
+    function draw_viz_out(id) {
+      var oe_content = []
+      row_content = [];
+      for (var j = 0; j < $("#tbl" + id + " thead tr:eq(" + 0 + ") th").length; j ++) {
+        row_content.push($("#tbl" + id + " thead tr:eq(" + 0 + ") th:eq(" + j + ")")[0].innerText);
+      }
+      oe_content.push(row_content.join(","));
+      for (var i = 0; i < $("#tbl" + id + " tbody tr").length; i ++) {
+        var row_content = [];
+        for (var j = 0; j < $("#tbl" + id + " tbody tr:eq(" + i + ") td").length; j ++) {
+          row_content.push($("#tbl" + id + " tbody tr:eq(" + i + ") td:eq(" + j + ")")[0].innerText);
+        }
+        oe_content.push(row_content.join(","));
+      }
+
+      var output_example_csvstr = oe_content.join("\n");
+      oe_csv_data = d3.csvParse(output_example_csvstr);
+
+      if (oe_csv_data.columns.length == 3) {
+        histodata = [];
+        histodata.push("c1,c2");
+        for (i = 0; i < oe_csv_data.length; i ++) {
+          if (oe_csv_data[i][oe_csv_data.columns[2]] == "" || oe_csv_data[i][oe_csv_data.columns[1]]=="" 
+                      || isNaN(oe_csv_data[i][oe_csv_data.columns[2]]) || isNaN(oe_csv_data[i][oe_csv_data.columns[1]]))
+            continue;
+          c1 = oe_csv_data[i][oe_csv_data.columns[0]];
+          c2 = parseInt(oe_csv_data[i][oe_csv_data.columns[2]]) - parseInt(oe_csv_data[i][oe_csv_data.columns[1]]);
+          histodata.push(c1 + "," + c2);
+        }
+        histo_data_str = histodata.join("\n");
+        $("#viz-output" + id).html("");
+        gen_histogram(d3.csvParse(histo_data_str), "#viz-output" + id);
+      } else if (oe_csv_data.columns.length == 4) {
+        // draw the dot graph
+        histodata = [];
+        histodata.push("author,career_length,paper_year");
+        for (i = 0; i < oe_csv_data.length; i ++) {
+          c1 = oe_csv_data[i][oe_csv_data.columns[0]];
+          c2 = parseInt(oe_csv_data[i][oe_csv_data.columns[2]]) - parseInt(oe_csv_data[i][oe_csv_data.columns[1]]);
+          c3 = parseInt(oe_csv_data[i][oe_csv_data.columns[3]]) - parseInt(oe_csv_data[i][oe_csv_data.columns[1]]);
+          histodata.push(c1 + "," + c2 + "," + c3);
+        }
+        histo_data_str = histodata.join("\n");
+        $("#viz-output" + id).html("");
+        build_pubviz(d3.csvParse(histo_data_str), "#viz-output" + id);
+      }
+    }
+
+    $(function() {
+      $("#" + table_id).on("change", function() {
+        id = this.id.substring(this.id.length-1);
+        draw_viz_out(id);
+      });
+    });
+
     $(function() {
       $("#" + synthesize_btn_id).click(function() {
+
         id = this.id.substring(this.id.length-1);
-
-        // part 1: get input examples
-        /*var selected_rows = $("#input-example table .selected");
-        if (selected_rows.length == 0) {
-          return;
-        }
-        var csv_input = [];
-        // add header
-        var csv_header = [];
-        for (var key in selected_rows[0].__data__) { 
-          csv_header.push(key);
-        }
-        csv_input.push(csv_header.join(","));
-        for (var i = 0; i < selected_rows.length; i ++) {
-          var row_content = [];
-          for (var key in selected_rows[i].__data__) {
-            row_content.push(selected_rows[i].__data__[key]);
-          }
-          csv_input.push(row_content.join(","));
-        }
-        var input_example_csvstr = csv_input.join("\n");
-        */
-
-        //$("#viz" + id + " .buttons").attr("style", "padding: 5px 5px 5px 5px;");
-        //$("#viz" + id + " .placeholder").attr("style", "display:none;");
 
         var ie_content = []
         var row_content = [];
@@ -403,32 +434,9 @@ $(function() {
 
         // generate output-viz
         oe_csv_data = d3.csvParse(output_example_csvstr);
-        if (oe_csv_data.columns.length == 3) {
-          histodata = [];
-          histodata.push("c1,c2");
-          for (i = 0; i < oe_csv_data.length; i ++) {
-            c1 = oe_csv_data[i][oe_csv_data.columns[0]];
-            c2 = parseInt(oe_csv_data[i][oe_csv_data.columns[2]]) - parseInt(oe_csv_data[i][oe_csv_data.columns[1]]);
-            histodata.push(c1 + "," + c2);
-          }
-          histo_data_str = histodata.join("\n");
-          $("#viz-output" + id).html("");
-          gen_histogram(d3.csvParse(histo_data_str), "#viz-output" + id);
-        
-        } else if (oe_csv_data.columns.length == 4) {
-          // draw the dot graph
-          histodata = [];
-          histodata.push("author,career_length,paper_year");
-          for (i = 0; i < oe_csv_data.length; i ++) {
-            c1 = oe_csv_data[i][oe_csv_data.columns[0]];
-            c2 = parseInt(oe_csv_data[i][oe_csv_data.columns[2]]) - parseInt(oe_csv_data[i][oe_csv_data.columns[1]]);
-            c3 = parseInt(oe_csv_data[i][oe_csv_data.columns[3]]) - parseInt(oe_csv_data[i][oe_csv_data.columns[1]]);
-            histodata.push(c1 + "," + c2 + "," + c3);
-          }
-          histo_data_str = histodata.join("\n");
-          $("#viz-output" + id).html("");
-          build_pubviz(d3.csvParse(histo_data_str), "#viz-output" + id);
-        }
+
+        // draw the visualization of the output panel 
+        draw_viz_out(id);
 
         $.ajax({
           url: '/scythe',
@@ -493,15 +501,7 @@ $(function() {
   });
 });
 
-// handle "synthesize" event
-$(function () {
-  $('.submit-btn').click(function () {
-    var example = "";
-    
-  });
-});
-
-$(document).ready( function () {
+/*$(document).ready( function () {
 
   $('#table_id').DataTable( {
       scrollY:        360,
@@ -515,6 +515,6 @@ $(document).ready( function () {
   $('#table_id tbody').on( 'click', 'tr', function () {
     $(this).toggleClass('selected');
   });
-} );
+} );*/
 </script>
 </html>

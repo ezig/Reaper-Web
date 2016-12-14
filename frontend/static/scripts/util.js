@@ -101,6 +101,8 @@ function gen_histogram(csvdata, div_id) {
         ymax = cnt_data[csvdata[i].c2];
     } else {
       cnt_data[csvdata[i].c2] = 1;
+      if (cnt_data[csvdata[i].c2] > ymax)
+        ymax = cnt_data[csvdata[i].c2];
     }
   }
 
@@ -227,9 +229,7 @@ function build_pubviz(csvdata, div_id) {
   var map = {};
   var xvals = [];
   var yvals = [];
-
   var xydata = [];
-
   var maxcnt = 1;
 
   for (var i = 0; i < csvdata.length; i ++) {
@@ -327,7 +327,7 @@ function build_pubviz(csvdata, div_id) {
     .attr("text-anchor", "middle")
     .attr("x", width / 2)
     .attr("y", height + margin.bottom - 5)
-    .text("Career Length");
+    .text("c3 - c2");
 
   // add the y axis and y-label
   svg.append("g")
@@ -341,5 +341,5 @@ function build_pubviz(csvdata, div_id) {
     .attr("dy", "1em")
     .attr("transform", "rotate(-90)")
     .style("text-anchor", "middle")
-    .text("Most Cited Paper Published Year");
+    .text("c4 - c2");
 }
