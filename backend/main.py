@@ -24,7 +24,7 @@ def solve():
 @app.route('/upload_file', methods = ['POST'])
 def upload_file():
     file_content = request.form.get('content')
-    file_name = "../frontend/static/temp"
+    file_name = os.path.abspath("../frontend/static/temp")
     f = open(file_name, "w")
     f.write(file_coddntent)
     return file_name
