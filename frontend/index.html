@@ -62,16 +62,16 @@ var input_csv = null;
 $(function() {
   $('#add_panel').click(function () {
 
-    output_panel_content = "<tr><td>empty</td><td>empty</td><td>empty</td></tr>\
-                <tr><td>empty</td><td>empty</td><td>empty</td></tr>\
-                <tr><td>empty</td><td>empty</td><td>empty</td></tr>";
+    output_panel_content = "<tr><td>H. Simon</td><td>empty</td><td>empty</td></tr>\
+                <tr><td>R. Tibshiran...</td><td>empty</td><td>empty</td></tr>\
+                <tr><td>P. Bork</td><td>empty</td><td>empty</td></tr>";
     if (panel_id == 1)
       output_panel_content = "<tr><td>H. Simon</td><td>1974</td><td>1997</td></tr>\
                 <tr><td>R. Tibshiran...</td><td>1995</td><td>2008</td></tr>\
                 <tr><td>P. Bork</td><td>1998</td><td>2011</td></tr>";
     if (panel_id == 2)
-      output_panel_content = "<tr><td>empty</td><td>empty</td><td>empty</td></tr>\
-                <tr><td>empty</td><td>empty</td><td>empty</td></tr>";
+      output_panel_content = "<tr><td>22</td><td>2</td><td>empty</td></tr>\
+                <tr><td>13</td><td>0</td><td>empty</td></tr>";
 
     panel_content = 
       "<div id=\"panel"  + panel_id + "\" class=\"ipanel dash-box\">\
