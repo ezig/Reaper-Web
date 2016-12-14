@@ -86,7 +86,7 @@ $(function() {
             <button id=\"idelete_col_btn" + panel_id + "\" class=\"btn btn-sm btn-default\"><span class=\"glyphicon glyphicon-minus\"></span> C</button>\
           </div>\
           <div class=\"buttons\">\
-            <label class=\"btn btn-success btn-block\">\
+            <label class=\"btn btn-primary btn-block\">\
               Load Data\
               <input class=\"fileupload\" id=\"fileupload" + panel_id + "\" type=\"file\"  style=\"display: none;\" name=\"files[]\">\
             </label>\
@@ -95,16 +95,11 @@ $(function() {
         <div class=\"output-example\" id=\"output-example" + panel_id + "\">\
           <div class=\"tbl\">\
             <table id=\"tbl" + panel_id + "\" class=\"cell-border compact dataTable no-footer\">\
-              <thead><tr><th class=\"col-md-2\">c1</th><th class=\"col-md-2\">c2</th></tr></thead>\
+              <thead><tr><th class=\"col-md-2\">c1</th><th class=\"col-md-2\">c2</th><th class=\"col-md-2\">c3</th><th class=\"col-md-2\">c4</th></tr></thead>\
               <tbody>\
-                <tr><td>empty</td><td>empty</td></tr>\
-                <tr><td>empty</td><td>empty</td></tr>\
-                <tr><td>empty</td><td>empty</td></tr>\
-                <tr><td>empty</td><td>empty</td></tr>\
-                <tr><td>empty</td><td>empty</td></tr>\
-                <tr><td>empty</td><td>empty</td></tr>\
-                <tr><td>empty</td><td>empty</td></tr>\
-                <tr><td>empty</td><td>empty</td></tr>\
+                <tr><td>H. Simon</td><td>1974</td><td>1996</td><td>1975</td></tr>\
+                <tr><td>R. Tibshiran...</td><td>1995</td><td>2008</td><td>1995</td></tr>\
+                <tr><td>P. Bork</td><td>1998</td><td>2011</td><td>1998</td></tr>\
               </tbody>\
             </table>\
           </div>\
@@ -118,7 +113,20 @@ $(function() {
             <button id=\"synthesize_btn" + panel_id + "\" class=\"btn btn-primary btn-block\">Synthesize</button>\
           </div>\
         </div>\
-        <div class=\"viz\" id=\"viz" + panel_id + "\"></div>\
+        <div class=\"viz\"  id=\"viz" + panel_id + "\">\
+          <div style=\"padding: 12px 5px 5px 5px;\" class=\"buttons\">\
+            <button class=\"btn btn-xs btn-secondary\" id=\"viz-query-btn" + panel_id + "\">Query</button>\
+            <button class=\"btn btn-xs btn-secondary\" id=\"viz-output-btn" + panel_id + "\">Vis-Ouput</button>\
+            <button class=\"btn btn-xs btn-secondary\" id=\"viz-full-btn" + panel_id + "\">Vis-Full</button>\
+          </div>\
+          <div id=\"query" + panel_id + "\" class=\"pnl\" style=\"display:none\">\
+            <img src=\"./static/waiting.gif\" alt=\"HTML5 Icon\" style=\"width:32px;height:32px;\">\
+          </div>\
+          <div id=\"viz-output" + panel_id + "\" class=\"pnl\" style=\"display:block; width:95%;\">\
+          </div>\
+          <div id=\"viz-full" + panel_id + "\" class=\"pnl\" style=\"display:none\">\
+            <img src=\"./static/waiting.gif\" alt=\"HTML5 Icon\" style=\"width:32px;height:32px;\">\
+          </div>\
         </div>\
       </div>\
       <br/>";
@@ -130,6 +138,10 @@ $(function() {
     delete_col_btn_id = "delete_col_btn" + panel_id;
     synthesize_btn_id = "synthesize_btn" + panel_id;
     fileupload_id = "fileupload" + panel_id;
+
+    viz_query_btn = "viz-query-btn" + panel_id;
+    viz_output_btn = "viz-output-btn" + panel_id;
+    viz_full_btn = "viz-full-btn" + panel_id;
 
     $("#interactive-panels").append(panel_content);
     $("#panel" + panel_id).height(360);
@@ -233,6 +245,30 @@ $(function() {
       });
     });
 
+    $(function() {
+      $("#" + viz_query_btn).click(function () {
+        id = this.id.substring(this.id.length-1);
+        $("#query" + id).attr("style", "display: block; width:95%;");
+        $("#viz-output" + id).attr("style", "display: none");
+        $("#viz-full" + id).attr("style", "display: none");
+      });
+    });
+    $(function() {
+      $("#" + viz_full_btn).click(function () {
+        id = this.id.substring(this.id.length-1);
+        $("#query" + id).attr("style", "display: none");
+        $("#viz-output" + id).attr("style", "display: none");
+        $("#viz-full" + id).attr("style", "display: block; width:95%;");
+      });
+    });
+    $(function() {
+      $("#" + viz_output_btn).click(function () {
+        id = this.id.substring(this.id.length-1);
+        $("#query" + id).attr("style", "display: none");
+        $("#viz-output" + id).attr("style", "display: block; width:95%;");
+        $("#viz-full" + id).attr("style", "display: none");
+      });
+    });
 
     // event handler for uploading files
     $(function () {
@@ -325,6 +361,9 @@ $(function() {
         var input_example_csvstr = csv_input.join("\n");
         */
 
+        //$("#viz" + id + " .buttons").attr("style", "padding: 5px 5px 5px 5px;");
+        //$("#viz" + id + " .placeholder").attr("style", "display:none;");
+
         var ie_content = []
         var row_content = [];
         for (var j = 0; j < $("#itbl" + id + " thead tr:eq(" + 0 + ") th").length; j ++) {
@@ -359,12 +398,37 @@ $(function() {
                          + "\n\n#output\n\n" + output_example_csvstr
                          + "\n\n#constraint\n"
                          + "{\n  \"constants\": [],\n  \"aggregation_functions\": [\"min\", \"max\"]\n}\n";
-                         //+ "\n\n#fullinput\n\n"
-                         //+ file_content;
-
-        $("#viz" + id).html("");
 
         console.log(scythe_str);
+
+        // generate output-viz
+        oe_csv_data = d3.csvParse(output_example_csvstr);
+        if (oe_csv_data.columns.length == 3) {
+          histodata = [];
+          histodata.push("c1,c2");
+          for (i = 0; i < oe_csv_data.length; i ++) {
+            c1 = oe_csv_data[i][oe_csv_data.columns[0]];
+            c2 = parseInt(oe_csv_data[i][oe_csv_data.columns[2]]) - parseInt(oe_csv_data[i][oe_csv_data.columns[1]]);
+            histodata.push(c1 + "," + c2);
+          }
+          histo_data_str = histodata.join("\n");
+          $("#viz-output" + id).html("");
+          gen_histogram(d3.csvParse(histo_data_str), "#viz-output" + id);
+        
+        } else if (oe_csv_data.columns.length == 4) {
+          // draw the dot graph
+          histodata = [];
+          histodata.push("author,career_length,paper_year");
+          for (i = 0; i < oe_csv_data.length; i ++) {
+            c1 = oe_csv_data[i][oe_csv_data.columns[0]];
+            c2 = parseInt(oe_csv_data[i][oe_csv_data.columns[2]]) - parseInt(oe_csv_data[i][oe_csv_data.columns[1]]);
+            c3 = parseInt(oe_csv_data[i][oe_csv_data.columns[3]]) - parseInt(oe_csv_data[i][oe_csv_data.columns[1]]);
+            histodata.push(c1 + "," + c2 + "," + c3);
+          }
+          histo_data_str = histodata.join("\n");
+          $("#viz-output" + id).html("");
+          build_pubviz(d3.csvParse(histo_data_str), "#viz-output" + id);
+        }
 
         $.ajax({
           url: '/scythe',
@@ -373,30 +437,46 @@ $(function() {
             "example": scythe_str
           },
           success: function (data) {
-            content_str = 
-              "<div id=\"tabs" + id + "\">\
-                <ul>\
-                  <li><a href=\"#tabs" + id + "-1\">Query</a></li>\
-                  <li><a href=\"#tabs" + id + "-2\">Table Output</a></li>\
-                  <li><a href=\"#tabs" + id + "-3\">Visualization</a></li>\
-                </ul>\
-                <div id=\"tabs" + id + "-1\">\
-                  <pre class=\"feedback\"> </pre>\
-                </div>\
-                <div id=\"tabs" + id + "-2\">\
-                </div>\
-                <div id=\"tabs" + id + "-3\">\
-                </div>\
-              </div>";
-
-            $("#viz" + id).html(content_str);
-
-            $("#tabs" + id).height(Math.max($("#output-example" + id).height(), 360)*0.95);
-            $("#tabs" + id + "-3").height("80%");
-            $("#tabs" + id + "-3").width("90%");
-            gen_histogram(d3.csvParse(output_example_csvstr), "#tabs" + id + "-3");
-            $("#tabs" + id + "-1 .feedback").html(htmlForTextWithEmbeddedNewlines(data.substring(1, data.length - 1)));
-            $("#tabs" + id).tabs({ heightStyle: "fill" });
+            $("#query" + id).html("<pre><span class=\"inner-pre\" style=\"font-size: 11px\">" + data + "</span></pre>");
+            // generate viz-full
+            $.ajax({
+              url: '/static/author_career.csv',
+              method: 'GET',
+              data: {},
+              success: function (data) {
+                csvdata = d3.csvParse(data);
+                $("#viz-full" + id).html("");
+                if (id >= 2) {
+                  build_pubviz(csvdata, "#viz-full" + id);
+                } else if (id == 0) {
+                  histodata = [];
+                  histodata.push("c1,c2");
+                  for (i = 0; i < csvdata.length; i ++) {
+                    if (csvdata[i].career_length == "" || csvdata[i].paper_year=="" 
+                        || isNaN(csvdata[i].career_length) || isNaN(csvdata[i].paper_year))
+                      continue;
+                    c1 = csvdata[i][csvdata.columns[0]];
+                    c2 = parseInt(csvdata[i][csvdata.columns[1]]);
+                    histodata.push(c1 + "," + c2);
+                  }
+                  histo_data_str = histodata.join("\n");
+                  gen_histogram(d3.csvParse(histo_data_str), "#viz-full" + id);
+                } else if (id == 1) {
+                  histodata = [];
+                  histodata.push("c1,c2");
+                  for (i = 0; i < csvdata.length; i ++) {
+                    if (csvdata[i].career_length == "" || csvdata[i].paper_year=="" 
+                        || isNaN(csvdata[i].career_length) || isNaN(csvdata[i].paper_year))
+                      continue;
+                    c1 = csvdata[i][csvdata.columns[0]];
+                    c2 = parseInt(csvdata[i][csvdata.columns[2]]);
+                    histodata.push(c1 + "," + c2);
+                  }
+                  histo_data_str = histodata.join("\n");
+                  gen_histogram(d3.csvParse(histo_data_str), "#viz-full" + id);
+                }
+              }
+            });
           }
         });
       });

@@ -56,7 +56,7 @@ label {
 
 .viz {
   width: 43%;
-  min-height: 200px;
+  min-height: 97%;
 	float: left;
 	text-align: center;
 	padding: 0px 10px 0px 10px;
@@ -140,9 +140,8 @@ label {
 }
 .dash-box-w-text {
   color: #ccc;
-  border-style: dashed;
   border-color: #ccc;
-  line-height: 400px;
+  line-height: 300px;
   text-align: center
 }
 
@@ -198,6 +197,11 @@ table {
   border-radius: 1;
   border-color: #428bca;
   padding : 5px 15px;
+}
+
+.pnl {
+  width: 42%;
+  min-height: 300px;
 }
 
 pre {

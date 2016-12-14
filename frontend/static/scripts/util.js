@@ -85,57 +85,65 @@ function htmlForTextWithEmbeddedNewlines(text) {
 // creating histogram
 // plot a histogram from mpg data in a .csv file
 function gen_histogram(csvdata, div_id) {
+  
+  // whitespace on either side of the bars in units of MPG
+  var binmargin = .5; 
+  var margin = {top: 40, right: 20, bottom: 40, left: 50};
+  var height = $(div_id).height() - margin.top - margin.bottom;
+  var width = Math.min($(div_id).width() - margin.left - margin.right, $(div_id).height() + 200 - margin.left - margin.right);
+
+  var ymax = 0;
+  var cnt_data = {};
+  for (var i = 0; i < csvdata.length; i ++) {
+    if (csvdata[i].c2 in cnt_data) {
+      cnt_data[csvdata[i].c2] ++;
+      if (cnt_data[csvdata[i].c2] > ymax)
+        ymax = cnt_data[csvdata[i].c2];
+    } else {
+      cnt_data[csvdata[i].c2] = 1;
+    }
+  }
+
   var binsize = 1;
   var minbin = 0;
-  var maxbin = csvdata.length;
+  var maxbin = 60;
   var numbins = (maxbin - minbin) / binsize;
-
-  // whitespace on either side of the bars in units of MPG
-  var binmargin = .2; 
-  var margin = {top: 40, right: 20, bottom: 40, left: 50};
-  var width = $(div_id).width() - margin.left - margin.right;
-  var height = $(div_id).height() - margin.top - margin.bottom;
-
   // Set the limits of the x axis
-  var xmin = minbin;
-  var xmax = maxbin;
+  var xmin = 0;
+  var xmax = 60;
 
-  histdata = new Array(numbins);
-  for (var i = 0; i < numbins; i++) {
-    histdata[i] = { 
-      numfill: (! isNaN(csvdata[i].c2)) ? parseFloat(csvdata[i].c3) : 1, 
-      meta: csvdata[i].c2
+  var binwidth = (width - 0) / 62 - 2 * binmargin;
+
+  histdata = [];
+  for (i in cnt_data) {
+    dt = { 
+      numfill: parseInt(cnt_data[i]), 
+      meta: parseInt(i),
     };
+    histdata.push(dt);
   }
 
   // This scale is for determining the widths of the histogram bars
   // Must start at 0 or else x(binsize a.k.a dx) will be negative
   var x = d3.scaleLinear()
-  .domain([0, (xmax - xmin)])
+  .domain([-1, (xmax - xmin) + 1])
   .range([0, width]);
-
-  var ctnt = [];
-  for (var i = 0; i < numbins; i ++) {
-    ctnt.push(csvdata[i].c1);
-  }
 
   // Scale for the placement of the bars
-  var x2 = d3.scaleLinear()
-  .domain([xmin, xmax])
-  .range([0, width]);
-
   var y = d3.scaleLinear()
-  .domain([0, d3.max(histdata, function(d) { 
-          return d.numfill; 
-          })])
+  /*.domain([0, d3.max(histdata, function(d) { 
+            return d.numfill; 
+          })])*/
+  .domain([0, ymax])
   .range([height, 0]);
 
-  var xAxis = d3.axisBottom().scale(x2).tickFormat(function(d) { 
+  var xAxis = d3.axisBottom().scale(x).ticks(10);
+  /*.tickFormat(function(d) {
                 if (Number.isInteger(d-0.5)) {
-                  return ctnt[parseInt(d-0.5)];
+                  return map[parseInt(d-0.5)];
                 }
                 return "";
-            });
+            });*/
   var yAxis = d3.axisLeft().scale(y).ticks(8);
 
   var tip = d3.tip()
@@ -143,67 +151,69 @@ function gen_histogram(csvdata, div_id) {
   .direction('e')
   .offset([0, 20])
   .html(function(d) {
-    return '<table id="tiptable">' + d.meta + "</table>";
+    return '<table id="tiptable">' + "<tr><td>Year: "+ d.meta + "</td></tr><tr><td> Count: " + d.numfill + "</td></tr></table>";
   });
 
   // put the graph in the "mpg" div
   var svg = d3.select(div_id).append("svg")
-  .attr("width", width + margin.left + margin.right)
-  .attr("height", height + margin.top + margin.bottom)
-  .append("g")
-  .attr("transform", "translate(" + margin.left + "," + 
-          margin.top + ")");
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .attr("transform", "translate(" + margin.left + "," + 
+              margin.top + ")");
 
   svg.call(tip);
 
   // set up the bars
   var bar = svg.selectAll(".bar")
-  .data(histdata)
-  .enter().append("g")
-  .attr("class", "bar")
-  .attr("transform", function(d, i) { return "translate(" + 
-       x2(i * binsize + minbin) + "," + y(d.numfill) + ")"; })
-  .on('mouseover', tip.show)
-  .on('mouseout', tip.hide);
+    .data(histdata)
+    .enter().append("g")
+    .attr("class", "bar")
+    .attr("transform", function(d, i) { return "translate(" + 
+         (x(d.meta * binsize) - binwidth / 2) + "," + y(d.numfill) + ")"; })
+    .on('mouseover', tip.show)
+    .on('mouseout', tip.hide);
 
   // add rectangles of correct size at correct location
   bar.append("rect")
-  .attr("x", x(binmargin))
-  .attr("width", x(binsize - 2 * binmargin))
-  .style("fill", function(d) {
-    if (! isNaN(d.meta)) {
-      return "#337ab7";
-    } else {
-      return "#d9534f";
-    }
-  })
-  .attr("height", function(d) { return height - y(d.numfill); });
+//    .attr("x",)
+    .attr("width", binwidth)
+    .style("fill", function(d) {
+      if (! isNaN(d.meta)) {
+        return "#337ab7";
+      } else {
+        return "#d9534f";
+      }
+    })
+    .attr("height", function(d) { return height - y(d.numfill); });
 
   // add the x axis and x-label
   svg.append("g")
-  .attr("class", "x axis")
-  .attr("transform", "translate(0," + height + ")")
-  .call(xAxis);
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + height + ")")
+    .call(xAxis);
+
   svg.append("text")
-  .attr("class", "xlabel")
-  .attr("text-anchor", "middle")
-  .attr("x", width / 2)
-  .attr("y", height + margin.bottom - 5)
-  .text("Diagram");
+    .attr("class", "xlabel")
+    .attr("text-anchor", "middle")
+    .attr("x", width / 2)
+    .attr("y", height + margin.bottom - 5)
+    .text("c3 - c2");
 
   // add the y axis and y-label
   svg.append("g")
-  .attr("class", "y axis")
-  .attr("transform", "translate(0,0)")
-  .call(yAxis);
+      .attr("class", "y axis")
+      .attr("transform", "translate(0,0)")
+      .call(yAxis);
+
   svg.append("text")
-  .attr("class", "ylabel")
-  .attr("y", 0 - margin.left) // x and y switched due to rotation
-  .attr("x", 0 - (height / 2))
-  .attr("dy", "1em")
-  .attr("transform", "rotate(-90)")
-  .style("text-anchor", "middle")
-  .text("c2");
+    .attr("class", "ylabel")
+    .attr("y", 0 - margin.left) // x and y switched due to rotation
+    .attr("x", 0 - (height / 2))
+    .attr("dy", "1em")
+    .attr("transform", "rotate(-90)")
+    .style("text-anchor", "middle")
+    .text("Count");
 }
 
 function build_pubviz(csvdata, div_id) {
@@ -211,8 +221,8 @@ function build_pubviz(csvdata, div_id) {
   // whitespace on either side of the bars in units of MPG
   var binmargin = .2; 
   var margin = {top: 40, right: 20, bottom: 40, left: 50};
-  var width = $(div_id).width() - margin.left - margin.right;
   var height = $(div_id).height() - margin.top - margin.bottom;
+  var width = Math.min($(div_id).width() - margin.left - margin.right, $(div_id).height() + 200 - margin.left - margin.right);
 
   var map = {};
   var xvals = [];
@@ -251,8 +261,8 @@ function build_pubviz(csvdata, div_id) {
   }
 
   // Set the limits of the x axis
-  var xmin = Math.min(...xvals);
-  var xmax = Math.max(...xvals);
+  var xmin = 0;
+  var xmax = 60;
 
   // This scale is for determining the widths of the histogram bars
   // Must start at 0 or else x(binsize a.k.a dx) will be negative
@@ -266,7 +276,7 @@ function build_pubviz(csvdata, div_id) {
              .range([0, width]);
 
   var y = d3.scaleLinear()
-            .domain([Math.min(...yvals)-1, Math.max(...yvals)+1])
+            .domain([-1,56])
             .range([height, 0]);
 
   var xAxis = d3.axisBottom().scale(x2);
@@ -297,14 +307,14 @@ function build_pubviz(csvdata, div_id) {
               .on('mouseover', tip.show)
               .on('mouseout', tip.hide);
 
-  circle_radius = 0.98 * (height / (Math.max(...yvals)+2)) / 2;
+  circle_radius = 0.98 * (height / (55+2)) / 2;
 
   // add rectangles of correct size at correct location
   bar.append("circle")
   .attr("cx", function (d) { return x2(d[0]); })
   .attr("cy", function (d) { return y(d[1]); })
   .attr("r", function (d) { return circle_radius; })
-  .style("fill", function(d) { return "#000000"; })
+  .style("fill", function(d) { return "#3182BD"; })
   .style("opacity", function(d) {return 0.05 + 0.95 * map[d[0]][d[1]] / maxcnt; });
 
   // add the x axis and x-label
