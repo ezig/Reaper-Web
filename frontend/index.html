@@ -61,6 +61,19 @@ var input_csv = null;
 
 $(function() {
   $('#add_panel').click(function () {
+
+    output_panel_content = "<tr><td>empty</td><td>empty</td><td>empty</td></tr>\
+                <tr><td>empty</td><td>empty</td><td>empty</td></tr>\
+                <tr><td>empty</td><td>empty</td><td>empty</td></tr>";
+    if (panel_id == 1)
+      output_panel_content = "<tr><td>H. Simon</td><td>1974</td><td>1997</td></tr>\
+                <tr><td>R. Tibshiran...</td><td>1995</td><td>2008</td></tr>\
+                <tr><td>P. Bork</td><td>1998</td><td>2011</td></tr>";
+    if (panel_id == 2)
+      output_panel_content = "<tr><td>H. Simon</td><td>1974</td><td>1997</td></tr>\
+                <tr><td>R. Tibshiran...</td><td>1995</td><td>2008</td></tr>\
+                <tr><td>P. Bork</td><td>1998</td><td>2011</td></tr>";
+
     panel_content = 
       "<div id=\"panel"  + panel_id + "\" class=\"ipanel dash-box\">\
         <div class=\"input-example\" id=\"input-example" + panel_id + "\">\
@@ -95,12 +108,12 @@ $(function() {
         <div class=\"output-example\" id=\"output-example" + panel_id + "\">\
           <div class=\"tbl\">\
             <table id=\"tbl" + panel_id + "\" class=\"cell-border compact dataTable no-footer\">\
-              <thead><tr><th class=\"col-md-2\">c1</th><th class=\"col-md-2\">c2</th><th class=\"col-md-2\">c3</th><th class=\"col-md-2\">c4</th></tr></thead>\
-              <tbody>\
-                <tr><td>H. Simon</td><td>1974</td><td>1996</td><td>1975</td></tr>\
-                <tr><td>R. Tibshiran...</td><td>1995</td><td>2008</td><td>1995</td></tr>\
-                <tr><td>P. Bork</td><td>1998</td><td>2011</td><td>1998</td></tr>\
-              </tbody>\
+              <thead><tr><th class=\"col-md-2\">c1</th><th class=\"col-md-2\">c2</th><th class=\"col-md-2\">c3</th></tr></thead>\
+              <tbody>" 
+              +
+                output_panel_content
+              +  
+              "</tbody>\
             </table>\
           </div>\
           <div class=\"buttons\">\
@@ -321,9 +334,6 @@ $(function() {
                 $("#itbl" + id).editableTableWidget();
 
                 $("#panel" + id).height(Math.max($("#input-example" + id).height(), $("#output-example" + id).height(), 360));
-
-                //build_pubviz(csvdata, "#input-example" + id);
-
               };
               reader.readAsText(file, "UTF-8");
             })(input.files[i]);          
@@ -353,7 +363,22 @@ $(function() {
       var output_example_csvstr = oe_content.join("\n");
       oe_csv_data = d3.csvParse(output_example_csvstr);
 
-      if (oe_csv_data.columns.length == 3) {
+      if (id == 2) {
+        // draw the dot graph
+        histodata = [];
+        histodata.push("c1,c2,c3");
+        for (i = 0; i < oe_csv_data.length; i ++) {
+          if (isNaN(oe_csv_data[i][oe_csv_data.columns[0]]) || isNaN(oe_csv_data[i][oe_csv_data.columns[1]]) || isNaN(oe_csv_data[i][oe_csv_data.columns[2]]))
+            continue;
+          c1 = parseInt(oe_csv_data[i][oe_csv_data.columns[0]]);
+          c2 = parseInt(oe_csv_data[i][oe_csv_data.columns[1]]);
+          c3 = parseInt(oe_csv_data[i][oe_csv_data.columns[2]]);
+          histodata.push(c1 + "," + c2 + "," + c3);
+        }
+        histo_data_str = histodata.join("\n");
+        $("#viz-output" + id).html("");
+        build_pubviz(d3.csvParse(histo_data_str), "#viz-output" + id);
+      } else if (oe_csv_data.columns.length == 3) {
         histodata = [];
         histodata.push("c1,c2");
         for (i = 0; i < oe_csv_data.length; i ++) {
@@ -367,20 +392,7 @@ $(function() {
         histo_data_str = histodata.join("\n");
         $("#viz-output" + id).html("");
         gen_histogram(d3.csvParse(histo_data_str), "#viz-output" + id);
-      } else if (oe_csv_data.columns.length == 4) {
-        // draw the dot graph
-        histodata = [];
-        histodata.push("author,career_length,paper_year");
-        for (i = 0; i < oe_csv_data.length; i ++) {
-          c1 = oe_csv_data[i][oe_csv_data.columns[0]];
-          c2 = parseInt(oe_csv_data[i][oe_csv_data.columns[2]]) - parseInt(oe_csv_data[i][oe_csv_data.columns[1]]);
-          c3 = parseInt(oe_csv_data[i][oe_csv_data.columns[3]]) - parseInt(oe_csv_data[i][oe_csv_data.columns[1]]);
-          histodata.push(c1 + "," + c2 + "," + c3);
-        }
-        histo_data_str = histodata.join("\n");
-        $("#viz-output" + id).html("");
-        build_pubviz(d3.csvParse(histo_data_str), "#viz-output" + id);
-      }
+      } 
     }
 
     $(function() {
@@ -428,7 +440,7 @@ $(function() {
         var scythe_str = "#input\n\n" + input_example_csvstr 
                          + "\n\n#output\n\n" + output_example_csvstr
                          + "\n\n#constraint\n"
-                         + "{\n  \"constants\": [],\n  \"aggregation_functions\": [\"min\", \"max\"]\n}\n";
+                         + "{\n  \"constants\": [],\n  \"aggregation_functions\": [\"min\", \"count\", \"max\"]\n}\n";
 
         console.log(scythe_str);
 
@@ -445,7 +457,7 @@ $(function() {
             "example": scythe_str
           },
           success: function (data) {
-            $("#query" + id).html("<pre><span class=\"inner-pre\" style=\"font-size: 11px\">" + data + "</span></pre>");
+            $("#query" + id).html("<pre style=\"height:320px; overflow:auto;\"><span class=\"inner-pre\" style=\"font-size: 12px\">" + htmlForTextWithEmbeddedNewlines(data.substring(1, data.length-1)) + "</span></pre>");
             // generate viz-full
             $.ajax({
               url: '/static/author_career.csv',
@@ -455,7 +467,32 @@ $(function() {
                 csvdata = d3.csvParse(data);
                 $("#viz-full" + id).html("");
                 if (id >= 2) {
-                  build_pubviz(csvdata, "#viz-full" + id);
+                  var map = {};
+                  for (var i = 0; i < csvdata.length; i ++) {
+                    if (csvdata[i].career_length == "" || csvdata[i].paper_year=="" 
+                         || isNaN(csvdata[i].career_length) || isNaN(csvdata[i].paper_year))
+                      continue;
+                    x = Number.parseInt(csvdata[i].career_length);
+                    y = Number.parseInt(csvdata[i].paper_year);
+                    if (x in map) {
+                      if (y in map[x]) {
+                        map[x][y] += 1;
+                      } else {
+                        map[x][y] = 1;
+                      }
+                    } else {
+                      map[x] = {};
+                      map[x][y] = 1;
+                    }
+                  }
+                  map_str_lines = []
+                  map_str_lines.push("c1,c2,c3");
+                  for (i in map) {
+                    for (j in map[i]) {
+                      map_str_lines.push(i + "," + j + "," + map[i][j]);
+                    }
+                  }
+                  build_pubviz(d3.csvParse(map_str_lines.join("\n")), "#viz-full" + id);
                 } else if (id == 0) {
                   histodata = [];
                   histodata.push("c1,c2");

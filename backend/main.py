@@ -37,8 +37,6 @@ def synthesize():
     text_file.write(example)
     text_file.close()
 
-    return "SDFDSFSDF"
-
     p = Popen(['java', '-jar', 'Scythe.jar', 'tmp', 'StagedEnumerator', '-aggr'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
     output, err = p.communicate("")
 

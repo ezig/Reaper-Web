@@ -140,12 +140,6 @@ function gen_histogram(csvdata, div_id) {
   .range([height, 0]);
 
   var xAxis = d3.axisBottom().scale(x).ticks(10);
-  /*.tickFormat(function(d) {
-                if (Number.isInteger(d-0.5)) {
-                  return map[parseInt(d-0.5)];
-                }
-                return "";
-            });*/
   var yAxis = d3.axisLeft().scale(y).ticks(8);
 
   var tip = d3.tip()
@@ -220,44 +214,31 @@ function gen_histogram(csvdata, div_id) {
 
 function build_pubviz(csvdata, div_id) {
 
+  console.log(csvdata);
+
   // whitespace on either side of the bars in units of MPG
   var binmargin = .2; 
   var margin = {top: 40, right: 20, bottom: 40, left: 50};
   var height = $(div_id).height() - margin.top - margin.bottom;
   var width = Math.min($(div_id).width() - margin.left - margin.right, $(div_id).height() + 200 - margin.left - margin.right);
 
-  var map = {};
   var xvals = [];
   var yvals = [];
-  var xydata = [];
+  var data = [];
   var maxcnt = 1;
 
+  xydata = []
+
   for (var i = 0; i < csvdata.length; i ++) {
-
-    if (csvdata[i].career_length == "" || csvdata[i].paper_year=="" 
-         || isNaN(csvdata[i].career_length) || isNaN(csvdata[i].paper_year))
-      continue;
-
-    x = Number.parseInt(csvdata[i].career_length);
-    y = Number.parseInt(csvdata[i].paper_year);
-
-    xvals.push(x);
-    yvals.push(y);
-
-    if (x in map) {
-      if (y in map[x]) {
-        map[x][y] += 1;
-        if (map[x][y] > maxcnt)
-          maxcnt = map[x][y]; 
-      } else {
-        map[x][y] = 1;
-        xydata.push([x,y]);
-      }
-    } else {
-      map[x] = {};
-      map[x][y] = 1;
-      xydata.push([x,y]);
+    x = Number.parseInt(csvdata[i][csvdata.columns[0]]);
+    y = Number.parseInt(csvdata[i][csvdata.columns[1]]);
+    z = Number.parseInt(csvdata[i][csvdata.columns[2]]);
+    if (z > maxcnt) {
+      maxcnt = z; 
     }
+    xydata.push([x,y,z]);
+    xvals.push[x];
+    yvals.push[y];
   }
 
   // Set the limits of the x axis
@@ -287,7 +268,7 @@ function build_pubviz(csvdata, div_id) {
   .direction('e')
   .offset([0, 20])
   .html(function(d) {
-    return '<table id="tiptable"><tr><td>Career Length: ' + d[0] + "</td></tr><tr><td> Most Cited Paper Year: " + d[1] + "</td></tr><tr><td>Count: " + map[d[0]][d[1]] + "</td></tr></table>";
+    return '<table id="tiptable"><tr><td>Career Length: ' + d[0] + "</td></tr><tr><td> Most Cited Paper Year: " + d[1] + "</td></tr><tr><td>Count: " + d[2] + "</td></tr></table>";
   });
 
   // put the graph in the "mpg" div
@@ -315,7 +296,7 @@ function build_pubviz(csvdata, div_id) {
   .attr("cy", function (d) { return y(d[1]); })
   .attr("r", function (d) { return circle_radius; })
   .style("fill", function(d) { return "#3182BD"; })
-  .style("opacity", function(d) {return 0.05 + 0.95 * map[d[0]][d[1]] / maxcnt; });
+  .style("opacity", function(d) {return 0.05 + 0.95 * d[2] / maxcnt; });
 
   // add the x axis and x-label
   svg.append("g")
