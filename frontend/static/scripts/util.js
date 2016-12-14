@@ -308,7 +308,7 @@ function build_pubviz(csvdata, div_id) {
     .attr("text-anchor", "middle")
     .attr("x", width / 2)
     .attr("y", height + margin.bottom - 5)
-    .text("c3 - c2");
+    .text("c1");
 
   // add the y axis and y-label
   svg.append("g")
@@ -322,5 +322,5 @@ function build_pubviz(csvdata, div_id) {
     .attr("dy", "1em")
     .attr("transform", "rotate(-90)")
     .style("text-anchor", "middle")
-    .text("c4 - c2");
+    .text("c2");
 }

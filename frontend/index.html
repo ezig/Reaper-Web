@@ -70,9 +70,8 @@ $(function() {
                 <tr><td>R. Tibshiran...</td><td>1995</td><td>2008</td></tr>\
                 <tr><td>P. Bork</td><td>1998</td><td>2011</td></tr>";
     if (panel_id == 2)
-      output_panel_content = "<tr><td>H. Simon</td><td>1974</td><td>1997</td></tr>\
-                <tr><td>R. Tibshiran...</td><td>1995</td><td>2008</td></tr>\
-                <tr><td>P. Bork</td><td>1998</td><td>2011</td></tr>";
+      output_panel_content = "<tr><td>empty</td><td>empty</td><td>empty</td></tr>\
+                <tr><td>empty</td><td>empty</td><td>empty</td></tr>";
 
     panel_content = 
       "<div id=\"panel"  + panel_id + "\" class=\"ipanel dash-box\">\
@@ -451,6 +450,70 @@ $(function() {
         draw_viz_out(id);
 
         $.ajax({
+          url: '/static/author_career.csv',
+          method: 'GET',
+          data: {},
+          success: function (data) {
+            csvdata = d3.csvParse(data);
+            $("#viz-full" + id).html("");
+            if (id >= 2) {
+              var map = {};
+              for (var i = 0; i < csvdata.length; i ++) {
+                if (csvdata[i].career_length == "" || csvdata[i].paper_year=="" 
+                     || isNaN(csvdata[i].career_length) || isNaN(csvdata[i].paper_year))
+                  continue;
+                x = Number.parseInt(csvdata[i].career_length);
+                y = Number.parseInt(csvdata[i].paper_year);
+                if (x in map) {
+                  if (y in map[x]) {
+                    map[x][y] += 1;
+                  } else {
+                    map[x][y] = 1;
+                  }
+                } else {
+                  map[x] = {};
+                  map[x][y] = 1;
+                }
+              }
+              map_str_lines = []
+              map_str_lines.push("c1,c2,c3");
+              for (i in map) {
+                for (j in map[i]) {
+                  map_str_lines.push(i + "," + j + "," + map[i][j]);
+                }
+              }
+              build_pubviz(d3.csvParse(map_str_lines.join("\n")), "#viz-full" + id);
+            } else if (id == 0) {
+              histodata = [];
+              histodata.push("c1,c2");
+              for (i = 0; i < csvdata.length; i ++) {
+                if (csvdata[i].career_length == "" || csvdata[i].paper_year=="" 
+                    || isNaN(csvdata[i].career_length) || isNaN(csvdata[i].paper_year))
+                  continue;
+                c1 = csvdata[i][csvdata.columns[0]];
+                c2 = parseInt(csvdata[i][csvdata.columns[1]]);
+                histodata.push(c1 + "," + c2);
+              }
+              histo_data_str = histodata.join("\n");
+              gen_histogram(d3.csvParse(histo_data_str), "#viz-full" + id);
+            } else if (id == 1) {
+              histodata = [];
+              histodata.push("c1,c2");
+              for (i = 0; i < csvdata.length; i ++) {
+                if (csvdata[i].career_length == "" || csvdata[i].paper_year=="" 
+                    || isNaN(csvdata[i].career_length) || isNaN(csvdata[i].paper_year))
+                  continue;
+                c1 = csvdata[i][csvdata.columns[0]];
+                c2 = parseInt(csvdata[i][csvdata.columns[2]]);
+                histodata.push(c1 + "," + c2);
+              }
+              histo_data_str = histodata.join("\n");
+              gen_histogram(d3.csvParse(histo_data_str), "#viz-full" + id);
+            }
+          }
+        });
+
+        $.ajax({
           url: '/scythe',
           method: 'POST',
           data: {
@@ -459,69 +522,6 @@ $(function() {
           success: function (data) {
             $("#query" + id).html("<pre style=\"height:320px; overflow:auto;\"><span class=\"inner-pre\" style=\"font-size: 12px\">" + htmlForTextWithEmbeddedNewlines(data.substring(1, data.length-1)) + "</span></pre>");
             // generate viz-full
-            $.ajax({
-              url: '/static/author_career.csv',
-              method: 'GET',
-              data: {},
-              success: function (data) {
-                csvdata = d3.csvParse(data);
-                $("#viz-full" + id).html("");
-                if (id >= 2) {
-                  var map = {};
-                  for (var i = 0; i < csvdata.length; i ++) {
-                    if (csvdata[i].career_length == "" || csvdata[i].paper_year=="" 
-                         || isNaN(csvdata[i].career_length) || isNaN(csvdata[i].paper_year))
-                      continue;
-                    x = Number.parseInt(csvdata[i].career_length);
-                    y = Number.parseInt(csvdata[i].paper_year);
-                    if (x in map) {
-                      if (y in map[x]) {
-                        map[x][y] += 1;
-                      } else {
-                        map[x][y] = 1;
-                      }
-                    } else {
-                      map[x] = {};
-                      map[x][y] = 1;
-                    }
-                  }
-                  map_str_lines = []
-                  map_str_lines.push("c1,c2,c3");
-                  for (i in map) {
-                    for (j in map[i]) {
-                      map_str_lines.push(i + "," + j + "," + map[i][j]);
-                    }
-                  }
-                  build_pubviz(d3.csvParse(map_str_lines.join("\n")), "#viz-full" + id);
-                } else if (id == 0) {
-                  histodata = [];
-                  histodata.push("c1,c2");
-                  for (i = 0; i < csvdata.length; i ++) {
-                    if (csvdata[i].career_length == "" || csvdata[i].paper_year=="" 
-                        || isNaN(csvdata[i].career_length) || isNaN(csvdata[i].paper_year))
-                      continue;
-                    c1 = csvdata[i][csvdata.columns[0]];
-                    c2 = parseInt(csvdata[i][csvdata.columns[1]]);
-                    histodata.push(c1 + "," + c2);
-                  }
-                  histo_data_str = histodata.join("\n");
-                  gen_histogram(d3.csvParse(histo_data_str), "#viz-full" + id);
-                } else if (id == 1) {
-                  histodata = [];
-                  histodata.push("c1,c2");
-                  for (i = 0; i < csvdata.length; i ++) {
-                    if (csvdata[i].career_length == "" || csvdata[i].paper_year=="" 
-                        || isNaN(csvdata[i].career_length) || isNaN(csvdata[i].paper_year))
-                      continue;
-                    c1 = csvdata[i][csvdata.columns[0]];
-                    c2 = parseInt(csvdata[i][csvdata.columns[2]]);
-                    histodata.push(c1 + "," + c2);
-                  }
-                  histo_data_str = histodata.join("\n");
-                  gen_histogram(d3.csvParse(histo_data_str), "#viz-full" + id);
-                }
-              }
-            });
           }
         });
       });
