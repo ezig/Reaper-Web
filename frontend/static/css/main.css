@@ -5,6 +5,12 @@ body {
   font-weight:400;
 }
 
+.table_name {
+  text-align: center;
+  font-weight: bold;
+  border: 0px solid;
+}
+
 h1 {
   color:#222;
   margin:0 0 20px;
@@ -14,6 +20,10 @@ h1 {
 h3 {
   color:#111;
   font-size: 12pt;
+}
+
+thead tr td {
+  font-weight: bold;
 }
 
 #wrapper {
@@ -206,4 +216,12 @@ table {
 
 pre {
   text-align: left;
+}
+
+.query_output_container ul li { display: inline; }
+
+.query_output_container ul li a
+{
+  text-decoration: none;
+  padding: .2em 1em;
 }

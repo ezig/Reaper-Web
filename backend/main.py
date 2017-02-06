@@ -4,7 +4,8 @@ import os
 import subprocess
 from subprocess import Popen, PIPE
 
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
+
 template_dir = os.path.abspath('../frontend')
 static_dir = os.path.abspath('../frontend/static')
 app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
@@ -13,12 +14,6 @@ app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
 @app.route('/')
 def index():
     return render_template('index.html')
-
-# Solve api call
-@app.route('/solve', methods = ['POST'])
-def solve():
-    query = request.form.get('query')
-    return "asdf"
 
 # file upload 
 @app.route('/upload_file', methods = ['POST'])
@@ -41,13 +36,18 @@ def synthesize():
     output, err = p.communicate("")
 
     lines = output.splitlines()
-    result = "";
-    flag = False
+    queries = []
+
+    current = ""
+    start_collect = False
     for line in lines:
-        if (not flag) and ("[Query No.1]" not in line):
+        if "[No." in line:
+            start_collect = True
+            if current != "":
+                queries.append(current)
+            current = ""
+        elif start_collect:
+            current += line + "\n"
+        else:
             continue
-        if ("[Query No." in line) and flag:
-            result = result + "\n"
-        flag = True
-        result += line + "\n" 
-    return repr(result)
+    return jsonify(queries)

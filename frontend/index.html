@@ -34,10 +34,7 @@
       </ul>
       <ul class="nav navbar-nav navbar-right" style="padding: 0px 15px">
         <li>
-          <!--<label class="btn btn-success navbar-btn">
-            Load Data
-            <input id="fileupload" type="file"  style="display: none;" name="files[]">
-          </label>-->
+            <button class="btn btn-primary navbar-btn">Connect</button>
         </li>
       </ul>
     </div>
@@ -62,33 +59,28 @@ var input_csv = null;
 $(function() {
   $('#add_panel').click(function () {
 
-    output_panel_content = "<tr><td>H. Simon</td><td>empty</td><td>empty</td></tr>\
-                <tr><td>R. Tibshiran...</td><td>empty</td><td>empty</td></tr>\
-                <tr><td>P. Bork</td><td>empty</td><td>empty</td></tr>";
-    if (panel_id == 1)
-      output_panel_content = "<tr><td>H. Simon</td><td>1974</td><td>1997</td></tr>\
-                <tr><td>R. Tibshiran...</td><td>1995</td><td>2008</td></tr>\
-                <tr><td>P. Bork</td><td>1998</td><td>2011</td></tr>";
-    if (panel_id == 2)
-      output_panel_content = "<tr><td>22</td><td>22</td><td>empty</td></tr>\
-                <tr><td>13</td><td>0</td><td>empty</td></tr>";
+    output_panel_content2 = "<tr><td>empty</td><td>empty</td><td>empty</td></tr>\
+                <tr><td>empty</td><td>empty</td><td>empty</td></tr>\
+                <tr><td>empty</td><td>empty</td><td>empty</td></tr>";
+    output_panel_content = "<tr><td>H. Simon</td><td>1974</td><td>277</td></tr>\
+                <tr><td>R. Tibshiran...</td><td>1995</td><td>51</td></tr>\
+                <tr><td>P. Bork</td><td>1998</td><td>51</td></tr>";
+
+    input_panel_content = "<tr><td>empty</td><td>empty</td><td>empty</td></tr>\
+                <tr><td>empty</td><td>empty</td><td>empty</td></tr>\
+                <tr><td>empty</td><td>empty</td><td>empty</td></tr>\
+                <tr><td>empty</td><td>empty</td><td>empty</td></tr>";
 
     panel_content = 
       "<div id=\"panel"  + panel_id + "\" class=\"ipanel dash-box\">\
         <div class=\"input-example\" id=\"input-example" + panel_id + "\">\
           <div class=\"tbl\">\
+            <input type='text' class='table_name' value='input'>\
             <table id=\"itbl" + panel_id + "\" class=\"cell-border compact dataTable no-footer\">\
-              <thead><tr><th class=\"col-md-2\">c1</th><th class=\"col-md-2\">c2</th></tr></thead>\
-              <tbody>\
-                <tr><td>empty</td><td>empty</td></tr>\
-                <tr><td>empty</td><td>empty</td></tr>\
-                <tr><td>empty</td><td>empty</td></tr>\
-                <tr><td>empty</td><td>empty</td></tr>\
-                <tr><td>empty</td><td>empty</td></tr>\
-                <tr><td>empty</td><td>empty</td></tr>\
-                <tr><td>empty</td><td>empty</td></tr>\
-                <tr><td>empty</td><td>empty</td></tr>\
-              </tbody>\
+              <thead><tr><td class=\"col-md-2\">c1</td><td class=\"col-md-2\">c2</td><td class=\"col-md-2\">c3</th></tr></thead>\
+              <tbody>"
+              + input_panel_content +  
+              "</tbody>\
             </table>\
           </div>\
           <div class=\"buttons\">\
@@ -106,8 +98,9 @@ $(function() {
         </div>\
         <div class=\"output-example\" id=\"output-example" + panel_id + "\">\
           <div class=\"tbl\">\
+            <input type='text' class='table_name' value='output'>\
             <table id=\"tbl" + panel_id + "\" class=\"cell-border compact dataTable no-footer\">\
-              <thead><tr><th class=\"col-md-2\">c1</th><th class=\"col-md-2\">c2</th><th class=\"col-md-2\">c3</th></tr></thead>\
+              <thead><tr><td class=\"col-md-2\">c1</td><td class=\"col-md-2\">c2</td><td class=\"col-md-2\">c3</td></tr></thead>\
               <tbody>" 
               +
                 output_panel_content
@@ -151,6 +144,9 @@ $(function() {
     synthesize_btn_id = "synthesize_btn" + panel_id;
     fileupload_id = "fileupload" + panel_id;
 
+    input_example_id = "input-example" + panel_id;
+    output_example_id = "output-example" + panel_id;
+
     viz_query_btn = "viz-query-btn" + panel_id;
     viz_output_btn = "viz-output-btn" + panel_id;
     viz_full_btn = "viz-full-btn" + panel_id;
@@ -163,13 +159,12 @@ $(function() {
 
     draw_viz_out(panel_id);
 
-
     $(function () {
       $('#' + insert_row_btn_id).click(function () {
         //TODO: this is a potential bug, due to extraction number
         id = this.id.substring(this.id.length-1);
         row = "<tr>";
-        for (i = 0; i < $("#tbl" + id + " th").length; i ++) {
+        for (i = 0; i < $("#tbl" + id + " thead td").length; i ++) {
           row += "<td>" + "empty" + "</td>";
         }
         row += "</tr>";
@@ -200,7 +195,7 @@ $(function() {
         id = this.id.substring(this.id.length-1);
         var c = $("#tbl" + id + " tbody tr:first td").length;
         //$("#" + table_id + " tbody tr:first").append("<td>" + (c+1)+"</td>");
-        $("#tbl" + id + " thead tr").append("<th class=\"col-md-2\">c" + (c+1) + "</th>");
+        $("#tbl" + id + " thead tr").append("<td class=\"col-md-2\">c" + (c+1) + "</td>");
         $("#tbl" + id + " tbody tr").append("<td>empty</td>");
         $("#tbl" + id).editableTableWidget();
         draw_viz_out(id);
@@ -210,7 +205,7 @@ $(function() {
     $(function () {
       $('#' + delete_col_btn_id).click(function () {
         id = this.id.substring(this.id.length-1);
-        $("#tbl" + id + " thead tr th:last").remove();
+        $("#tbl" + id + " thead tr td:last").remove();
         $("#tbl" + id + " tbody").find("tr").find("td:last").remove();
         draw_viz_out(id);
       });
@@ -221,7 +216,7 @@ $(function() {
         //TODO: this is a potential bug, due to extraction number
         id = this.id.substring(this.id.length-1);
         row = "<tr>";
-        for (i = 0; i < $("#itbl" + id + " th").length; i ++) {
+        for (i = 0; i < $("#itbl" + id + " thead td").length; i ++) {
           row += "<td>" + "empty" + "</td>";
         }
         row += "</tr>";
@@ -230,7 +225,7 @@ $(function() {
         } else {
           $("#itbl" + id + ' tbody').append(row);
         }
-        $("#tbl"+id).editableTableWidget();
+        $("#itbl"+id).editableTableWidget();
         $("#panel" + id).height(Math.max($("#input-example" + id).height(), $("#output-example" + id).height(), 360));
         $("#tabs" + id).height(Math.max($("#input-example" + id).height(), 360)*0.95);
       });
@@ -250,7 +245,7 @@ $(function() {
         id = this.id.substring(this.id.length-1);
         var c = $("#itbl" + id + " tbody tr:first td").length;
         //$("#" + table_id + " tbody tr:first").append("<td>" + (c+1)+"</td>");
-        $("#itbl" + id + " thead tr").append("<th class=\"col-md-2\">c" + (c+1) + "</th>");
+        $("#itbl" + id + " thead tr").append("<td class=\"col-md-2\">c" + (c+1) + "</td>");
         $("#itbl" + id + " tbody tr").append("<td>empty</td>");
         $("#itbl" + id).editableTableWidget();
       });
@@ -259,7 +254,7 @@ $(function() {
     $(function () {
       $('#i' + delete_col_btn_id).click(function () {
         id = this.id.substring(this.id.length-1);
-        $("#itbl" + id + " thead tr th:last").remove();
+        $("#itbl" + id + " thead tr td:last").remove();
         $("#itbl" + id + " tbody").find("tr").find("td:last").remove();
       });
     });
@@ -316,7 +311,7 @@ $(function() {
 
                 header_str = "";
                 for (col in csvdata.columns) {
-                  header_str += "<th class=\"col-md-2\">" + csvdata.columns[col] + "</th>"
+                  header_str += "<td class=\"col-md-2\">" + csvdata.columns[col] + "</td>"
                 }
                 $("#input-example" + id + " .tbl table thead tr").html(header_str);
                 body_str = "";
@@ -347,8 +342,8 @@ $(function() {
     function draw_viz_out(id) {
       var oe_content = []
       row_content = [];
-      for (var j = 0; j < $("#tbl" + id + " thead tr:eq(" + 0 + ") th").length; j ++) {
-        row_content.push($("#tbl" + id + " thead tr:eq(" + 0 + ") th:eq(" + j + ")")[0].innerText);
+      for (var j = 0; j < $("#tbl" + id + " thead tr:eq(" + 0 + ") td").length; j ++) {
+        row_content.push($("#tbl" + id + " thead tr:eq(" + 0 + ") td:eq(" + j + ")")[0].innerText);
       }
       oe_content.push(row_content.join(","));
       for (var i = 0; i < $("#tbl" + id + " tbody tr").length; i ++) {
@@ -408,8 +403,8 @@ $(function() {
 
         var ie_content = []
         var row_content = [];
-        for (var j = 0; j < $("#itbl" + id + " thead tr:eq(" + 0 + ") th").length; j ++) {
-          row_content.push($("#itbl" + id + " thead tr:eq(" + 0 + ") th:eq(" + j + ")")[0].innerText);
+        for (var j = 0; j < $("#itbl" + id + " thead tr:eq(" + 0 + ") td").length; j ++) {
+          row_content.push($("#itbl" + id + " thead tr:eq(" + 0 + ") td:eq(" + j + ")")[0].innerText);
         }
         ie_content.push(row_content.join(","));
         for (var i = 0; i < $("#itbl" + id + " tbody tr").length; i ++) {
@@ -424,8 +419,8 @@ $(function() {
         // part 2: get output examples in csv format
         var oe_content = []
         row_content = [];
-        for (var j = 0; j < $("#tbl" + id + " thead tr:eq(" + 0 + ") th").length; j ++) {
-          row_content.push($("#tbl" + id + " thead tr:eq(" + 0 + ") th:eq(" + j + ")")[0].innerText);
+        for (var j = 0; j < $("#tbl" + id + " thead tr:eq(" + 0 + ") td").length; j ++) {
+          row_content.push($("#tbl" + id + " thead tr:eq(" + 0 + ") td:eq(" + j + ")")[0].innerText);
         }
         oe_content.push(row_content.join(","));
         for (var i = 0; i < $("#tbl" + id + " tbody tr").length; i ++) {
@@ -435,9 +430,14 @@ $(function() {
           }
           oe_content.push(row_content.join(","));
         }
+
+        var input_table_name = $("#" + input_example_id + " .table_name")[0].value;
+        var output_table_name = $("#" + output_example_id + " .table_name")[0].value;
+
+
         var output_example_csvstr = oe_content.join("\n");
-        var scythe_str = "#input\n\n" + input_example_csvstr 
-                         + "\n\n#output\n\n" + output_example_csvstr
+        var scythe_str = "#input:" + input_table_name + "\n\n" + input_example_csvstr 
+                         + "\n\n#output:" + output_table_name + "\n\n" + output_example_csvstr
                          + "\n\n#constraint\n"
                          + "{\n  \"constants\": [],\n  \"aggregation_functions\": [\"min\", \"count\", \"max\"]\n}\n";
 
@@ -520,7 +520,37 @@ $(function() {
             "example": scythe_str
           },
           success: function (data) {
-            $("#query" + id).html("<pre style=\"height:320px; overflow:auto;\"><span class=\"inner-pre\" style=\"font-size: 12px\">" + htmlForTextWithEmbeddedNewlines(data.substring(1, data.length-1)) + "</span></pre>");
+
+            console.log(data);
+
+            query_content = '<div class="query_output_container" id="query_inner' + id + '">';
+            indicator = '<ul style="display: inline;list-style-type: none;">';
+            for (var i = data.length - 1; i >= 0; i --) {
+              indicator += '<li><a href="#query_inner_'+ id + '_tabs_' 
+              + (data.length - i) + '"> Solution #' + (data.length - i) + '</a></li>';
+            }
+            indicator += '<ul>';
+
+            tab_content = '';
+            for (var i = data.length - 1; i >= 0; i --) {
+              tab_content += '<div id="query_inner_' + id + '_tabs_'+ (data.length - i) +'">' + "<pre style=\"height:268px; overflow:auto; margin: 0 0 5px;\"><span id='synthesized_query_" + id + "_" + (data.length-i) + "' class=\"inner-pre\" style=\"font-size: 12px\">" + htmlForTextWithEmbeddedNewlines(data[i]) + "</span></pre>";
+
+              tab_content += '<button class="btn btn-xs btn-primary" id="run_synthesized_query_' + id + '_' + (data.length-i) + '">run query on database</button>';
+
+              tab_content += '</div>';
+
+            }
+            query_content += indicator + tab_content + "</div>";
+
+            $("#query" + id).html(query_content);
+
+            for (var i = data.length - 1; i >= 0; i --) {
+              $("#run_synthesized_query_" + id + "_" + (data.length-i)).click(function () {
+                alert($("#" + this.id.substring(this.id.indexOf('_') + 1)).text());
+              });
+            }
+
+            $("#query_inner" + id).tabs();
             // generate viz-full
           }
         });
@@ -534,24 +564,9 @@ $(function() {
 
 $(function() {
   $('#remove_panel').click(function () {
-      $("#interactive-panels .ipanel:last").remove();
+    $("#interactive-panels .ipanel:last").remove();
   });
 });
 
-/*$(document).ready( function () {
-
-  $('#table_id').DataTable( {
-      scrollY:        360,
-      scrollCollapse: true,
-      deferRender:    true,
-      paging:         false,
-      bFilter:        false, 
-      bInfo:          false
-  });
-
-  $('#table_id tbody').on( 'click', 'tr', function () {
-    $(this).toggleClass('selected');
-  });
-} );*/
 </script>
 </html>
