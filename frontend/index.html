@@ -78,34 +78,25 @@ $(function() {
 
     panel_content = 
       "<table id=\"panel"  + panel_id + "\" class=\"ipanel dash-box\" style=\"width:100%;table-layout: fixed;\">\
-        <tr><td colspan='1' style='width: 35%;border-right:1px dashed gray;'><button panel_id='" + panel_id + "' id=\"add_sub_input_example_btn" + panel_id + "\" class=\"btn btn-super-sm btn-default\" style='margin-left:3px;'><span class=\"glyphicon glyphicon-plus\"></span> add input table</button>\
-          </td>\
-          <td style='width: 20%;'></td>\
-          <td style='width: 43%;'><button panel_id='" + panel_id + "' id=\"set_histogram" + panel_id + "\" class=\"btn btn-super-sm btn-default\" style='margin-left:3px;'>histogram viz</button><button panel_id='" + panel_id + "' id=\"set_2d_histogram" + panel_id + "\" class=\"btn btn-super-sm btn-default\" style='margin-left:3px;'>2d-histogram viz</button></td></tr>\
         <tr>\
           <td style='width: 35%;vertical-align:top;border-right:1px dashed gray;'>\
             <div class=\"input-example\" sub_panel_cnt='1' id=\"input-example" + panel_id + "\">\
               <div id=\"input-example" + panel_id +  "sub" + 1 + "\"></div>\
             </div>\
-            <div class='input-group input-group-sm input-box'>\
-              <span class='input-group-addon' id='basic-addon1'>Constants</span>\
-              <input type='text' class='form-control' placeholder='Empty' aria-describedby='basic-addon1'>\
+            <div class='input-group input-group-sm input-box' id='constant_pnl" + panel_id + "'>\
+              <span class='input-group-addon'>Constants</span>\
+              <input type='text' class='form-control' placeholder='None' aria-describedby='basic-addon1'>\
             </div>\
-            <div class='input-group input-group-sm input-box'>\
-              <span class='input-group-addon' id='basic-addon1'>Aggregators</span>\
-              <input type='text' class='form-control' placeholder='Username' aria-describedby='basic-addon1'>\
+            <div class='input-group input-group-sm input-box' id='aggr_func_pnl" + panel_id + "'>\
+              <span class='input-group-addon'>Aggregators</span>\
+              <input type='text' class='form-control' placeholder='None' aria-describedby='basic-addon1'>\
             </div>\
           </td>\
           <td style='width: 20%;vertical-align:top;'>\
             <div class=\"output-example\" id=\"output-example" + panel_id + "\"></div>\
           </td>\
-          <td style='width: 43%;vertical-align:top;' rowspan=\"2\">\
+          <td style='width: 43%;vertical-align:top;'>\
             <div class=\"viz\"  id=\"viz" + panel_id + "\">\
-              <div style=\"padding: 12px 5px 5px 5px;\" class=\"buttons\">\
-                <button class=\"btn btn-xs btn-default\" id=\"viz-output-btn" + panel_id + "\">Vis-Ouput</button>\
-                <button class=\"btn btn-xs btn-default\" id=\"viz-query-btn" + panel_id + "\">Query</button>\
-                <button class=\"btn btn-xs btn-default\" id=\"viz-full-btn" + panel_id + "\">Vis-Full</button>\
-              </div>\
               <div id=\"query" + panel_id + "\" class=\"pnl\" style=\"display:none\">\
                 <img src=\"./static/waiting.gif\" alt=\"HTML5 Icon\" style=\"width:32px;height:32px;\">\
               </div>\
@@ -117,8 +108,13 @@ $(function() {
           </td>\
         </tr>\
         <tr style='height:0px;'>\
-          <td style='border-right:1px dashed gray;'><div id=\"input-example-upload" + panel_id + "\"></div></td>\
+          <td style='border-right:1px dashed gray;'><div current_panel_id=\"" + panel_id + "\" id=\"input-panel-btns" + panel_id + "\"></div></td>\
           <td><div id='synthesize-btn-container" + panel_id + "'></div></td>\
+          <td><div class=\"buttons btn-group btn-group-justified\" style='padding-left:10px;padding-right:10px;'>\
+                <label class=\"btn btn-default\" id=\"viz-output-btn" + panel_id + "\">Vis-Ouput</label>\
+                <label class=\"btn btn-default\" id=\"viz-query-btn" + panel_id + "\">Query</label>\
+                <label class=\"btn btn-default\" id=\"viz-full-btn" + panel_id + "\">Vis-Full</label>\
+              </div></td>\
         </tr>\
       </table>\
       <br/>";
@@ -134,32 +130,9 @@ $(function() {
     gen_adjustable_table_div("input-example" + panel_id +  "sub" + 1, "itable_" + panel_id + "_" + 1 );
     //gen_adjustable_table_div("input-example" + panel_id +  "sub" + 2, "sm-in-tbl" + panel_id);
     gen_adjustable_table_div("output-example" + panel_id, "otable_" + panel_id);
-    gen_table_upload_btn("input-example-upload" + panel_id, "itable_upload_btn_" + panel_id, "itable_" + panel_id + "_" + 1);
+    gen_input_panel_btn("input-panel-btns" + panel_id, "itable_upload_btn_" + panel_id, "itable_" + panel_id + "_" + 1);
     gen_synthesize_btn("synthesize-btn-container" + panel_id, "synthesize-btn" + panel_id, ["itable_" + panel_id + "_" + 1], "otable_" + panel_id, "query" + panel_id, "viz-full" + panel_id);
     //draw_viz_out(panel_id);
-
-    $("#add_sub_input_example_btn" + panel_id).click(function() {
-      panel_id = $(this).attr("panel_id");
-      
-      // extract number of panels
-      sub_panel_cnt = parseInt($("#input-example" + panel_id).attr("sub_panel_cnt"));
-      sub_panel_cnt += 1;
-
-      // update panel_cnt
-      $("#input-example" + panel_id).attr("sub_panel_cnt", String(sub_panel_cnt));
-
-      $("#input-example" + panel_id).append("<div id=\"input-example" + panel_id +  "sub" + sub_panel_cnt + "\"></div>");
-
-      // update the new table and the adjustable table panel
-      gen_adjustable_table_div("input-example" + panel_id +  "sub" + sub_panel_cnt, "itable_" + panel_id + "_" + sub_panel_cnt);
-      gen_table_upload_btn("input-example-upload" + panel_id, "itable_upload_btn_" + panel_id, "itable_" + panel_id + "_" + sub_panel_cnt);
-
-      // update synthesize btn
-      sub_panel_id_list = [];
-      for (var i = 1; i <= sub_panel_cnt; i ++)
-        sub_panel_id_list.push("itable_" + panel_id + "_" + i);
-      gen_synthesize_btn("synthesize-btn-container" + panel_id, "synthesize-btn" + panel_id, sub_panel_id_list, "otable_" + panel_id, "query" + panel_id, "viz-full" + panel_id);
-    });
 
     set_hist_viz_btn = "set_histogram" + panel_id;
     set_2d_hist_viz_btn = "set_2d_histogram" + panel_id;
@@ -209,7 +182,6 @@ $(function() {
         draw_viz_out(this.id, "viz-output" + id);
       });
     });
-
     $("#panel" + panel_id).height(Math.max($("#input-example" + panel_id).height(), $("#output-example" + panel_id).height(), 20));
   });
 });
