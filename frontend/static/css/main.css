@@ -6,7 +6,7 @@ body {
 }
 
 .table_name {
-  text-align: center;
+  text-align: left;
   font-weight: bold;
   border: 0px solid;
 }
@@ -30,7 +30,7 @@ thead tr td {
 	width: 100%;
 	/*border: 1px solid black;*/
 	position: relative;
-	height: 800px;
+	height: 100px;
 	float: left;
 }
 
@@ -38,12 +38,14 @@ label {
 	text-align: center;
 }
 
+.btn-super-sm {
+  font-size: 8pt;
+  padding: 0px 5px;
+}
+
 .input-example {
-	width: 35%;
-	float: left;
   text-align: center;
-	padding: 0px 10px 0px 10px;
-  border-right: 1px dashed gray;
+	padding: 10px 10px 0px 10px;
   font-size: 10pt;
 }
 
@@ -56,19 +58,16 @@ label {
 }
 
 .output-example {
-	width: 20%;
-	float: left;
 	text-align: center;
-	padding: 0px 10px 0px 10px;
+	padding: 10px 10px 0px 10px;
   margin: 0 auto;
   font-size: 10pt;
 }
 
 .viz {
-  width: 43%;
   min-height: 97%;
-	float: left;
 	text-align: center;
+  width: 100%;
 	padding: 0px 10px 0px 10px;
 }
 
@@ -151,7 +150,7 @@ label {
 .dash-box-w-text {
   color: #ccc;
   border-color: #ccc;
-  line-height: 300px;
+  /*line-height: 300px;*/
   text-align: center
 }
 
@@ -165,12 +164,11 @@ table {
 
 .tbl {
   padding-bottom: 5px;
-  min-height:280px;
 }
 
 .ipanel {
   width: 98%;
-  height: 300px;
+  /*height: 300px;*/
   margin: 0 auto;
 }
 
@@ -211,7 +209,7 @@ table {
 
 .pnl {
   width: 42%;
-  min-height: 300px;
+  min-height: 10px;
 }
 
 pre {
@@ -224,4 +222,8 @@ pre {
 {
   text-decoration: none;
   padding: .2em 1em;
+}
+
+.input-box {
+  padding: 5px 5px 5px 5px;
 }
