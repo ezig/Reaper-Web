@@ -66,9 +66,9 @@ label {
 
 .viz {
   min-height: 97%;
+  /*padding: 0px 10px 0px 10px;*/
 	text-align: center;
   width: 100%;
-	padding: 0px 10px 0px 10px;
 }
 
 #tool-title {
@@ -167,8 +167,10 @@ table {
 }
 
 .ipanel {
-  width: 98%;
+  width: 100%;
   /*height: 300px;*/
+  padding-left: 10px;
+  padding-right: 10px;
   margin: 0 auto;
 }
 
@@ -211,6 +213,8 @@ table {
 .pnl {
   width: 42%;
   min-height: 240px;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 pre {

@@ -90,7 +90,8 @@ function gen_histogram(csvdata, div_id) {
   var binmargin = .5; 
   var margin = {top: 40, right: 20, bottom: 40, left: 50};
   var height = $(div_id).height() - margin.top - margin.bottom;
-  var width = Math.min($(div_id).width() - margin.left - margin.right, $(div_id).height() + 200 - margin.left - margin.right);
+  var width = Math.min($(div_id).width() - margin.left - margin.right, 
+                       $(div_id).height() + 200 - margin.left - margin.right);
 
   var ymax = 0;
   var cnt_data = {};
@@ -147,7 +148,8 @@ function gen_histogram(csvdata, div_id) {
   .direction('e')
   .offset([0, 20])
   .html(function(d) {
-    return '<table id="tiptable">' + "<tr><td>Year: "+ d.meta + "</td></tr><tr><td> Count: " + d.numfill + "</td></tr></table>";
+    return '<table id="tiptable">' + "<tr><td>Year: "
+            + d.meta + "</td></tr><tr><td> Count: " + d.numfill + "</td></tr></table>";
   });
 
   // put the graph in the "mpg" div
@@ -218,7 +220,8 @@ function build_pubviz(csvdata, div_id) {
   var binmargin = .2; 
   var margin = {top: 40, right: 20, bottom: 40, left: 50};
   var height = $(div_id).height() - margin.top - margin.bottom;
-  var width = Math.min($(div_id).width() - margin.left - margin.right, $(div_id).height() + 200 - margin.left - margin.right);
+  var width = Math.min($(div_id).width() - margin.left - margin.right, 
+                       $(div_id).height() + 200 - margin.left - margin.right);
 
   var xvals = [];
   var yvals = [];
@@ -266,7 +269,10 @@ function build_pubviz(csvdata, div_id) {
   .direction('e')
   .offset([0, 20])
   .html(function(d) {
-    return '<table id="tiptable"><tr><td>Career Length: ' + d[0] + "</td></tr><tr><td> Most Cited Paper Year: " + d[1] + "</td></tr><tr><td>Count: " + d[2] + "</td></tr></table>";
+    return '<table id="tiptable"><tr><td>Career Length: ' 
+    + d[0] + "</td></tr><tr><td> Most Cited Paper Year: " 
+    + d[1] + "</td></tr><tr><td>Count: " 
+    + d[2] + "</td></tr></table>";
   });
 
   // put the graph in the "mpg" div

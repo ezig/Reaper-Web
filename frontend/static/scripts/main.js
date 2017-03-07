@@ -9,10 +9,13 @@ function gen_input_panel_btn(container_id, upload_btn_id, target_div_id) {
 
 	html_frame = 
 		"<div class=\"buttons btn-group btn-group-justified\" style='padding-left:10px;padding-right:10px;'>\
-      <label panel_id='" + panel_id + "' id=\"add_sub_input_example_btn" + panel_id + "\" class=\"btn btn-primary\" style='padding-left:3px; padding-right:3px;'><span class=\"glyphicon glyphicon-plus\"></span> Add Input Table</label>\
+      <label panel_id='" + panel_id + "' id=\"add_sub_input_example_btn" 
+            + panel_id + "\" class=\"btn btn-primary\" style='padding-left:3px; padding-right:3px;'>\
+              <span class=\"glyphicon glyphicon-plus\"></span> Add Input Table</label>\
       <label class=\"btn btn-primary\">\
         Load Data\
-        <input class=\"fileupload\" target_table_content_id=\"" + target_table_content_id + "\" id=\"" + upload_btn_id + "\" type=\"file\"  style=\"display: none;\" name=\"files[]\">\
+        <input class=\"fileupload\" target_table_content_id=\"" + target_table_content_id 
+        + "\" id=\"" + upload_btn_id + "\" type=\"file\"  style=\"display: none;\" name=\"files[]\">\
       </label>\
     </div>";
 
@@ -27,17 +30,25 @@ function gen_input_panel_btn(container_id, upload_btn_id, target_div_id) {
 
     // update panel_cnt
     $("#input-example" + panel_id).attr("sub_panel_cnt", String(sub_panel_cnt));
-    $("#input-example" + panel_id).append("<div id=\"input-example" + panel_id +  "sub" + sub_panel_cnt + "\"></div>");
+    $("#input-example" + panel_id).append("<div id=\"input-example" + panel_id 
+                                           + "sub" + sub_panel_cnt + "\"></div>");
 
     // update the new table and the adjustable table panel
-    gen_adjustable_table_div("input-example" + panel_id +  "sub" + sub_panel_cnt, "itable_" + panel_id + "_" + sub_panel_cnt);
-    gen_input_panel_btn("input-panel-btns" + panel_id, "itable_upload_btn_" + panel_id, "itable_" + panel_id + "_" + sub_panel_cnt);
+    gen_adjustable_table_div("input-example" + panel_id + "sub" + sub_panel_cnt, 
+                             "itable_" + panel_id + "_" + sub_panel_cnt);
+    gen_input_panel_btn("input-panel-btns" + panel_id, 
+                        "itable_upload_btn_" + panel_id, "itable_" + panel_id + "_" + sub_panel_cnt);
 
     // update synthesize btn
     sub_panel_id_list = [];
     for (var i = 1; i <= sub_panel_cnt; i ++)
       sub_panel_id_list.push("itable_" + panel_id + "_" + i);
-    gen_synthesize_btn("synthesize-btn-container" + panel_id, "synthesize-btn" + panel_id, sub_panel_id_list, "otable_" + panel_id, "query" + panel_id, "viz-full" + panel_id);
+    gen_synthesize_btn("synthesize-btn-container" + panel_id, 
+                       "synthesize-btn" + panel_id, 
+                       sub_panel_id_list, 
+                       "otable_" + panel_id, 
+                       "query" + panel_id, 
+                       "viz-full" + panel_id);
   });
 
 	// event handler for uploading files
@@ -73,7 +84,9 @@ function gen_input_panel_btn(container_id, upload_btn_id, target_div_id) {
             for (var i = 0; i < csvdata.length; i ++) {
               tr_str = "<tr>";
               for (j in csvdata.columns) {
-                var cell = csvdata[i][csvdata.columns[j]].length > 12? (csvdata[i][csvdata.columns[j]].substring(0,12) + "...") : csvdata[i][csvdata.columns[j]];
+                var cell = csvdata[i][csvdata.columns[j]].length > 12 ? 
+                                (csvdata[i][csvdata.columns[j]].substring(0,12) + "...") 
+                                : csvdata[i][csvdata.columns[j]];
                 tr_str += "<td>" + cell  + "</td>";
               }
               tr_str += "</tr>";
@@ -94,7 +107,11 @@ function gen_input_panel_btn(container_id, upload_btn_id, target_div_id) {
 
 // target_input_div_id: the div id that contains the input example 
 // (same as the one passed to gen_ajustbale_table_div)
-function gen_synthesize_btn(container_id, btn_id, target_input_div_id_list, target_output_div_id, target_query_panel_id, target_viz_panel_id) {
+function gen_synthesize_btn(container_id, btn_id, target_input_div_id_list, target_output_div_id, 
+                            target_constraint_div_id, target_query_panel_id, target_viz_panel_id) {
+
+  console.log(container_id, btn_id, target_input_div_id_list, 
+              target_output_div_id, target_constraint_div_id, target_query_panel_id, target_viz_panel_id);
 
 	synthesize_btn = "<div class=\"buttons\" style=\"padding-left:10px;padding-right:10px;\">\
             					<button id=\"" + btn_id + "\" target_input_div_id=\"" 
@@ -124,7 +141,18 @@ function gen_synthesize_btn(container_id, btn_id, target_input_div_id_list, targ
 
   	scythe_input_string += "#output:" +  output_table_eg.table_name + "\n\n";
   	scythe_input_string += output_table_eg.table_content_str + "\n\n";
-		scythe_input_string += "#constraint\n\n{\n  \"constants\": [],\n  \"aggregation_functions\": [\"min\", \"count\", \"max\"]\n}\n";
+
+    // get constant and aggregation functions from the constraint panel
+    constant_string = $("#" + target_constraint_div_id + " .constant-panel input").eq(0).val();
+    aggr_function_string = $("#" + target_constraint_div_id + " .aggr-func-panel input").eq(0).val();
+
+    if (aggr_function_string == "")
+      aggr_function_string = '"max", "min", "count"';
+
+    scythe_input_string += "#constraint\n\n{\n  \"constants\": [" + constant_string + "],\n\
+                                  \"aggregation_functions\": [" + aggr_function_string + "]\n}\n";
+
+    console.log(scythe_input_string);
 
 		oe_csv_data = d3.csvParse(output_table_eg.table_content_str);
 		// TODO: add draw visualization
@@ -140,8 +168,6 @@ function gen_synthesize_btn(container_id, btn_id, target_input_div_id_list, targ
       success: function (data) {
         csvdata = d3.csvParse(data);
         $("#" + target_viz_panel_id).html("");
-
-        console.log(target_viz_panel_id);
 
         viz_type = $("#" + target_viz_panel_id).attr("viz_type");
 
@@ -220,10 +246,12 @@ function gen_synthesize_btn(container_id, btn_id, target_input_div_id_list, targ
         indicator = '<ul style="display: inline;list-style-type: none;">';
         for (var i = data.length - 1; i >= 0; i --) {
           indicator += '<li><a href="#query_inner_'+ id + '_tabs_' 
-          + (data.length - i) + '"> Solution #' + (data.length - i) + '</a><label class="btn-xs" id="run_synthesized_query_' 
-                          + id + '_' + (data.length-i) + '"><span class="glyphicon glyphicon-play-circle"></span></label></li>';
+          + (data.length - i) + '"> Solution #' + (data.length - i) 
+          + '<label class="btn-xs" id="run_synthesized_query_' 
+          + id + '_' + (data.length-i) 
+          + '"><span class="glyphicon glyphicon-play-circle"></span></label></a></li>';
         }
-        indicator += '<ul>';
+        indicator += '</ul>';
 
         tab_content = '';
         for (var i = data.length - 1; i >= 0; i --) {
@@ -236,8 +264,6 @@ function gen_synthesize_btn(container_id, btn_id, target_input_div_id_list, targ
         }
         query_content += indicator + tab_content + "</div>";
 
-
-        console.log(target_query_panel_id);
         $("#" + target_query_panel_id).html(query_content);
 
         for (var i = data.length - 1; i >= 0; i --) {
@@ -275,17 +301,28 @@ function gen_adjustable_table_div(container_id, table_div_id) {
 	html_frame = 
 		"<div id=\"" + table_div_id + "\" class=\"tbl\">\
       <table id=\"" + table_content_id + "\" class=\"hover cell-border compact dataTable no-footer\">\
-        <thead><tr><td class=\"col-md-2\">c1</td><td class=\"col-md-2\">c2</td><td class=\"col-md-2\">c3</th></tr></thead>\
+        <thead><tr><td class=\"col-md-2\">c1</td>\
+                   <td class=\"col-md-2\">c2</td><td class=\"col-md-2\">c3</th>\
+               </tr></thead>\
         <tbody>"
         + default_content +
         "</tbody>\
       </table>\
       <div class=\"buttons\">\
-        <input type=\"text\" size=\"10\" class=\"table_name\" id=\"" + table_name_id + "\" value=\"tablename\">\
-        <button id=\"" + insert_row_btn_id + "\" class=\"btn btn-super-sm btn-default\"><span class=\"glyphicon glyphicon-plus\"></span> R</button>\
-        <button id=\"" + delete_row_btn_id + "\" class=\"btn btn-super-sm btn-default\"><span class=\"glyphicon glyphicon-minus\"></span> R</button>\
-        <button id=\"" + insert_col_btn_id + "\" class=\"btn btn-super-sm btn-default\"><span class=\"glyphicon glyphicon-plus\"></span> C</button>\
-        <button id=\"" + delete_col_btn_id + "\" class=\"btn btn-super-sm btn-default\"><span class=\"glyphicon glyphicon-minus\"></span> C</button>\
+        <input type=\"text\" size=\"10\" class=\"table_name\" id=\"" 
+              + table_name_id + "\" value=\"tablename\">\
+        <button id=\"" + insert_row_btn_id 
+              + "\" class=\"btn btn-super-sm btn-default\">\
+              <span class=\"glyphicon glyphicon-plus\"></span> R</button>\
+        <button id=\"" + delete_row_btn_id 
+              + "\" class=\"btn btn-super-sm btn-default\">\
+              <span class=\"glyphicon glyphicon-minus\"></span> R</button>\
+        <button id=\"" + insert_col_btn_id 
+              + "\" class=\"btn btn-super-sm btn-default\">\
+              <span class=\"glyphicon glyphicon-plus\"></span> C</button>\
+        <button id=\"" + delete_col_btn_id 
+              + "\" class=\"btn btn-super-sm btn-default\">\
+              <span class=\"glyphicon glyphicon-minus\"></span> C</button>\
       </div>\
     </div>";
 
@@ -384,11 +421,14 @@ function draw_histogram_viz(table_div_id, draw_viz_id) {
 	histodata = [];
   histodata.push("c1,c2");
   for (i = 0; i < oe_csv_data.length; i ++) {
-    if (oe_csv_data[i][oe_csv_data.columns[2]] == "" || oe_csv_data[i][oe_csv_data.columns[1]]=="" 
-                || isNaN(oe_csv_data[i][oe_csv_data.columns[2]]) || isNaN(oe_csv_data[i][oe_csv_data.columns[1]]))
+    if (oe_csv_data[i][oe_csv_data.columns[2]] == "" 
+        || oe_csv_data[i][oe_csv_data.columns[1]]=="" 
+        || isNaN(oe_csv_data[i][oe_csv_data.columns[2]]) 
+        || isNaN(oe_csv_data[i][oe_csv_data.columns[1]]))
       continue;
     c1 = oe_csv_data[i][oe_csv_data.columns[0]];
-    c2 = parseInt(oe_csv_data[i][oe_csv_data.columns[2]]) - parseInt(oe_csv_data[i][oe_csv_data.columns[1]]);
+    c2 = parseInt(oe_csv_data[i][oe_csv_data.columns[2]]) - 
+        parseInt(oe_csv_data[i][oe_csv_data.columns[1]]);
     histodata.push(c1 + "," + c2);
   }
   histo_data_str = histodata.join("\n");
@@ -404,7 +444,9 @@ function draw_2d_histogram_viz(table_div_id, draw_viz_id) {
   histodata = [];
   histodata.push("c1,c2,c3");
   for (i = 0; i < oe_csv_data.length; i ++) {
-    if (isNaN(oe_csv_data[i][oe_csv_data.columns[0]]) || isNaN(oe_csv_data[i][oe_csv_data.columns[1]]) || isNaN(oe_csv_data[i][oe_csv_data.columns[2]]))
+    if (isNaN(oe_csv_data[i][oe_csv_data.columns[0]]) 
+          || isNaN(oe_csv_data[i][oe_csv_data.columns[1]]) 
+          || isNaN(oe_csv_data[i][oe_csv_data.columns[2]]))
       continue;
     c1 = parseInt(oe_csv_data[i][oe_csv_data.columns[0]]);
     c2 = parseInt(oe_csv_data[i][oe_csv_data.columns[1]]);

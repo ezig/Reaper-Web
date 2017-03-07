@@ -36,6 +36,7 @@
       <ul class="nav navbar-nav navbar-right" style="padding: 0px 15px">
         <li>
             <button class="btn btn-primary navbar-btn">Connect</button>
+            <button class="btn btn-danger navbar-btn">Disconnect</button>
         </li>
       </ul>
     </div>
@@ -83,13 +84,15 @@ $(function() {
             <div class=\"input-example\" sub_panel_cnt='1' id=\"input-example" + panel_id + "\">\
               <div id=\"input-example" + panel_id +  "sub" + 1 + "\"></div>\
             </div>\
-            <div class='input-group input-group-sm input-box' id='constant_pnl" + panel_id + "'>\
-              <span class='input-group-addon'>Constants</span>\
-              <input type='text' class='form-control' placeholder='None' aria-describedby='basic-addon1'>\
-            </div>\
-            <div class='input-group input-group-sm input-box' id='aggr_func_pnl" + panel_id + "'>\
-              <span class='input-group-addon'>Aggregators</span>\
-              <input type='text' class='form-control' placeholder='None' aria-describedby='basic-addon1'>\
+            <div id='constraint-panel" + panel_id + "'>\
+              <div class='input-group input-group-sm input-box constant-panel'>\
+                <span class='input-group-addon' id='basic-addon1" + panel_id + "'>Constants</span>\
+                <input type='text' class='form-control' placeholder='None' aria-describedby='basic-addon1" + panel_id + "'>\
+              </div>\
+              <div class='input-group input-group-sm input-box aggr-func-panel'>\
+                <span class='input-group-addon' id='basic-addon2" + panel_id + "'>Aggregators</span>\
+                <input type='text' class='form-control' placeholder='None' aria-describedby='basic-addon2" + panel_id + "'>\
+              </div>\
             </div>\
           </td>\
           <td style='width: 20%;vertical-align:top;'>\
@@ -97,13 +100,9 @@ $(function() {
           </td>\
           <td style='width: 43%;vertical-align:top;'>\
             <div class=\"viz\"  id=\"viz" + panel_id + "\">\
-              <div id=\"query" + panel_id + "\" class=\"pnl\" style=\"display:none\">\
-                <img src=\"./static/waiting.gif\" alt=\"HTML5 Icon\" style=\"width:32px;height:32px;\">\
-              </div>\
-              <div viz_type=\"histogram\" id=\"viz-output" + panel_id + "\" class=\"pnl\" style=\"display:block; width:95%;\"></div>\
-              <div viz_type=\"histogram\" id=\"viz-full" + panel_id + "\" class=\"pnl\" style=\"display:none;\">\
-                <img src=\"./static/waiting.gif\" alt=\"HTML5 Icon\" style=\"width:32px;height:32px;\">\
-              </div>\
+              <div id=\"query" + panel_id + "\" class=\"pnl\" style=\"display:none\"></div>\
+              <div viz_type=\"histogram\" id=\"viz-output" + panel_id + "\" class=\"pnl\" style=\"display:block;\"></div>\
+              <div viz_type=\"histogram\" id=\"viz-full" + panel_id + "\" class=\"pnl\" style=\"display:none;\"></div>\
             </div>\
           </td>\
         </tr>\
@@ -131,7 +130,7 @@ $(function() {
     //gen_adjustable_table_div("input-example" + panel_id +  "sub" + 2, "sm-in-tbl" + panel_id);
     gen_adjustable_table_div("output-example" + panel_id, "otable_" + panel_id);
     gen_input_panel_btn("input-panel-btns" + panel_id, "itable_upload_btn_" + panel_id, "itable_" + panel_id + "_" + 1);
-    gen_synthesize_btn("synthesize-btn-container" + panel_id, "synthesize-btn" + panel_id, ["itable_" + panel_id + "_" + 1], "otable_" + panel_id, "query" + panel_id, "viz-full" + panel_id);
+    gen_synthesize_btn("synthesize-btn-container" + panel_id, "synthesize-btn" + panel_id, ["itable_" + panel_id + "_" + 1], "otable_" + panel_id, "constraint-panel" + panel_id, "query" + panel_id, "viz-full" + panel_id);
     //draw_viz_out(panel_id);
 
     set_hist_viz_btn = "set_histogram" + panel_id;
@@ -154,7 +153,7 @@ $(function() {
     $(function() {
       $("#" + viz_query_btn).click(function () {
         id = this.id.substring(this.id.length-1);
-        $("#query" + id).attr("style", "display: block; width:95%;");
+        $("#query" + id).attr("style", "display: block; width:100%;");
         $("#viz-output" + id).attr("style", "display: none");
         $("#viz-full" + id).attr("style", "display: none");
       });
@@ -164,14 +163,14 @@ $(function() {
         id = this.id.substring(this.id.length-1);
         $("#query" + id).attr("style", "display: none");
         $("#viz-output" + id).attr("style", "display: none");
-        $("#viz-full" + id).attr("style", "display: block; width:95%;");
+        $("#viz-full" + id).attr("style", "display: block; width:100%;");
       });
     });
     $(function() {
       $("#" + viz_output_btn).click(function () {
         id = this.id.substring(this.id.length-1);
         $("#query" + id).attr("style", "display: none");
-        $("#viz-output" + id).attr("style", "display: block; width:95%;");
+        $("#viz-output" + id).attr("style", "display: block; width:100%;");
         $("#viz-full" + id).attr("style", "display: none");
       });
     });
