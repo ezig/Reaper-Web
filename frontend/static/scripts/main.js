@@ -47,6 +47,7 @@ function gen_input_panel_btn(container_id, upload_btn_id, target_div_id) {
                        "synthesize-btn" + panel_id, 
                        sub_panel_id_list, 
                        "otable_" + panel_id, 
+                       "constraint-panel" + panel_id,
                        "query" + panel_id, 
                        "viz-full" + panel_id);
   });
@@ -146,11 +147,24 @@ function gen_synthesize_btn(container_id, btn_id, target_input_div_id_list, targ
     constant_string = $("#" + target_constraint_div_id + " .constant-panel input").eq(0).val();
     aggr_function_string = $("#" + target_constraint_div_id + " .aggr-func-panel input").eq(0).val();
 
+    console.log("#" + target_constraint_div_id + " .constant-panel input");
+    console.log(constant_string, aggr_function_string);
+
+    // default aggregation functions includes only max, min, and count
+    // TODO: thinking whether this can be re designed to utilize default aggregation functions in Scythe
     if (aggr_function_string == "")
       aggr_function_string = '"max", "min", "count"';
 
-    scythe_input_string += "#constraint\n\n{\n  \"constants\": [" + constant_string + "],\n\
-                                  \"aggregation_functions\": [" + aggr_function_string + "]\n}\n";
+    // a special function that parses and formats the string provided by the user
+    function parse_n_format_comma_delimited_str(str) {
+      if (str == "")
+        return "";
+      return str.split(",").map(function(x) {return "\"" + x.trim().replace(/['"]+/g, '') + "\"";});
+    }
+
+    // the string used as the input to the synthesizer
+    scythe_input_string += "#constraint\n\n{\n  \"constants\": [" + parse_n_format_comma_delimited_str(constant_string) + "],\n\
+  \"aggregation_functions\": [" + parse_n_format_comma_delimited_str(aggr_function_string) + "]\n}\n";
 
     console.log(scythe_input_string);
 
