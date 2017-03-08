@@ -111,9 +111,6 @@ function gen_input_panel_btn(container_id, upload_btn_id, target_div_id) {
 function gen_synthesize_btn(container_id, btn_id, target_input_div_id_list, target_output_div_id, 
                             target_constraint_div_id, target_query_panel_id, target_viz_panel_id) {
 
-  console.log(container_id, btn_id, target_input_div_id_list, 
-              target_output_div_id, target_constraint_div_id, target_query_panel_id, target_viz_panel_id);
-
 	synthesize_btn = "<div class=\"buttons\" style=\"padding-left:10px;padding-right:10px;\">\
             					<button id=\"" + btn_id + "\" target_input_div_id=\"" 
             						+ serialize_id_list(target_input_div_id_list) + "\" target_output_div_id=\"" 
@@ -146,9 +143,6 @@ function gen_synthesize_btn(container_id, btn_id, target_input_div_id_list, targ
     // get constant and aggregation functions from the constraint panel
     constant_string = $("#" + target_constraint_div_id + " .constant-panel input").eq(0).val();
     aggr_function_string = $("#" + target_constraint_div_id + " .aggr-func-panel input").eq(0).val();
-
-    console.log("#" + target_constraint_div_id + " .constant-panel input");
-    console.log(constant_string, aggr_function_string);
 
     // default aggregation functions includes only max, min, and count
     // TODO: thinking whether this can be re designed to utilize default aggregation functions in Scythe
@@ -252,6 +246,7 @@ function gen_synthesize_btn(container_id, btn_id, target_input_div_id_list, targ
       },
       success: function (data) {
 
+        // the data returned from the backend
       	console.log(data);
 
         id = target_query_panel_id;

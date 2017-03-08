@@ -22,6 +22,11 @@
 
   <script type="text/javascript" charset="utf8" src="./static/scripts/mindmup-editabletable.js"></script>
   <script type="text/javascript" src="./static/scripts/main.js"></script>
+
+  <!-- enahnced dropdown -->
+  <script type="text/javascript" charset="utf8" src="./static/lib/dropdowns-enhancement/dropdowns-enhancement.js"></script>
+  <link rel="stylesheet" type="text/css" href="./static/lib/dropdowns-enhancement/dropdowns-enhancement.css">
+
 </head>
 
 <body>
@@ -110,9 +115,22 @@ $(function() {
           <td style='border-right:1px dashed gray;'><div current_panel_id=\"" + panel_id + "\" id=\"input-panel-btns" + panel_id + "\"></div></td>\
           <td><div id='synthesize-btn-container" + panel_id + "'></div></td>\
           <td><div class=\"buttons btn-group btn-group-justified\" style='padding-left:10px;padding-right:10px;'>\
-                <label class=\"btn btn-default\" id=\"viz-output-btn" + panel_id + "\">Vis-Ouput</label>\
                 <label class=\"btn btn-default\" id=\"viz-query-btn" + panel_id + "\">Query</label>\
+                <label class=\"btn btn-default\" id=\"viz-output-btn" + panel_id + "\">Vis-Ouput</label>\
                 <label class=\"btn btn-default\" id=\"viz-full-btn" + panel_id + "\">Vis-Full</label>\
+                <div class='btn-group'>\
+                  <label data-toggle='dropdown' class='btn btn-default dropdown-toggle pull-right'><i class='icon-edit'></i> Visualization <span class='caret'></span></label>\
+                  <ul class='dropdown-menu'>\
+                    <li>\
+                      <input type='radio' id='ex2_2_1' name='ex2_2' value='1' checked=''>\
+                      <label for='ex2_2_1'><i class='icon-edit'></i> Histogram</label>\
+                    </li>\
+                    <li>\
+                      <input type='radio' id='ex2_2_2' name='ex2_2' value='2'>\
+                      <label for='ex2_2_2'><i class='icon-remove'></i> 3D Histogram</label>\
+                    </li>\
+                  </ul>\
+                </div>\
               </div></td>\
         </tr>\
       </table>\
