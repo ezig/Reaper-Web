@@ -64,7 +64,7 @@ label {
   font-size: 10pt;
 }
 
-.viz {
+.vis {
   min-height: 97%;
   /*padding: 0px 10px 0px 10px;*/
 	text-align: center;
@@ -235,4 +235,8 @@ pre {
 
 .input-box {
   padding: 5px 5px 5px 5px;
+}
+
+.dropdown-menu li label {
+  text-align: left;
 }
