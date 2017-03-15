@@ -41,11 +41,12 @@ function gen_input_panel_btn(container_id, upload_btn_id, target_div_id) {
 
     // update synthesize btn
     sub_panel_id_list = [];
-    for (var i = 1; i <= sub_panel_cnt; i ++)
+    for (var i = 1; i <= sub_panel_cnt; i ++) {
       sub_panel_id_list.push("itable_" + panel_id + "_" + i);
+    }
     gen_synthesize_btn("synthesize-btn-container" + panel_id, 
                        "synthesize-btn" + panel_id, 
-                       sub_panel_id_list, 
+                       sub_panel_id_list,
                        "otable_" + panel_id, 
                        "constraint-panel" + panel_id,
                        "display-panel" + panel_id);
@@ -121,6 +122,7 @@ function gen_synthesize_btn(container_id, btn_id, target_input_div_id_list, targ
   $("#" + container_id).html(synthesize_btn);
 
   $("#" + btn_id).on("click", function () {
+
   	target_input_div_id_list = deserialize_id_list($(this).attr("target_input_div_id"));
   	target_output_div_id = $(this).attr("target_output_div_id");
 
@@ -157,14 +159,14 @@ function gen_synthesize_btn(container_id, btn_id, target_input_div_id_list, targ
 
     // the string used as the input to the synthesizer
     scythe_input_string += "#constraint\n\n{\n  \"constants\": [" 
-                          + parse_n_format_comma_delimited_str(constant_string) + "],\n\
-  \"aggregation_functions\": [" + parse_n_format_comma_delimited_str(aggr_function_string) + "]\n}\n";
+                          + parse_n_format_comma_delimited_str(constant_string) + "],\n" 
+                          + "\"aggregation_functions\": [" 
+                          + parse_n_format_comma_delimited_str(aggr_function_string) 
+                          + "]\n}\n";
 
     console.log(scythe_input_string);
 
 		oe_csv_data = d3.csvParse(output_table_eg.table_content_str);
-		// TODO: add draw visualization
-		// draw_viz_out(id);
 
 		target_display_panel_id = $(this).attr("target_display_panel_id");
 
@@ -174,9 +176,10 @@ function gen_synthesize_btn(container_id, btn_id, target_input_div_id_list, targ
       data: {},
       success: function (data) {
         csvdata = d3.csvParse(data);
-        $("#" + target_display_panel_id + " .display-vis").html("");
 
-        vis_type = $("#" + target_display_panel_id + " .display-vis").attr("vis_type");
+        // default visualization type
+        vis_type = "histogram";
+        target_vis_panel_id = target_display_panel_id + " .display-vis";
 
         id = parseInt(target_display_panel_id.substring(target_display_panel_id.length-1));
 
@@ -206,7 +209,8 @@ function gen_synthesize_btn(container_id, btn_id, target_input_div_id_list, targ
               map_str_lines.push(i + "," + j + "," + map[i][j]);
             }
           }
-          build_pubviz(d3.csvParse(map_str_lines.join("\n")), "#" + target_viz_panel_id);
+          // only set up data but not modification
+          $("#" + target_vis_panel_id).prop("full_data", map_str_lines.join("\n"));
         } else if (vis_type == "histogram") {
           histodata = [];
           histodata.push("c1,c2");
@@ -219,7 +223,7 @@ function gen_synthesize_btn(container_id, btn_id, target_input_div_id_list, targ
             histodata.push(c1 + "," + c2);
           }
           histo_data_str = histodata.join("\n");
-          gen_histogram(d3.csvParse(histo_data_str), "#" + target_viz_panel_id);
+          $("#" + target_vis_panel_id).prop("full_data", d3.csvParse(histo_data_str));
         } else if (id == 1) {
           histodata = [];
           histodata.push("c1,c2");
@@ -232,7 +236,7 @@ function gen_synthesize_btn(container_id, btn_id, target_input_div_id_list, targ
             histodata.push(c1 + "," + c2);
           }
           histo_data_str = histodata.join("\n");
-          gen_histogram(d3.csvParse(histo_data_str), "#" + target_viz_panel_id);
+          $("#" + target_vis_panel_id).prop("full_data", d3.csvParse(histo_data_str));
         }
       }
     });
@@ -263,15 +267,14 @@ function gen_synthesize_btn(container_id, btn_id, target_input_div_id_list, targ
 
         concat_links = "";
         for (var i = data.length - 1; i >= 0; i --) {
-          temp_link = "<li><input type='radio' id='link_to_query_inner_" + id + "_tabs_" + (data.length - i) 
+          temp_link = "<li><input type='radio'"
+                        + "id='link_to_query_inner_" + id + "_tabs_" + (data.length - i) 
                         + "' name='link_to_query_inner_" + id + "' value='1' " 
                         + (i == data.length - 1 ? "checked=''" : "" ) + ">"
                         + "<label for='link_to_query_inner_" + id + "_tabs_" 
                         + (data.length - i) + "'> Query#" + (data.length - i) + "</label></li>";
           concat_links += temp_link;
         }
-
-        console.log(query_content_list);
 
         // the default query content
         query_content = '<div class="query_output_container" id="query_inner' + id + '">'
@@ -355,8 +358,7 @@ function gen_adjustable_table_div(container_id, table_div_id) {
   $("#" + container_id).html(html_frame);
   $("#" + table_content_id).editableTableWidget();
 
-  // add buttons to the table
-  // Bind events to them
+  // add buttons to the table and bind events to them
   $('#' + insert_row_btn_id).click(function () {
     id = this.id.substring(0, this.id.indexOf(reserved_id_connector));
     table_content_id = id + reserved_id_connector + "table";
@@ -426,60 +428,12 @@ function get_generated_table_content(table_div_id) {
   return result;
 }
 
-function draw_viz_out(table_div_id, draw_viz_id) {
-  var output_example_csvstr = get_generated_table_content(table_div_id).table_content_str;
-  oe_csv_data = d3.csvParse(output_example_csvstr);
-
-  vis_type = $("#" + draw_viz_id).attr("vis_type");
-
-  if (vis_type == "2dhistogram") {
-    draw_2d_histogram_viz(table_div_id, draw_viz_id);
-  } else if (vis_type == "histogram") {
-    draw_histogram_viz(table_div_id, draw_viz_id);
-  }
-}
-
-function draw_histogram_viz(table_div_id, draw_viz_id) {
-
-	var output_example_csvstr = get_generated_table_content(table_div_id).table_content_str;
-  oe_csv_data = d3.csvParse(output_example_csvstr);
-
-	histodata = [];
-  histodata.push("c1,c2");
-  for (i = 0; i < oe_csv_data.length; i ++) {
-    if (oe_csv_data[i][oe_csv_data.columns[2]] == "" 
-        || oe_csv_data[i][oe_csv_data.columns[1]]=="" 
-        || isNaN(oe_csv_data[i][oe_csv_data.columns[2]]) 
-        || isNaN(oe_csv_data[i][oe_csv_data.columns[1]]))
-      continue;
-    c1 = oe_csv_data[i][oe_csv_data.columns[0]];
-    c2 = parseInt(oe_csv_data[i][oe_csv_data.columns[2]]) - 
-        parseInt(oe_csv_data[i][oe_csv_data.columns[1]]);
-    histodata.push(c1 + "," + c2);
-  }
-  histo_data_str = histodata.join("\n");
-  $("#" + draw_viz_id).html("");
-  gen_histogram(d3.csvParse(histo_data_str), "#" + draw_viz_id);
-}
-
-function draw_2d_histogram_viz(table_div_id, draw_viz_id) {
-	var output_example_csvstr = get_generated_table_content(table_div_id).table_content_str;
-  oe_csv_data = d3.csvParse(output_example_csvstr);
-
-  // draw the dot graph
-  histodata = [];
-  histodata.push("c1,c2,c3");
-  for (i = 0; i < oe_csv_data.length; i ++) {
-    if (isNaN(oe_csv_data[i][oe_csv_data.columns[0]]) 
-          || isNaN(oe_csv_data[i][oe_csv_data.columns[1]]) 
-          || isNaN(oe_csv_data[i][oe_csv_data.columns[2]]))
-      continue;
-    c1 = parseInt(oe_csv_data[i][oe_csv_data.columns[0]]);
-    c2 = parseInt(oe_csv_data[i][oe_csv_data.columns[1]]);
-    c3 = parseInt(oe_csv_data[i][oe_csv_data.columns[2]]);
-    histodata.push(c1 + "," + c2 + "," + c3);
-  }
-  histo_data_str = histodata.join("\n");
-  $("#" + draw_viz_id).html("");
-  build_pubviz(d3.csvParse(histo_data_str), "#" + draw_viz_id);
+// the function to create visualization from data, achieved by side effect
+function build_visualization(csvdata, target_div_id, vis_type) {
+  // clear the diagram
+  $(target_div_id).html("");
+  if (vis_type == 1)
+    gen_histogram(csvdata, target_div_id);
+  else if (vis_type == 2)
+    build_pubviz(csvdata, target_div_id);
 }

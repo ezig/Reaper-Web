@@ -39,8 +39,7 @@
         <li class="active"><a href="#">Home</a></li>
       </ul>
       <ul class="nav navbar-nav navbar-right" style="padding: 0px 15px">
-        <li>
-            <button class="btn btn-primary navbar-btn">Connect</button>
+        <li><button class="btn btn-primary navbar-btn">Connect</button>
             <button class="btn btn-danger navbar-btn">Disconnect</button>
         </li>
       </ul>
@@ -106,32 +105,31 @@ $(function() {
           <td style='width: 43%;vertical-align:top;'>\
             <div class=\"vis\"  id=\"display-panel" + panel_id + "\">\
               <div class=\"pnl display-query\" style=\"display:none\"></div>\
-              <div viz_type=\"histogram\" class=\"pnl display-vis\" style=\"display:block;\"></div>\
+              <div vis_type=\"histogram\" class=\"pnl display-vis\" style=\"display:block;\"></div>\
             </div>\
           </td>\
         </tr>\
         <tr style='height:0px;'>\
           <td style='border-right:1px dashed gray;'><div current_panel_id=\"" + panel_id + "\" id=\"input-panel-btns" + panel_id + "\"></div></td>\
           <td><div id='synthesize-btn-container" + panel_id + "'></div></td>\
-          <td><div class=\"buttons btn-group\" style='padding-left:10px;padding-right:10px;'>\
+          <td style=\"text-align:center;\"><div class=\"buttons btn-group\" style='margin:0 auto; padding-left:10px;padding-right:10px;'>\
                 <div class='btn-group' id='query-choice" + panel_id + "'>\
                   <label class=\"btn btn-default query-btn\">Query</label>\
                   <label data-toggle='dropdown' class='viz-query-choice btn btn-default dropdown-toggle' data-placeholder=\"false\"><span class='caret'></span></label>\
                   <ul class='dropdown-menu' ></ul>\
                 </div>" +
-                //<label class=\"btn btn-default\" id=\"viz-full-btn" + panel_id + "\">Vis-Full</label>"
                 // below is the visualization choice panel, note that items in the list should all have the same name
                 "<div class='btn-group' id='vis-choice" + panel_id + "'>\
                   <label class=\"btn btn-default vis-btn\">Visualization</label>\
                   <label data-toggle='dropdown' class='btn btn-default dropdown-toggle' data-placeholder=\"false\"><span class='caret'></span></label>\
                   <ul class='dropdown-menu'>\
                     <li>\
-                      <input type='radio' id='vis_target_" + panel_id + "_1' name='vis_target_" + panel_id + "' value='1' checked>\
-                      <label for='vis_target_" + panel_id + "_1'>Example Output</label>\
+                      <input type='radio' id='vis_data_" + panel_id + "_1' name='vis_data_" + panel_id + "' value='1' checked>\
+                      <label for='vis_data_" + panel_id + "_1'>Example Output</label>\
                     </li>\
                     <li>\
-                      <input type='radio' id='vis_target_" + panel_id + "_2' name='vis_target_" + panel_id + "' value='2'>\
-                      <label for='vis_target_" + panel_id + "_2'>Full Output</label>\
+                      <input type='radio' id='vis_data_" + panel_id + "_2' name='vis_data_" + panel_id + "' value='2'>\
+                      <label for='vis_data_" + panel_id + "_2'>Full Output</label>\
                     </li>\
                     <li class='divider'></li>\
                     <li>\
@@ -158,35 +156,24 @@ $(function() {
     fileupload_id = "fileupload" + panel_id;
 
     // add an input table to the input table panel, this is the first sub table in the panel
-    gen_adjustable_table_div("input-example" + panel_id +  "sub" + 1, "itable_" + panel_id + "_" + 1 );
+    gen_adjustable_table_div("input-example" + panel_id + "sub" + 1, "itable_" + panel_id + "_" + 1 );
     // add an output table to the output table panel
     gen_adjustable_table_div("output-example" + panel_id, "otable_" + panel_id);
     // generate buttons for the input panel, include an "add table button" and an load table button
-    gen_input_panel_btn("input-panel-btns" + panel_id, "itable_upload_btn_" + panel_id, "itable_" + panel_id + "_" + 1);
+    gen_input_panel_btn("input-panel-btns" + panel_id, 
+                        "itable_upload_btn_" + panel_id, 
+                        "itable_" + panel_id + "_" + 1);
     // generate the button for the output panel, it is the "synthesize" button
-    gen_synthesize_btn("synthesize-btn-container" + panel_id, "synthesize-btn" + panel_id, ["itable_" + panel_id + "_" + 1], "otable_" + panel_id, "constraint-panel" + panel_id, "display-panel" + panel_id);
+    gen_synthesize_btn("synthesize-btn-container" + panel_id, "synthesize-btn" + panel_id, 
+                       ["itable_" + panel_id + "_" + 1], "otable_" + panel_id, 
+                       "constraint-panel" + panel_id, "display-panel" + panel_id);
 
-    set_hist_viz_btn = "set_histogram" + panel_id;
-    set_2d_hist_viz_btn = "set_2d_histogram" + panel_id;
-    $("#" + set_hist_viz_btn).click(function() {
-      panel_id = $(this).attr("panel_id");
-      $("#viz-output" + panel_id).attr("viz_type", "histogram");
-      $("#viz-full" + panel_id).attr("viz_type", "histogram");
-    });
-    $("#" + set_2d_hist_viz_btn).click(function() {
-      panel_id = $(this).attr("panel_id");
-      $("#viz-output" + panel_id).attr("viz_type", "2dhistogram");
-      $("#viz-full" + panel_id).attr("viz_type", "2dhistogram");
-    });
-    
     vis_type_choice_id = "vis-type-choice" + panel_id;
-    vis_target_choice_id = "vis-target-choice" + panel_id
+    vis_data_choice_id = "vis-data-choice" + panel_id
 
     query_choice_id = "query-choice" + panel_id;
     vis_choice_id = "vis-choice" + panel_id;
 
-    viz_output_btn = "viz-output-btn" + panel_id;
-    viz_full_btn = "viz-full-btn" + panel_id;
     $(function() {
       $("#" + query_choice_id + " .query-btn").click(function () {
         // get the query choice id
@@ -195,35 +182,43 @@ $(function() {
         $("#display-panel" + id + " .display-query").attr("style", "display: block; width:100%;");
         $("#display-panel" + id + " .display-vis").attr("style", "display: none");
       });
+
       $("#" + vis_choice_id + " .vis-btn").on("click", function () {
         vis_choice_id = $(this).closest("div").prop("id");
         id = vis_choice_id.substring(vis_choice_id.length-1);
-        //$("#" + vis_choice_id + " ")
+        $("#display-panel" + id + " .display-vis").attr("style", "display: block; width:100%;");
+        $("#display-panel" + id + " .display-query").attr("style", "display: none");
+
+        // set up visualization configuration
+        config = {};
+        $("#" + vis_choice_id + " ul li input:checked").each(function() {
+          if ($(this).attr('name').startsWith("vis_type"));
+            config["vis_type"] = parseInt($(this).attr("value"));
+          if ($(this).attr('name').startsWith("vis_data"))
+            config["vis_data"] = parseInt($(this).attr("value"));
+        });
+
+        data = null;
+        if (config["vis_data"] == 1) {
+          // TODO: deal with the visualization data
+        } else if (config["vis_data"] == 2) {
+          data = $("#display-panel" + id + " .display-vis").prop("full_data");
+        }
+
+        build_visualization($("#display-panel" + id + " .display-vis").prop("full_data"), 
+                              "#display-panel" + id + " .display-vis", config["vis_type"]);
       });
     });
-    $(function() {
-      $("#" + viz_full_btn).click(function () {
-        id = this.id.substring(this.id.length-1);
-        $("#query" + id).attr("style", "display: none");
-        $("#viz-output" + id).attr("style", "display: none");
-        $("#viz-full" + id).attr("style", "display: block; width:100%;");
-      });
-    });
-    $(function() {
-      $("#" + viz_output_btn).click(function () {
-        id = this.id.substring(this.id.length-1);
-        $("#vis-display query" + id).attr("style", "display: none");
-        $("#viz-output" + id).attr("style", "display: block; width:100%;");
-        $("#viz-full" + id).attr("style", "display: none");
-      });
-    });
+
+    // redraw the chart when data changes in the example output
     $(function() {
       $("#otable_" + panel_id).on("change", function() {
-        id = this.id.substring(this.id.length-1);
+        id = this.id.substring(this.id.length - 1);
         draw_viz_out(this.id, "viz-output" + id);
       });
     });
-    $("#panel" + panel_id).height(Math.max($("#input-example" + panel_id).height(), $("#output-example" + panel_id).height(), 20));
+    $("#panel" + panel_id).height(Math.max($("#input-example" + panel_id).height(), 
+                                           $("#output-example" + panel_id).height(), 20));
   });
 });
 
