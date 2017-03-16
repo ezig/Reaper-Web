@@ -210,7 +210,7 @@ function gen_synthesize_btn(container_id, btn_id, target_input_div_id_list, targ
             }
           }
           // only set up data but not modification
-          $("#" + target_vis_panel_id).prop("full_data", map_str_lines.join("\n"));
+          $("#" + target_vis_panel_id).prop("preloaded_data", map_str_lines.join("\n"));
         } else if (vis_type == "histogram") {
           histodata = [];
           histodata.push("c1,c2");
@@ -223,7 +223,7 @@ function gen_synthesize_btn(container_id, btn_id, target_input_div_id_list, targ
             histodata.push(c1 + "," + c2);
           }
           histo_data_str = histodata.join("\n");
-          $("#" + target_vis_panel_id).prop("full_data", d3.csvParse(histo_data_str));
+          $("#" + target_vis_panel_id).prop("preloaded_data", d3.csvParse(histo_data_str));
         } else if (id == 1) {
           histodata = [];
           histodata.push("c1,c2");
@@ -236,7 +236,7 @@ function gen_synthesize_btn(container_id, btn_id, target_input_div_id_list, targ
             histodata.push(c1 + "," + c2);
           }
           histo_data_str = histodata.join("\n");
-          $("#" + target_vis_panel_id).prop("full_data", d3.csvParse(histo_data_str));
+          $("#" + target_vis_panel_id).prop("preloaded_data", d3.csvParse(histo_data_str));
         }
       }
     });
@@ -284,7 +284,6 @@ function gen_synthesize_btn(container_id, btn_id, target_input_div_id_list, targ
         $("#" + target_display_panel_id + " .display-query").html(query_content);
 
         for (var i = data.length - 1; i >= 0; i --) {
-
           link_id = "link_to_query_inner_" + id + "_tabs_" + (data.length - i);
           display_place_id = "query_inner" + id;
           target_query_content = query_content_list[i];
@@ -295,14 +294,10 @@ function gen_synthesize_btn(container_id, btn_id, target_input_div_id_list, targ
           $("#" + link_id).click(function() {
             $("#" + $(this).prop("display_place_id")).html($(this).prop("query_content"));
           });
-
-          $("#run_synthesized_query_" + id + "_" + (data.length-i)).click(function () {
-            alert($("#" + this.id.substring(this.id.indexOf('_') + 1)).text());
-          });
         }
 
-        $("#query_inner" + target_display_panel_id + " .display-query").tabs();
-        // generate viz-full
+        // trigger the query choice switch effect
+        $("#" + query_choice_id + " .query-btn").trigger("click");
       }
     });
   });

@@ -183,7 +183,7 @@ $(function() {
         $("#display-panel" + id + " .display-vis").attr("style", "display: none");
       });
 
-      $("#" + vis_choice_id + " .vis-btn").on("click", function () {
+      $("#" + vis_choice_id + " .vis-btn, " + "#" + vis_choice_id + " ul").on("click", function () {
         vis_choice_id = $(this).closest("div").prop("id");
         id = vis_choice_id.substring(vis_choice_id.length-1);
         $("#display-panel" + id + " .display-vis").attr("style", "display: block; width:100%;");
@@ -201,12 +201,19 @@ $(function() {
         data = null;
         if (config["vis_data"] == 1) {
           // TODO: deal with the visualization data
+          output_table_panel_id = "otable_" + panel_id;
+          table_content = get_generated_table_content("otable_" + panel_id)["table_content_str"];
+          data = d3.csvParse(table_content);
         } else if (config["vis_data"] == 2) {
+
           data = $("#display-panel" + id + " .display-vis").prop("full_data");
+          if (data == null) {
+            query_to_be_run = $("#display-panel" + id + " .display-query pre span").prop("textContent");
+            data = $("#display-panel" + id + " .display-vis").prop("preloaded_data");
+          }
         }
 
-        build_visualization($("#display-panel" + id + " .display-vis").prop("full_data"), 
-                              "#display-panel" + id + " .display-vis", config["vis_type"]);
+        build_visualization(data, "#display-panel" + id + " .display-vis", config["vis_type"]);
       });
     });
 
@@ -214,7 +221,6 @@ $(function() {
     $(function() {
       $("#otable_" + panel_id).on("change", function() {
         id = this.id.substring(this.id.length - 1);
-        draw_viz_out(this.id, "viz-output" + id);
       });
     });
     $("#panel" + panel_id).height(Math.max($("#input-example" + panel_id).height(), 
