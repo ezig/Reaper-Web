@@ -24,6 +24,11 @@ def upload_file():
     f.write(file_coddntent)
     return file_name
 
+@app.route('/run_query', methods = ['POST'])
+def run_query():
+    query = request.form.get('query')
+    target_db = request.form.get('database')
+
 # Synthesizer api call
 @app.route('/scythe', methods = ['POST'])
 def synthesize():

@@ -25,8 +25,7 @@
 
   <!-- enahnced dropdown -->
   <script type="text/javascript" charset="utf8" src="./static/lib/dropdowns-enhancement/dropdowns-enhancement.js"></script>
-  <link rel="stylesheet" type="text/css" href="./static/lib/dropdowns-enhancement/dropdowns-enhancement.css">
-
+  <link rel="stylesheet" type="text/css" href="./static/lib/dropdowns-enhancement/dropdowns-enhancement.css" />
 </head>
 
 <body>
@@ -198,22 +197,26 @@ $(function() {
             config["vis_data"] = parseInt($(this).attr("value"));
         });
 
+        // the target data used for visualization
         data = null;
         if (config["vis_data"] == 1) {
-          // TODO: deal with the visualization data
+          // the target visualization data is the example output
           output_table_panel_id = "otable_" + panel_id;
           table_content = get_generated_table_content("otable_" + panel_id)["table_content_str"];
           data = d3.csvParse(table_content);
         } else if (config["vis_data"] == 2) {
-
+          // the target visualization data is the full output (execute the query on database)
           data = $("#display-panel" + id + " .display-vis").prop("full_data");
           if (data == null) {
             query_to_be_run = $("#display-panel" + id + " .display-query pre span").prop("textContent");
+            alert(query_to_be_run);
             data = $("#display-panel" + id + " .display-vis").prop("preloaded_data");
           }
         }
-
-        build_visualization(data, "#display-panel" + id + " .display-vis", config["vis_type"]);
+        // visualize data on the target div (specified by its id), visualization type specified in config
+        if (data != null) {
+          build_visualization(data, "#display-panel" + id + " .display-vis", config["vis_type"]);
+        }
       });
     });
 
