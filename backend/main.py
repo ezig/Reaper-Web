@@ -1,8 +1,8 @@
 # Main api routes for frontend
 
 import os
-import subprocess
-from subprocess import Popen, PIPE
+import subprocess32
+from subprocess32 import check_output, PIPE, TimeoutExpired
 
 from flask import Flask, render_template, request, jsonify
 
@@ -37,22 +37,25 @@ def synthesize():
     text_file.write(example)
     text_file.close()
 
-    p = Popen(['java', '-jar', 'Scythe.jar', 'tmp', 'StagedEnumerator', '-aggr'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    output, err = p.communicate("")
+    try:
+        output = check_output(['java', '-jar', 'Scythe.jar', 'tmp', 'StagedEnumerator', '-aggr'], stdin=PIPE, stderr=PIPE, timeout=30)
+    
+        lines = output.splitlines()
+        queries = []
 
-    lines = output.splitlines()
-    queries = []
-
-    current = ""
-    start_collect = False
-    for line in lines:
-        if "[No." in line:
-            start_collect = True
-            if current != "":
-                queries.append(current)
-            current = ""
-        elif start_collect:
-            current += line + "\n"
-        else:
-            continue
-    return jsonify(queries)
+        current = ""
+        start_collect = False
+        for line in lines:
+            if "[No." in line:
+                start_collect = True
+                if current != "":
+                    queries.append(current)
+                current = ""
+            elif start_collect:
+                current += line + "\n"
+            else:
+                continue
+        return jsonify(queries)
+        
+    except TimeoutExpired:
+        return jsonify(["[Error] Sorry, the synthesizer timed out."])
