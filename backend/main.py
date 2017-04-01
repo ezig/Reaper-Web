@@ -1,8 +1,8 @@
 # Main api routes for frontend
 
 import os
-import subprocess32
-from subprocess32 import check_output, PIPE, TimeoutExpired
+import local_subprocess32
+from local_subprocess32 import check_output, PIPE, TimeoutExpired
 
 from flask import Flask, render_template, request, jsonify
 
