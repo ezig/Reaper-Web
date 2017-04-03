@@ -9,11 +9,17 @@ from flask import Flask, render_template, request, jsonify
 template_dir = os.path.abspath('../frontend')
 static_dir = os.path.abspath('../frontend/static')
 app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
+app.debug = True
 
 # Index page for GET
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/static/<path:path>')
+def serve_static(path):
+    dir = os.path.abspath('../frontend/static')
+    return send_from_directory(dir, path, mimetype='text/plain')
 
 # file upload 
 @app.route('/upload_file', methods = ['POST'])
