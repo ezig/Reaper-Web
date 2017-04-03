@@ -3,6 +3,8 @@ backend/database/*
 *.DS_Store
 *.pyc
 
+frontend/static/node_modules
+
 backend/tmp
 
 # Byte-compiled / optimized / DLL files
