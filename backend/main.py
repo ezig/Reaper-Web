@@ -8,7 +8,7 @@ from flask import Flask, render_template, request, jsonify
 
 template_dir = os.path.abspath('../frontend')
 static_dir = os.path.abspath('../frontend/static')
-app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
+app = Flask(__name__,template_folder=template_dir, static_folder=static_dir)
 app.debug = True
 
 # Index page for GET
@@ -17,9 +17,9 @@ def index():
     return render_template('index.html')
 
 @app.route('/static/<path:path>')
-def serve_static(path):
-    dir = os.path.abspath('../frontend/static')
-    return send_from_directory(dir, path, mimetype='text/plain')
+def static_proxy(path):
+  # send_static_file will guess the correct MIME type
+  return app.send_static_file(path)
 
 # file upload 
 @app.route('/upload_file', methods = ['POST'])
