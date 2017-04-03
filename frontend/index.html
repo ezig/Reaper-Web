@@ -30,6 +30,13 @@
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/ju/dt-1.10.13/datatables.min.css"/>
   <script type="text/javascript" src="https://cdn.datatables.net/v/ju/dt-1.10.13/datatables.min.js"></script>
 
+  <!-- Import Vega 3 & Vega-Lite 2 js (does not have to be from cdn) -->
+  <script src="./static/node_modules/vega/build/vega.js"></script>
+  <script src="./static/node_modules/vega-lite/build/vega-lite.js"></script>
+  <script src="./static/node_modules/compassql/build/compassql.js"></script>
+  <!-- Import vega-embed -->
+  <script src="./static/node_modules/vega-embed/vega-embed.js"></script>
+  
 </head>
 
 <body>
@@ -48,6 +55,8 @@
       </ul>
     </div>
   </nav>
+
+  <div id="vis-test"></div>
 
   <!--<div id="place_holder" class="dash-box-w-text" style="width: 98%; margin: 0 auto;"> Start By Uploading Your Data.</div>-->
   <div id="wrapper">
@@ -241,5 +250,10 @@ $(function() {
   });
 });
 
+</script>
+
+<script type="text/javascript">
+  var spec = "https://raw.githubusercontent.com/vega/vega/master/test/specs-valid/bar.vg.json";
+  vega.embed('#vis-test', spec);
 </script>
 </html>

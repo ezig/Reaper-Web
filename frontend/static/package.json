@@ -1,0 +1,16 @@
+{
+  "name": "scythe-web",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "compassql": "^0.11.0",
+    "vega": "^3.0.0-beta.27",
+    "vega-embed": "^3.0.0-beta.7",
+    "vega-lite": "^2.0.0-alpha.8"
+  }
+}
