@@ -1,4 +1,4 @@
-reserved_id_connector = "_-_";
+var reserved_id_connector = "_-_";
 
 function gen_input_panel_btn(container_id, upload_btn_id, target_div_id) {
 	
