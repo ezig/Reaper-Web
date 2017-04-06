@@ -1,16 +1,22 @@
 {
   "name": "scythe-web",
   "version": "1.0.0",
-  "description": "",
+  "description": "The web interface for the Scythe project.",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "babel src --out-dir scripts"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "compassql": "^0.11.0",
+    "react": "^15.4.2",
+    "react-dom": "^15.4.2",
     "vega": "^3.0.0-beta.27",
     "vega-embed": "^3.0.0-beta.7",
     "vega-lite": "^2.0.0-alpha.8"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.24.0"
   }
 }
