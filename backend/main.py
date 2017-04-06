@@ -7,7 +7,7 @@ from local_subprocess32 import check_output, PIPE, TimeoutExpired
 from flask import Flask, render_template, request, jsonify
 
 template_dir = os.path.abspath('../frontend')
-static_dir = os.path.abspath('../frontend/static')
+static_dir = os.path.abspath('../frontend')
 app = Flask(__name__,template_folder=template_dir, static_folder=static_dir)
 app.debug = True
 
@@ -16,7 +16,7 @@ app.debug = True
 def index():
     return render_template('index.html')
 
-@app.route('/static/<path:path>')
+@app.route('/<path:path>')
 def static_proxy(path):
   # send_static_file will guess the correct MIME type
   return app.send_static_file(path)
