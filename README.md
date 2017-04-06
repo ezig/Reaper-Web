@@ -1,7 +1,7 @@
 ### Scythe Web Interface
 Scythe: Synthesizing SQL queries from input-output examples
 
-#### Instructions
+#### Instructions to run the tool
 
 1. Install Python 2.7 and pip, and install dependencies via `pip install -r requirements.txt`.
 2. Start the server using the command `sh serve.sh`. 
