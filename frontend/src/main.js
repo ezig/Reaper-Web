@@ -2,12 +2,12 @@ var reserved_id_connector = "_-_";
 
 function gen_input_panel_btn(container_id, upload_btn_id, target_div_id) {
 	
-	target_table_content_id =  target_div_id + reserved_id_connector + "table";
+	var target_table_content_id =  target_div_id + reserved_id_connector + "table";
 
   // get attribute panel_id from the container
-  panel_id = $("#" + container_id).attr("current_panel_id");
+  var panel_id = $("#" + container_id).attr("current_panel_id");
 
-	html_frame = 
+	var html_frame = 
 		"<div class=\"buttons btn-group btn-group-justified\" style='padding-left:10px;padding-right:10px;'>\
       <label panel_id='" + panel_id + "' id=\"add_sub_input_example_btn" 
             + panel_id + "\" class=\"btn btn-primary\" style='padding-left:3px; padding-right:3px;'>\
@@ -19,14 +19,31 @@ function gen_input_panel_btn(container_id, upload_btn_id, target_div_id) {
       </label>\
     </div>";
 
+  const element = 
+    (<div className="buttons btn-group btn-group-justified" 
+          style={{paddingLeft:10 + "px", paddingRight:10 + "px"}}>
+      <label panel_id={panel_id} id={"add_sub_input_example_btn" + panel_id}
+             className="btn btn-primary" style={{paddingLeft:3+"px", paddingRight:3 + "px"}}>
+              <span className="glyphicon glyphicon-plus"></span> Add Input Table
+      </label>
+      <label className="btn btn-primary">
+        Load Data
+        <input className="fileupload" target_table_content_id={target_table_content_id}
+               id={upload_btn_id} type="file"  style={{display: "none"}} name="files[]" />
+      </label>
+    </div>);
+  ReactDOM.render(
+    element,
+    document.getElementById('test')
+  );
+
   $("#" + container_id).html(html_frame);
 
   $("#add_sub_input_example_btn" + panel_id).click(function() {
-    panel_id = $(this).attr("panel_id");
+    var panel_id = $(this).attr("panel_id");
     
     // extract number of panels
-    sub_panel_cnt = parseInt($("#input-example" + panel_id).attr("sub_panel_cnt"));
-    sub_panel_cnt += 1;
+    var sub_panel_cnt = parseInt($("#input-example" + panel_id).attr("sub_panel_cnt")) + 1;
 
     // update panel_cnt
     $("#input-example" + panel_id).attr("sub_panel_cnt", String(sub_panel_cnt));
@@ -40,7 +57,7 @@ function gen_input_panel_btn(container_id, upload_btn_id, target_div_id) {
                         "itable_upload_btn_" + panel_id, "itable_" + panel_id + "_" + sub_panel_cnt);
 
     // update synthesize btn
-    sub_panel_id_list = [];
+    var sub_panel_id_list = [];
     for (var i = 1; i <= sub_panel_cnt; i ++) {
       sub_panel_id_list.push("itable_" + panel_id + "_" + i);
     }
@@ -309,20 +326,20 @@ function deserialize_id_list(id_list_string) { return id_list_string.split("#%#@
 
 function gen_adjustable_table_div(container_id, table_div_id) {
 
-  default_content = "<tr><td>empty</td><td>empty</td><td>empty</td></tr>\
+  var default_content = "<tr><td>empty</td><td>empty</td><td>empty</td></tr>\
                 <tr><td>empty</td><td>empty</td><td>empty</td></tr>\
                 <tr><td>empty</td><td>empty</td><td>empty</td></tr>";
 
   // generate id's for elements in the table
-  table_name_id = table_div_id + reserved_id_connector + "table_name";
-  table_content_id = table_div_id + reserved_id_connector + "table";
-  insert_row_btn_id = table_div_id + reserved_id_connector + "insert_row_btn";
-  delete_row_btn_id = table_div_id + reserved_id_connector + "delete_row_btn";
-  insert_col_btn_id = table_div_id + reserved_id_connector + "insert_col_btn";
-  delete_col_btn_id = table_div_id + reserved_id_connector + "delete_col_btn";
-  control_btn_id = table_div_id + reserved_id_connector + "control_btn";
+  var table_name_id = table_div_id + reserved_id_connector + "table_name";
+  var table_content_id = table_div_id + reserved_id_connector + "table";
+  var insert_row_btn_id = table_div_id + reserved_id_connector + "insert_row_btn";
+  var delete_row_btn_id = table_div_id + reserved_id_connector + "delete_row_btn";
+  var insert_col_btn_id = table_div_id + reserved_id_connector + "insert_col_btn";
+  var delete_col_btn_id = table_div_id + reserved_id_connector + "delete_col_btn";
+  var control_btn_id = table_div_id + reserved_id_connector + "control_btn";
 
-	html_frame = 
+	var html_frame = 
 		"<div id=\"" + table_div_id + "\" class=\"tbl\">\
       <table id=\"" + table_content_id + "\" class=\"hover cell-border compact dataTable no-footer\">\
         <thead><tr><td class=\"col-md-2\">c1</td>\

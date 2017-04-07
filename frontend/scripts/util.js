@@ -1,3 +1,5 @@
+"use strict";
+
 var global_table_id = 0;
 
 // The function that creates a table within given div
