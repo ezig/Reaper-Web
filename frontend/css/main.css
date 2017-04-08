@@ -11,6 +11,15 @@ body {
   border: 0px solid;
 }
 
+.editable-table-cell {
+  padding: 0px !important;
+}
+
+thead > tr, thead > tr > td {
+  border: none !important;
+}
+
+
 h1 {
   color:#222;
   margin:0 0 20px;
@@ -244,4 +253,8 @@ pre {
 table.dataTable.cell-border tbody tr:first-child th, 
 table.dataTable.cell-border tbody tr:first-child td {
   border-top: 1px solid #000 !important;
+}
+
+table.dataTable.cell-border tbody tr:last-child td {
+  border-bottom: 1px solid #000 !important;
 }

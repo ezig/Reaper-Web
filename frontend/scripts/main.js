@@ -18,27 +18,6 @@ function gen_input_panel_btn(container_id, upload_btn_id, target_div_id) {
       </label>\
     </div>";
 
-  var element = React.createElement(
-    "div",
-    { className: "buttons btn-group btn-group-justified",
-      style: { paddingLeft: 10 + "px", paddingRight: 10 + "px" } },
-    React.createElement(
-      "label",
-      { panel_id: panel_id, id: "add_sub_input_example_btn" + panel_id,
-        className: "btn btn-primary", style: { paddingLeft: 3 + "px", paddingRight: 3 + "px" } },
-      React.createElement("span", { className: "glyphicon glyphicon-plus" }),
-      " Add Input Table"
-    ),
-    React.createElement(
-      "label",
-      { className: "btn btn-primary" },
-      "Load Data",
-      React.createElement("input", { className: "fileupload", target_table_content_id: target_table_content_id,
-        id: upload_btn_id, type: "file", style: { display: "none" }, name: "files[]" })
-    )
-  );
-  ReactDOM.render(element, document.getElementById('test'));
-
   $("#" + container_id).html(html_frame);
 
   $("#add_sub_input_example_btn" + panel_id).click(function () {

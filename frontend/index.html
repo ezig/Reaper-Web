@@ -12,7 +12,11 @@
   <script src="./lib/d3/d3.js" type="text/javascript" charset="utf-8"></script>
   <script src="./lib/d3-tip.js" type="text/javascript" charset="utf-8"></script>
 
-  <script src="./scripts/util.js" type="text/javascript" charset="utf-8"></script>
+  <script src="./node_modules/react/dist/react.js"></script>
+  <script src="./node_modules/react-dom/dist/react-dom.js"></script>
+  <script src="./node_modules/react-data-grid/dist/react-data-grid.js"></script>
+
+  <!--<script src="./scripts/util.js" type="text/javascript" charset="utf-8"></script>-->
   
   <script src="./lib/jquery-ui-1.12.1.custom/jquery-ui.js" type="text/javascript" charset="utf-8"></script>
   <script src="./lib/jquery.fileupload.js" type="text/javascript" charset="utf-8"></script>
@@ -21,7 +25,6 @@
   <link rel="stylesheet" type="text/css" href="./css/jquery.datatables.css">-->
 
   <script type="text/javascript" charset="utf8" src="./lib/mindmup-editabletable.js"></script>
-  <script type="text/javascript" src="./scripts/main.js"></script>
 
   <!-- enahnced dropdown -->
   <script type="text/javascript" charset="utf8" src="./lib/dropdowns-enhancement/dropdowns-enhancement.js"></script>
@@ -36,9 +39,6 @@
   <script src="./node_modules/compassql/build/compassql.js"></script>
   <!-- Import vega-embed -->
   <script src="./node_modules/vega-embed/vega-embed.js"></script>
-
-  <script src="./node_modules/react/dist/react.js"></script>
-  <script src="./node_modules/react-dom/dist/react-dom.js"></script>
 </head>
 
 <body>
@@ -57,22 +57,11 @@
       </ul>
     </div>
   </nav>
-
-  <div id="test"></div>
-  <div id="vis-test"></div>
-
-  <!--<div id="place_holder" class="dash-box-w-text" style="width: 98%; margin: 0 auto;"> Start By Uploading Your Data.</div>-->
   <div id="wrapper">
-    <div id="interactive-panels" panel-cnt="0">
-      <div class="buttons">
-        <button id="add_panel" class="btn btn-success"><span class="glyphicon glyphicon-plus"></span> New Panel</button>
-        <button id="remove_panel" class="btn btn-danger"><span class="glyphicon glyphicon-minus"></span> Remove Panel</button>
-      </div>
   </div>
-
-  <div id="test"></div>
 </body>
 
+<script type="text/javascript" src="./scripts/index.js"></script>
 <script>
 
 var input_csv = null;
@@ -96,74 +85,6 @@ $(function() {
                 <tr><td>empty</td><td>empty</td><td>empty</td></tr>\
                 <tr><td>empty</td><td>empty</td><td>empty</td></tr>";
 
-    panel_frame = 
-      "<table panel_id='" + panel_id + "' id=\"panel"  + panel_id + "\" class=\"ipanel dash-box\" style=\"width:100%;table-layout: fixed;\">\
-        <tr>\
-          <td style='width: 35%;vertical-align:top;border-right:1px dashed gray;'>\
-            <div class=\"input-example\" sub_panel_cnt='1' id=\"input-example" + panel_id + "\">\
-              <div id=\"input-example" + panel_id +  "sub" + 1 + "\"></div>\
-            </div>\
-            <div id='constraint-panel" + panel_id + "'>\
-              <div class='input-group input-group-sm input-box constant-panel'>\
-                <span class='input-group-addon' id='basic-addon1" + panel_id + "'>Constants</span>\
-                <input type='text' class='form-control' placeholder='None' aria-describedby='basic-addon1" + panel_id + "'>\
-              </div>\
-              <div class='input-group input-group-sm input-box aggr-func-panel'>\
-                <span class='input-group-addon' id='basic-addon2" + panel_id + "'>Aggregators</span>\
-                <input type='text' class='form-control' placeholder='None' aria-describedby='basic-addon2" + panel_id + "'>\
-              </div>\
-            </div>\
-          </td>\
-          <td style='width: 20%;vertical-align:top;'>\
-            <div class=\"output-example\" id=\"output-example" + panel_id + "\"></div>\
-          </td>\
-          <td style='width: 43%;vertical-align:top;'>\
-            <div class=\"vis\"  id=\"display-panel" + panel_id + "\">\
-              <div class=\"pnl display-query\" style=\"display:none\"></div>\
-              <div vis_type=\"histogram\" class=\"pnl display-vis\" style=\"display:block;\"></div>\
-            </div>\
-          </td>\
-        </tr>\
-        <tr style='height:0px;'>\
-          <td style='border-right:1px dashed gray;'><div current_panel_id=\"" + panel_id + "\" id=\"input-panel-btns" + panel_id + "\"></div></td>\
-          <td><div id='synthesize-btn-container" + panel_id + "'></div></td>\
-          <td style=\"text-align:center;\"><div class=\"buttons btn-group\" style='margin:0 auto; padding-left:10px;padding-right:10px;'>\
-                <div class='btn-group' id='query-choice" + panel_id + "'>\
-                  <label class=\"btn btn-default query-btn\">Query</label>\
-                  <label data-toggle='dropdown' class='viz-query-choice btn btn-default dropdown-toggle' data-placeholder=\"false\"><span class='caret'></span></label>\
-                  <ul class='dropdown-menu' ></ul>\
-                </div>" +
-                // below is the visualization choice panel, note that items in the list should all have the same name
-                "<div class='btn-group' id='vis-choice" + panel_id + "'>\
-                  <label class=\"btn btn-default vis-btn\">Visualization</label>\
-                  <label data-toggle='dropdown' class='btn btn-default dropdown-toggle' data-placeholder=\"false\"><span class='caret'></span></label>\
-                  <ul class='dropdown-menu'>\
-                    <li>\
-                      <input type='radio' id='vis_data_" + panel_id + "_1' name='vis_data_" + panel_id + "' value='1' checked>\
-                      <label for='vis_data_" + panel_id + "_1'>Example Output</label>\
-                    </li>\
-                    <li>\
-                      <input type='radio' id='vis_data_" + panel_id + "_2' name='vis_data_" + panel_id + "' value='2'>\
-                      <label for='vis_data_" + panel_id + "_2'>Full Output</label>\
-                    </li>\
-                    <li class='divider'></li>\
-                    <li>\
-                      <input type='radio' id='vis_type_" + panel_id + "_1' name='vis_type" + panel_id + "' value='1' checked>\
-                      <label for='vis_type_" + panel_id + "_1'><i class='icon-edit'></i> Histogram</label>\
-                    </li>\
-                    <li>\
-                      <input type='radio' id='vis_type_" + panel_id + "_2' name='vis_type" + panel_id + "' value='2'>\
-                      <label for='vis_type_" + panel_id + "_2'><i class='icon-remove'></i> 3D Histogram</label>\
-                    </li>\
-                  </ul>\
-                </div>\
-              </div></td>\
-        </tr>\
-      </table>\
-      <br/>";
-
-    // add the frame into the panel
-    $("#interactive-panels").append(panel_frame);
 
     input_example_id = "input-example" + panel_id;
     output_example_id = "output-example" + panel_id;
