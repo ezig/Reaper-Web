@@ -18,6 +18,41 @@ class ScytheInterface extends React.Component {
 }
 
 class TaskPanel extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {};
+    this.state.inputTables = [];
+    this.state.inputTables.push(this.genDefaultTable("input_table_0"));
+    this.state.outputTable = this.genDefaultTable("output_table");
+  }
+  genDefaultTable(tableName) {
+
+    var defaultTableRowNum = 3;
+    var defaultTableColNum = 3;
+
+    var tableHeader = [];
+    var tableContent = [];
+    for (var r = 0; r < defaultTableRowNum; r ++) {
+      var row = [];
+      for (var c = 0; c < defaultTableColNum; c ++) {
+        row.push(0);
+      }
+      tableContent.push(row);
+    }
+    for (var c = 0; c < defaultTableColNum; c ++)
+      tableHeader.push("c" + c);
+
+    return {tableName: tableName, tableContent: tableContent, tableHeader: tableHeader};
+  }
+  renderInputTables() {
+    return this.state.inputTables.map( 
+        (t, i) => (<EditableTable refs={"input-table-" + i} key={i} table={t} />));
+  }
+  addInputTable() {
+    var newId = this.state.inputTables.length;
+    this.state.inputTables.push(this.genDefaultTable("input_table_" + newId));
+    this.setState(this.state.inputTables);
+  }
   render() {
     {/* the id of the panel */}
     var panelId = this.props.value;
@@ -26,9 +61,9 @@ class TaskPanel extends React.Component {
              style={{width: 100+ "%", tableLayout: "fixed"}}>
         <tbody>
           <tr>
-            <td style={{width: 35+ "%", verticalAlign:top, borderRight:1+"px dashed gray"}}>
+            <td style={{width: 35+ "%", verticalAlign:"top", borderRight:1+"px dashed gray"}}>
               <div className="input-example" id={"input-example" + panelId}>
-                <div id={"input-example" + panelId +  "sub" + 1}></div>
+                {this.renderInputTables()}
               </div>
               <div id={'constraint-panel' + panelId}>
                 <div className='input-group input-group-sm input-box constant-panel'>
@@ -42,27 +77,12 @@ class TaskPanel extends React.Component {
                           aria-describedby={'basic-addon2' + panelId} />
                 </div>
               </div>
-              <div className="buttons btn-group btn-group-justified" 
-                   style={{paddingLeft:10 + "px", paddingRight:10 + "px"}}>
-                <label id={"add_sub_input_example_btn" + panelId}
-                       className="btn btn-primary" style={{paddingLeft:3+"px", paddingRight:3 + "px"}}>
-                        <span className="glyphicon glyphicon-plus"></span> Add Input Table
-                </label>
-                <label className="btn btn-primary">
-                  Load Data
-                  <input className="fileupload" type="file"  
-                         style={{display: "none"}} name="files[]" />
-                </label>
-              </div>
             </td>
-            <td style={{width: 20+ "%", verticalAlign:top}}>
+            <td style={{width: 20+ "%", verticalAlign:"top"}}>
               <div className="output-example" 
-                   id={"output-example" + panelId}><EditableTable rowNum={3} colNum={3} /></div>
-              <div className="buttons" style={{paddingLeft:"10px", paddingRight:"10px"}}>
-                <button className="btn btn-primary btn-block">Synthesize</button>
-              </div>
+                   id={"output-example" + panelId}><EditableTable refs="output-table" table={this.state.outputTable} /></div>
             </td>
-            <td style={{width: 43+ "%", verticalAlign:top}}>
+            <td style={{width: 43+ "%", verticalAlign:"top"}}>
               <div className="vis"  id={"display-panel" + panelId}>
                 <div className="pnl display-query" style={{display:"none"}}></div>
                 <div className="pnl display-vis" style={{display:"block"}}></div>
@@ -72,9 +92,24 @@ class TaskPanel extends React.Component {
           <tr style={{height:0+"px"}}>
             <td style={{borderRight:1+"px dashed gray"}}>
               <div id={"input-panel-btns" + panelId}>
+                <div className="buttons btn-group btn-group-justified" 
+                     style={{paddingLeft:10 + "px", paddingRight:10 + "px"}}>
+                  <label id={"add_sub_input_example_btn" + panelId} onClick={this.addInputTable.bind(this)}
+                         className="btn btn-primary" style={{paddingLeft:3+"px", paddingRight:3 + "px"}}>
+                    <span className="glyphicon glyphicon-plus"></span> Add Input Table
+                  </label>
+                  <label className="btn btn-primary">
+                    Load Data
+                    <input className="fileupload" type="file" style={{display: "none"}} name="files[]" />
+                  </label>
+                </div>
               </div>
             </td>
-            <td><div id={'synthesize-btn-container' + panelId}></div></td>
+            <td><div id={'synthesize-btn-container' + panelId}>
+                  <div className="buttons" style={{paddingLeft:"10px", paddingRight:"10px"}}>
+                    <button className="btn btn-primary btn-block">Synthesize</button>
+                  </div>
+                </div></td>
             <td style={{textAlign:"center"}}>
               <div className="buttons btn-group" 
                    style={{margin:"0 auto", paddingLeft:10+"px", paddingRight:10+"px"}}>
@@ -125,34 +160,54 @@ class EditableTable extends React.Component {
   constructor(props) {
     super(props);
     this.state = {};
-    this.state.rowNum = this.props.rowNum;
-    this.state.colNum = this.props.colNum;
-    this.state.header = [];
-    this.state.table = [];
-    for (var r = 0; r < this.state.rowNum; r ++) {
-      var row = [];
-      for (var c = 0; c < this.state.colNum; c ++) {
-        row.push(0);
-      }
-      this.state.table.push(row);
+    this.state.tableName = this.props.table.tableName;
+    this.state.header = this.props.table.tableHeader;
+    this.state.table = this.props.table.tableContent;
+  }
+  getCSVTable() {
+    var tableClone = this.state.table.slice();
+    tableClone.splice(0, 0, this.state.header);
+    var csvString = "";
+    for (var i = 0; i < tableClone.length; i++) {
+      var s = "";
+      for (var j = 0; j < tableClone[i].length; j ++)
+        s += tableClone[i][j] + ", ";
+      csvString += s.substring(0, s.length-2) + "\n";
     }
-    for (var c = 0; c < this.state.colNum; c ++)
-      this.state.header.push("c" + c);
+    return {"name": this.state.tableName, "content": csvString};
+  }
+  updateTableName(name) {
+    this.state.tableName = name;
+    this.setState({tableName: this.state.tableName});
   }
   handleRowDel(rowId) {
+    if (this.state.table.length == 1)
+      return;
     this.state.table.splice(rowId, 1);
     this.setState(this.state.table);
-  };
-  handleColDel(colId) {
-    this.state.table.map(row => row.splice(colId, 1));
+  }
+  handleColDel() {
+    if (this.state.table[0].length == 1)
+      return;
+    this.state.table.map(row => row.splice(-1, 1));
+    this.state.header.splice(-1, 1);
+    this.setState(this.state.header);
     this.setState(this.state.table);
   }
-  handleAddEvent(evt) {
+  handleRowAdd(evt) {
+    console.log(this.getCSVTable());
     var id = (+ new Date() + Math.floor(Math.random() * 999999)).toString(36);
     var row = [];
-    for (var i = 0; i < this.state.colNum; i ++)
+    for (var i = 0; i < this.state.table[0].length; i ++)
       row.push(0);
     this.state.table.push(row);
+    this.setState(this.state.table);
+  }
+  handleColAdd(evt) {
+    var id = (+ new Date() + Math.floor(Math.random() * 999999)).toString(36);
+    this.state.header.splice(this.state.table[0].length, 0, "c" + this.state.table[0].length);
+    this.state.table.map(row => row.splice(this.state.table[0].length, 0, 0));
+    this.setState(this.state.header);
     this.setState(this.state.table);
   }
   handleCellUpdate(r, c, val) {
@@ -178,23 +233,25 @@ class EditableTable extends React.Component {
     return (
       <div>
         <ETableBody onCellUpdate={this.handleCellUpdate.bind(this)} 
-                      onRowAdd={this.handleAddEvent.bind(this)} 
-                      onRowDel={this.handleRowDel.bind(this)} 
+                      onRowAdd={this.handleRowAdd.bind(this)} 
+                      onRowDel={this.handleRowDel.bind(this)}
+                      onColDel={this.handleColDel.bind(this)}
+                      onColAdd={this.handleColAdd.bind(this)}
+                      updateTableName={this.updateTableName.bind(this)}
                       onHeadUpdate={this.handleHeaderUpdate.bind(this)} 
                       table={this.state.table}
+                      tableName={this.state.tableName}
                       header={this.state.header}/>
       </div>);}
 }
 
 class ETableBody extends React.Component {
   render() {
-    var onCellUpdate = this.props.onCellUpdate;
     return (
-      <div>
-      <button type="button" onClick={this.props.onRowAdd} 
-              className="btn btn-success btn-super-sm pull-right">Add Row</button>
-      <button type="button" onClick={this.props.onColAdd} 
-              className="btn btn-success btn-super-sm pull-right">Add Col</button>
+      <div style={{border: "dashed 1px #EEE", padding: "2px 2px 2px 2px"}}>
+      <input type='text' value= {this.props.tableName} className="table_name" size="10"
+            onChange={e => {this.props.updateTableName(e.target.value)}}
+            style={{ width: "100%", textAlign: "center", border: "none"}} />
         <table className="table dataTable cell-border">
           <thead> 
             <ETableRow onCellUpdate={this.props.onHeadUpdate} 
@@ -202,11 +259,17 @@ class ETableBody extends React.Component {
                     deletable={false} />
           </thead>
           <tbody> {this.props.table.map((val, i) =>
-              (<ETableRow onCellUpdate={onCellUpdate} data={{rowContent: val, rowId: i}} 
+              (<ETableRow onCellUpdate={this.props.onCellUpdate} data={{rowContent: val, rowId: i}} 
                    deletable={true}
                   key={i} onDelEvent={this.props.onRowDel}/>))}
           </tbody>
         </table>
+        <button type="button" onClick={this.props.onRowAdd} 
+              className="btn btn-super-sm btn-default">Add Row</button>
+        <button type="button" onClick={this.props.onColAdd} 
+                className="btn btn-super-sm btn-default">Add Col</button>
+        <button type="button" onClick={this.props.onColDel} 
+                className="btn btn-super-sm btn-default">Del Col</button>
       </div>
     );
   }
@@ -218,7 +281,7 @@ class ETableRow extends React.Component {
     if (this.props.deletable) {
       delButton = (<td className="del-cell editable-table-cell">
               <input type="button" onClick={e => this.props.onDelEvent(this.props.data.rowId)} 
-                    value="X" className="btn btn-secondary btn-super-sm" />
+                    value="X" className="btn btn-default btn-super-sm" />
             </td>);
     } else {
       delButton = (<td></td>);

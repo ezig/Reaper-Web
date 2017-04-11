@@ -55,13 +55,53 @@ var ScytheInterface = function (_React$Component) {
 var TaskPanel = function (_React$Component2) {
   _inherits(TaskPanel, _React$Component2);
 
-  function TaskPanel() {
+  function TaskPanel(props) {
     _classCallCheck(this, TaskPanel);
 
-    return _possibleConstructorReturn(this, (TaskPanel.__proto__ || Object.getPrototypeOf(TaskPanel)).apply(this, arguments));
+    var _this2 = _possibleConstructorReturn(this, (TaskPanel.__proto__ || Object.getPrototypeOf(TaskPanel)).call(this, props));
+
+    _this2.state = {};
+    _this2.state.inputTables = [];
+    _this2.state.inputTables.push(_this2.genDefaultTable("input_table_0"));
+    _this2.state.outputTable = _this2.genDefaultTable("output_table");
+    return _this2;
   }
 
   _createClass(TaskPanel, [{
+    key: "genDefaultTable",
+    value: function genDefaultTable(tableName) {
+
+      var defaultTableRowNum = 3;
+      var defaultTableColNum = 3;
+
+      var tableHeader = [];
+      var tableContent = [];
+      for (var r = 0; r < defaultTableRowNum; r++) {
+        var row = [];
+        for (var c = 0; c < defaultTableColNum; c++) {
+          row.push(0);
+        }
+        tableContent.push(row);
+      }
+      for (var c = 0; c < defaultTableColNum; c++) {
+        tableHeader.push("c" + c);
+      }return { tableName: tableName, tableContent: tableContent, tableHeader: tableHeader };
+    }
+  }, {
+    key: "renderInputTables",
+    value: function renderInputTables() {
+      return this.state.inputTables.map(function (t, i) {
+        return React.createElement(EditableTable, { refs: "input-table-" + i, key: i, table: t });
+      });
+    }
+  }, {
+    key: "addInputTable",
+    value: function addInputTable() {
+      var newId = this.state.inputTables.length;
+      this.state.inputTables.push(this.genDefaultTable("input_table_" + newId));
+      this.setState(this.state.inputTables);
+    }
+  }, {
     key: "render",
     value: function render() {
       {/* the id of the panel */}
@@ -78,11 +118,11 @@ var TaskPanel = function (_React$Component2) {
             null,
             React.createElement(
               "td",
-              { style: { width: 35 + "%", verticalAlign: top, borderRight: 1 + "px dashed gray" } },
+              { style: { width: 35 + "%", verticalAlign: "top", borderRight: 1 + "px dashed gray" } },
               React.createElement(
                 "div",
                 { className: "input-example", id: "input-example" + panelId },
-                React.createElement("div", { id: "input-example" + panelId + "sub" + 1 })
+                this.renderInputTables()
               ),
               React.createElement(
                 "div",
@@ -109,49 +149,21 @@ var TaskPanel = function (_React$Component2) {
                   React.createElement("input", { type: "text", className: "form-control", placeholder: "None",
                     "aria-describedby": 'basic-addon2' + panelId })
                 )
-              ),
-              React.createElement(
-                "div",
-                { className: "buttons btn-group btn-group-justified",
-                  style: { paddingLeft: 10 + "px", paddingRight: 10 + "px" } },
-                React.createElement(
-                  "label",
-                  { id: "add_sub_input_example_btn" + panelId,
-                    className: "btn btn-primary", style: { paddingLeft: 3 + "px", paddingRight: 3 + "px" } },
-                  React.createElement("span", { className: "glyphicon glyphicon-plus" }),
-                  " Add Input Table"
-                ),
-                React.createElement(
-                  "label",
-                  { className: "btn btn-primary" },
-                  "Load Data",
-                  React.createElement("input", { className: "fileupload", type: "file",
-                    style: { display: "none" }, name: "files[]" })
-                )
               )
             ),
             React.createElement(
               "td",
-              { style: { width: 20 + "%", verticalAlign: top } },
+              { style: { width: 20 + "%", verticalAlign: "top" } },
               React.createElement(
                 "div",
                 { className: "output-example",
                   id: "output-example" + panelId },
-                React.createElement(EditableTable, { rowNum: 3, colNum: 3 })
-              ),
-              React.createElement(
-                "div",
-                { className: "buttons", style: { paddingLeft: "10px", paddingRight: "10px" } },
-                React.createElement(
-                  "button",
-                  { className: "btn btn-primary btn-block" },
-                  "Synthesize"
-                )
+                React.createElement(EditableTable, { refs: "output-table", table: this.state.outputTable })
               )
             ),
             React.createElement(
               "td",
-              { style: { width: 43 + "%", verticalAlign: top } },
+              { style: { width: 43 + "%", verticalAlign: "top" } },
               React.createElement(
                 "div",
                 { className: "vis", id: "display-panel" + panelId },
@@ -166,12 +178,45 @@ var TaskPanel = function (_React$Component2) {
             React.createElement(
               "td",
               { style: { borderRight: 1 + "px dashed gray" } },
-              React.createElement("div", { id: "input-panel-btns" + panelId })
+              React.createElement(
+                "div",
+                { id: "input-panel-btns" + panelId },
+                React.createElement(
+                  "div",
+                  { className: "buttons btn-group btn-group-justified",
+                    style: { paddingLeft: 10 + "px", paddingRight: 10 + "px" } },
+                  React.createElement(
+                    "label",
+                    { id: "add_sub_input_example_btn" + panelId, onClick: this.addInputTable.bind(this),
+                      className: "btn btn-primary", style: { paddingLeft: 3 + "px", paddingRight: 3 + "px" } },
+                    React.createElement("span", { className: "glyphicon glyphicon-plus" }),
+                    " Add Input Table"
+                  ),
+                  React.createElement(
+                    "label",
+                    { className: "btn btn-primary" },
+                    "Load Data",
+                    React.createElement("input", { className: "fileupload", type: "file", style: { display: "none" }, name: "files[]" })
+                  )
+                )
+              )
             ),
             React.createElement(
               "td",
               null,
-              React.createElement("div", { id: 'synthesize-btn-container' + panelId })
+              React.createElement(
+                "div",
+                { id: 'synthesize-btn-container' + panelId },
+                React.createElement(
+                  "div",
+                  { className: "buttons", style: { paddingLeft: "10px", paddingRight: "10px" } },
+                  React.createElement(
+                    "button",
+                    { className: "btn btn-primary btn-block" },
+                    "Synthesize"
+                  )
+                )
+              )
             ),
             React.createElement(
               "td",
@@ -280,44 +325,72 @@ var EditableTable = function (_React$Component3) {
     var _this3 = _possibleConstructorReturn(this, (EditableTable.__proto__ || Object.getPrototypeOf(EditableTable)).call(this, props));
 
     _this3.state = {};
-    _this3.state.rowNum = _this3.props.rowNum;
-    _this3.state.colNum = _this3.props.colNum;
-    _this3.state.header = [];
-    _this3.state.table = [];
-    for (var r = 0; r < _this3.state.rowNum; r++) {
-      var row = [];
-      for (var c = 0; c < _this3.state.colNum; c++) {
-        row.push(0);
-      }
-      _this3.state.table.push(row);
-    }
-    for (var c = 0; c < _this3.state.colNum; c++) {
-      _this3.state.header.push("c" + c);
-    }return _this3;
+    _this3.state.tableName = _this3.props.table.tableName;
+    _this3.state.header = _this3.props.table.tableHeader;
+    _this3.state.table = _this3.props.table.tableContent;
+    return _this3;
   }
 
   _createClass(EditableTable, [{
+    key: "getCSVTable",
+    value: function getCSVTable() {
+      var tableClone = this.state.table.slice();
+      tableClone.splice(0, 0, this.state.header);
+      var csvString = "";
+      for (var i = 0; i < tableClone.length; i++) {
+        var s = "";
+        for (var j = 0; j < tableClone[i].length; j++) {
+          s += tableClone[i][j] + ", ";
+        }csvString += s.substring(0, s.length - 2) + "\n";
+      }
+      return { "name": this.state.tableName, "content": csvString };
+    }
+  }, {
+    key: "updateTableName",
+    value: function updateTableName(name) {
+      this.state.tableName = name;
+      this.setState({ tableName: this.state.tableName });
+    }
+  }, {
     key: "handleRowDel",
     value: function handleRowDel(rowId) {
+      if (this.state.table.length == 1) return;
       this.state.table.splice(rowId, 1);
       this.setState(this.state.table);
     }
   }, {
     key: "handleColDel",
-    value: function handleColDel(colId) {
+    value: function handleColDel() {
+      if (this.state.table[0].length == 1) return;
       this.state.table.map(function (row) {
-        return row.splice(colId, 1);
+        return row.splice(-1, 1);
       });
+      this.state.header.splice(-1, 1);
+      this.setState(this.state.header);
       this.setState(this.state.table);
     }
   }, {
-    key: "handleAddEvent",
-    value: function handleAddEvent(evt) {
+    key: "handleRowAdd",
+    value: function handleRowAdd(evt) {
+      console.log(this.getCSVTable());
       var id = (+new Date() + Math.floor(Math.random() * 999999)).toString(36);
       var row = [];
-      for (var i = 0; i < this.state.colNum; i++) {
+      for (var i = 0; i < this.state.table[0].length; i++) {
         row.push(0);
       }this.state.table.push(row);
+      this.setState(this.state.table);
+    }
+  }, {
+    key: "handleColAdd",
+    value: function handleColAdd(evt) {
+      var _this4 = this;
+
+      var id = (+new Date() + Math.floor(Math.random() * 999999)).toString(36);
+      this.state.header.splice(this.state.table[0].length, 0, "c" + this.state.table[0].length);
+      this.state.table.map(function (row) {
+        return row.splice(_this4.state.table[0].length, 0, 0);
+      });
+      this.setState(this.state.header);
       this.setState(this.state.table);
     }
   }, {
@@ -347,10 +420,14 @@ var EditableTable = function (_React$Component3) {
         "div",
         null,
         React.createElement(ETableBody, { onCellUpdate: this.handleCellUpdate.bind(this),
-          onRowAdd: this.handleAddEvent.bind(this),
+          onRowAdd: this.handleRowAdd.bind(this),
           onRowDel: this.handleRowDel.bind(this),
+          onColDel: this.handleColDel.bind(this),
+          onColAdd: this.handleColAdd.bind(this),
+          updateTableName: this.updateTableName.bind(this),
           onHeadUpdate: this.handleHeaderUpdate.bind(this),
           table: this.state.table,
+          tableName: this.state.tableName,
           header: this.state.header })
       );
     }
@@ -371,24 +448,16 @@ var ETableBody = function (_React$Component4) {
   _createClass(ETableBody, [{
     key: "render",
     value: function render() {
-      var _this5 = this;
+      var _this6 = this;
 
-      var onCellUpdate = this.props.onCellUpdate;
       return React.createElement(
         "div",
-        null,
-        React.createElement(
-          "button",
-          { type: "button", onClick: this.props.onRowAdd,
-            className: "btn btn-success btn-super-sm pull-right" },
-          "Add Row"
-        ),
-        React.createElement(
-          "button",
-          { type: "button", onClick: this.props.onColAdd,
-            className: "btn btn-success btn-super-sm pull-right" },
-          "Add Col"
-        ),
+        { style: { border: "dashed 1px #EEE", padding: "2px 2px 2px 2px" } },
+        React.createElement("input", { type: "text", value: this.props.tableName, className: "table_name", size: "10",
+          onChange: function onChange(e) {
+            _this6.props.updateTableName(e.target.value);
+          },
+          style: { width: "100%", textAlign: "center", border: "none" } }),
         React.createElement(
           "table",
           { className: "table dataTable cell-border" },
@@ -404,11 +473,29 @@ var ETableBody = function (_React$Component4) {
             null,
             " ",
             this.props.table.map(function (val, i) {
-              return React.createElement(ETableRow, { onCellUpdate: onCellUpdate, data: { rowContent: val, rowId: i },
+              return React.createElement(ETableRow, { onCellUpdate: _this6.props.onCellUpdate, data: { rowContent: val, rowId: i },
                 deletable: true,
-                key: i, onDelEvent: _this5.props.onRowDel });
+                key: i, onDelEvent: _this6.props.onRowDel });
             })
           )
+        ),
+        React.createElement(
+          "button",
+          { type: "button", onClick: this.props.onRowAdd,
+            className: "btn btn-super-sm btn-default" },
+          "Add Row"
+        ),
+        React.createElement(
+          "button",
+          { type: "button", onClick: this.props.onColAdd,
+            className: "btn btn-super-sm btn-default" },
+          "Add Col"
+        ),
+        React.createElement(
+          "button",
+          { type: "button", onClick: this.props.onColDel,
+            className: "btn btn-super-sm btn-default" },
+          "Del Col"
         )
       );
     }
@@ -429,7 +516,7 @@ var ETableRow = function (_React$Component5) {
   _createClass(ETableRow, [{
     key: "render",
     value: function render() {
-      var _this7 = this;
+      var _this8 = this;
 
       var delButton = null;
       if (this.props.deletable) {
@@ -437,9 +524,9 @@ var ETableRow = function (_React$Component5) {
           "td",
           { className: "del-cell editable-table-cell" },
           React.createElement("input", { type: "button", onClick: function onClick(e) {
-              return _this7.props.onDelEvent(_this7.props.data.rowId);
+              return _this8.props.onDelEvent(_this8.props.data.rowId);
             },
-            value: "X", className: "btn btn-secondary btn-super-sm" })
+            value: "X", className: "btn btn-default btn-super-sm" })
         );
       } else {
         delButton = React.createElement("td", null);
@@ -448,11 +535,11 @@ var ETableRow = function (_React$Component5) {
         "tr",
         null,
         this.props.data.rowContent.map(function (x, i) {
-          return React.createElement(ETableCell, { onCellUpdate: _this7.props.onCellUpdate,
-            key: _this7.props.data.rowId + "," + i,
+          return React.createElement(ETableCell, { onCellUpdate: _this8.props.onCellUpdate,
+            key: _this8.props.data.rowId + "," + i,
             cellData: {
               val: x,
-              rowId: _this7.props.data.rowId,
+              rowId: _this8.props.data.rowId,
               colId: i
             } });
         }),
@@ -476,14 +563,14 @@ var ETableCell = function (_React$Component6) {
   _createClass(ETableCell, [{
     key: "render",
     value: function render() {
-      var _this9 = this;
+      var _this10 = this;
 
       return React.createElement(
         "td",
         { className: "editable-table-cell" },
         React.createElement("input", { type: "text", value: this.props.cellData.val,
           onChange: function onChange(e) {
-            return _this9.props.onCellUpdate(_this9.props.cellData.rowId, _this9.props.cellData.colId, e.target.value);
+            return _this10.props.onCellUpdate(_this10.props.cellData.rowId, _this10.props.cellData.colId, e.target.value);
           },
           style: { width: "100%", textAlign: "center", border: "none" } })
       );
