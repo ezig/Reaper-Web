@@ -15,6 +15,9 @@
   <script src="./node_modules/react/dist/react.js"></script>
   <script src="./node_modules/react-dom/dist/react-dom.js"></script>
 
+  <!-- deal with the favicon error -->
+  <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon"> 
+
   <!--<script src="./scripts/util.js" type="text/javascript" charset="utf-8"></script>-->
   
   <script src="./lib/jquery-ui-1.12.1.custom/jquery-ui.js" type="text/javascript" charset="utf-8"></script>
@@ -52,7 +55,7 @@
         <li class="active"><a href="#">Home</a></li>
       </ul>
       <ul class="nav navbar-nav navbar-right" style="padding: 0px 15px">
-        <li><button class="btn btn-primary navbar-btn">Connect</button>
+        <li><button class="btn btn-success navbar-btn">Connect</button>
             <button class="btn btn-danger navbar-btn">Disconnect</button>
         </li>
       </ul>
@@ -63,119 +66,6 @@
 </body>
 
 <script type="text/javascript" src="./scripts/index.js"></script>
-<script>
-
-var input_csv = null;
-
-$(function() {
-  $('#add_panel').click(function () {
-
-    panel_id = parseInt($("#interactive-panels").attr("panel-cnt"));
-    $("#interactive-panels").attr("panel-cnt", panel_id + 1);
-
-    output_panel_content_empty = "<tr><td>empty</td><td>empty</td><td>empty</td></tr>\
-                <tr><td>empty</td><td>empty</td><td>empty</td></tr>\
-                <tr><td>empty</td><td>empty</td><td>empty</td></tr>";
-
-    output_panel_content = "<tr><td>H. Simon</td><td>1974</td><td>277</td></tr>\
-                <tr><td>R. Tibshiran...</td><td>1995</td><td>51</td></tr>\
-                <tr><td>P. Bork</td><td>1998</td><td>51</td></tr>";
-
-    input_panel_content = "<tr><td>empty</td><td>empty</td><td>empty</td></tr>\
-                <tr><td>empty</td><td>empty</td><td>empty</td></tr>\
-                <tr><td>empty</td><td>empty</td><td>empty</td></tr>\
-                <tr><td>empty</td><td>empty</td><td>empty</td></tr>";
-
-
-    input_example_id = "input-example" + panel_id;
-    output_example_id = "output-example" + panel_id;
-    synthesize_btn_id = "synthesize_btn" + panel_id;
-    fileupload_id = "fileupload" + panel_id;
-
-    // add an input table to the input table panel, this is the first sub table in the panel
-    gen_adjustable_table_div("input-example" + panel_id + "sub" + 1, "itable_" + panel_id + "_" + 1 );
-    // add an output table to the output table panel
-    gen_adjustable_table_div("output-example" + panel_id, "otable_" + panel_id);
-    // generate buttons for the input panel, include an "add table button" and an load table button
-    gen_input_panel_btn("input-panel-btns" + panel_id, 
-                        "itable_upload_btn_" + panel_id, 
-                        "itable_" + panel_id + "_" + 1);
-    // generate the button for the output panel, it is the "synthesize" button
-    gen_synthesize_btn("synthesize-btn-container" + panel_id, "synthesize-btn" + panel_id, 
-                       ["itable_" + panel_id + "_" + 1], "otable_" + panel_id, 
-                       "constraint-panel" + panel_id, "display-panel" + panel_id);
-
-    vis_type_choice_id = "vis-type-choice" + panel_id;
-    vis_data_choice_id = "vis-data-choice" + panel_id
-
-    query_choice_id = "query-choice" + panel_id;
-    vis_choice_id = "vis-choice" + panel_id;
-
-    $(function() {
-      $("#" + query_choice_id + " .query-btn").click(function () {
-        // get the query choice id
-        query_choice_id = $(this).closest("div").prop("id");
-        id = query_choice_id.substring(query_choice_id.length-1);
-        $("#display-panel" + id + " .display-query").attr("style", "display: block; width:100%;");
-        $("#display-panel" + id + " .display-vis").attr("style", "display: none");
-      });
-
-      $("#" + vis_choice_id + " .vis-btn, " + "#" + vis_choice_id + " ul").on("click", function () {
-        vis_choice_id = $(this).closest("div").prop("id");
-        id = vis_choice_id.substring(vis_choice_id.length-1);
-        $("#display-panel" + id + " .display-vis").attr("style", "display: block; width:100%;");
-        $("#display-panel" + id + " .display-query").attr("style", "display: none");
-
-        // set up visualization configuration
-        config = {};
-        $("#" + vis_choice_id + " ul li input:checked").each(function() {
-          if ($(this).attr('name').startsWith("vis_type"));
-            config["vis_type"] = parseInt($(this).attr("value"));
-          if ($(this).attr('name').startsWith("vis_data"))
-            config["vis_data"] = parseInt($(this).attr("value"));
-        });
-
-        // the target data used for visualization
-        data = null;
-        if (config["vis_data"] == 1) {
-          // the target visualization data is the example output
-          output_table_panel_id = "otable_" + panel_id;
-          table_content = get_generated_table_content("otable_" + panel_id)["table_content_str"];
-          data = d3.csvParse(table_content);
-        } else if (config["vis_data"] == 2) {
-          // the target visualization data is the full output (execute the query on database)
-          data = $("#display-panel" + id + " .display-vis").prop("full_data");
-          if (data == null) {
-            query_to_be_run = $("#display-panel" + id + " .display-query pre span").prop("textContent");
-            alert(query_to_be_run);
-            data = $("#display-panel" + id + " .display-vis").prop("preloaded_data");
-          }
-        }
-        // visualize data on the target div (specified by its id), visualization type specified in config
-        if (data != null) {
-          build_visualization(data, "#display-panel" + id + " .display-vis", config["vis_type"]);
-        }
-      });
-    });
-
-    // redraw the chart when data changes in the example output
-    $(function() {
-      $("#otable_" + panel_id).on("change", function() {
-        id = this.id.substring(this.id.length - 1);
-      });
-    });
-    $("#panel" + panel_id).height(Math.max($("#input-example" + panel_id).height(), 
-                                           $("#output-example" + panel_id).height(), 20));
-  });
-});
-
-$(function() {
-  $('#remove_panel').click(function () {
-    $("#interactive-panels .ipanel:last").remove();
-  });
-});
-
-</script>
 
 <script type="text/javascript">
   var spec = "https://raw.githubusercontent.com/vega/vega/master/test/specs-valid/bar.vg.json";

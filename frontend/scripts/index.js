@@ -11,16 +11,29 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 var ScytheInterface = function (_React$Component) {
   _inherits(ScytheInterface, _React$Component);
 
-  function ScytheInterface() {
+  function ScytheInterface(props) {
     _classCallCheck(this, ScytheInterface);
 
-    return _possibleConstructorReturn(this, (ScytheInterface.__proto__ || Object.getPrototypeOf(ScytheInterface)).apply(this, arguments));
+    var _this = _possibleConstructorReturn(this, (ScytheInterface.__proto__ || Object.getPrototypeOf(ScytheInterface)).call(this, props));
+
+    _this.state = {};
+    _this.state.panels = [];
+    _this.state.panels.push(React.createElement(TaskPanel, { key: _this.state.panels.length }));
+    return _this;
   }
 
   _createClass(ScytheInterface, [{
-    key: "renderPanel",
-    value: function renderPanel(i) {
-      return React.createElement(TaskPanel, null);
+    key: "addPanel",
+    value: function addPanel() {
+      this.state.panels.push(React.createElement(TaskPanel, { key: this.state.panels.length }));
+      this.setState(this.state.panels);
+    }
+  }, {
+    key: "removePanel",
+    value: function removePanel() {
+      if (this.state.panels.length == 0) return;
+      this.state.panels.splice(-1, 1);
+      this.setState(this.state.panels);
     }
   }, {
     key: "render",
@@ -33,18 +46,20 @@ var ScytheInterface = function (_React$Component) {
           { className: "buttons" },
           React.createElement(
             "button",
-            { id: "add_panel", className: "btn btn-success" },
+            { id: "add_panel", className: "btn btn-success", onClick: this.addPanel.bind(this) },
             React.createElement("span", { className: "glyphicon glyphicon-plus" }),
             " New Panel"
           ),
           React.createElement(
             "button",
-            { id: "remove_panel", className: "btn btn-danger" },
+            { id: "remove_panel", className: "btn btn-danger", onClick: this.removePanel.bind(this) },
             React.createElement("span", { className: "glyphicon glyphicon-minus" }),
             " Remove Panel"
           )
         ),
-        this.renderPanel(0)
+        this.state.panels.map(function (x) {
+          return [x, React.createElement("br", null)];
+        })
       );
     }
   }]);
@@ -64,12 +79,65 @@ var TaskPanel = function (_React$Component2) {
     _this2.state.inputTables = [];
     _this2.state.inputTables.push(_this2.genDefaultTable("input_table_0"));
     _this2.state.outputTable = _this2.genDefaultTable("output_table");
+    _this2.state.constants = "";
+    _this2.state.aggrFunc = "";
     return _this2;
   }
 
   _createClass(TaskPanel, [{
+    key: "uploadInputTables",
+    value: function uploadInputTables(evt) {
+
+      // When the control has changed, there are new files
+      if (!window.FileReader) {
+        return alert('FileReader API is not supported by your browser.');
+      }
+      var files = evt.target.files;
+      this.state.inputTables = [];
+      this.setState(this.state.inputTables);
+      if (files) {
+        //this.state.inputTables = [];
+        for (var i = 0; i < files.length; i++) {
+          // bind the function to "this" to update the react state
+          (function (file, t) {
+            var reader = new FileReader();
+
+            if (file.size > 50000) {
+              alert("[Error] Input example file " + file.name + "(" + file.size / 1000 + "kB) exceeds the tool size limit (50kB).");
+              return;
+            }
+
+            // bind the function to "this" to update the react state
+            reader.onload = function () {
+              var csvdata = d3.csvParse(reader.result);
+
+              var header = [];
+              var fileName = file.name.replace(/\./g, "_");
+              var content = [];
+
+              for (var i = 0; i < csvdata.columns.length; i++) {
+                header.push(csvdata.columns[i]);
+              }for (var i = 0; i < csvdata.length; i++) {
+                var row = [];
+                for (var j = 0; j < csvdata.columns.length; j++) {
+                  var cell = csvdata[i][csvdata.columns[j]].trim();
+                  row.push(cell);
+                }
+                content.push(row);
+              }
+              var table = { tableName: fileName, tableContent: content, tableHeader: header };
+              this.state.inputTables.push(table);
+              this.setState(this.state.inputTables);
+            }.bind(this);
+            reader.readAsText(file, "UTF-8");
+          }).bind(this)(files[i]);
+        }
+      }
+    }
+  }, {
     key: "genDefaultTable",
     value: function genDefaultTable(tableName) {
+      /* generate a default 3x3 table*/
 
       var defaultTableRowNum = 3;
       var defaultTableColNum = 3;
@@ -95,11 +163,50 @@ var TaskPanel = function (_React$Component2) {
       });
     }
   }, {
-    key: "addInputTable",
-    value: function addInputTable() {
+    key: "addDefaultInputTable",
+    value: function addDefaultInputTable() {
       var newId = this.state.inputTables.length;
       this.state.inputTables.push(this.genDefaultTable("input_table_" + newId));
       this.setState(this.state.inputTables);
+    }
+  }, {
+    key: "genScytheInputString",
+    value: function genScytheInputString() {
+      //generates the input to be used by the backend synthesizer
+      function tableToScytheStr(table, type) {
+        var s = "#" + type + ":" + table.tableName + "\n\n";
+        s += table.tableHeader.join(",") + "\n";
+        for (var i = 0; i < table.tableContent.length; i++) {
+          s += table.tableContent[i].join(",") + "\n";
+        }s += "\n";
+        return s;
+      }
+      var scytheInputString = "";
+      for (var i = 0; i < this.state.inputTables.length; i++) {
+        scytheInputString += tableToScytheStr(this.state.inputTables[i], "input");
+      }
+      scytheInputString += tableToScytheStr(this.state.outputTable, "output");
+
+      // get constant and aggregation functions from the constraint panel
+      var constantStr = this.state.constants;
+      var aggrFuncStr = this.state.aggrFunc;
+
+      // default aggregation functions includes only max, min, and count
+      // TODO: thinking whether this can be re designed to utilize default aggregation functions in Scythe
+      if (aggrFuncStr == "") aggrFuncStr = '"max", "min", "count"';
+
+      // a special function that parses and formats the string provided by the user
+      function parseFormatCommaDelimitedStr(str) {
+        if (str == "") return "";
+        return str.split(",").map(function (x) {
+          return "\"" + x.trim().replace(/['"]+/g, '') + "\"";
+        });
+      }
+
+      // the string used as the input to the synthesizer
+      scytheInputString += "#constraint\n\n{\n  \"constants\": [" + parseFormatCommaDelimitedStr(constantStr) + "],\n" + "  \"aggregation_functions\": [" + parseFormatCommaDelimitedStr(aggrFuncStr) + "]\n}\n";
+
+      console.log(scytheInputString);
     }
   }, {
     key: "render",
@@ -126,28 +233,27 @@ var TaskPanel = function (_React$Component2) {
               ),
               React.createElement(
                 "div",
-                { id: 'constraint-panel' + panelId },
+                null,
                 React.createElement(
                   "div",
                   { className: "input-group input-group-sm input-box constant-panel" },
                   React.createElement(
                     "span",
-                    { className: "input-group-addon", id: 'basic-addon1' + panelId },
+                    { className: "input-group-addon", id: 'constant-addon' + panelId },
                     "Constants"
                   ),
-                  React.createElement("input", { type: "text", className: "form-control", placeholder: "None",
-                    "aria-describedby": 'basic-addon1' + panelId })
+                  React.createElement("input", { type: "text", className: "form-control", placeholder: "None", "aria-describedby": 'constant-addon' + panelId })
                 ),
                 React.createElement(
                   "div",
                   { className: "input-group input-group-sm input-box aggr-func-panel" },
                   React.createElement(
                     "span",
-                    { className: "input-group-addon", id: "basic-addon2\" + panelId + \"" },
+                    { className: "input-group-addon", id: 'aggr-addon' + panelId },
                     "Aggregators"
                   ),
-                  React.createElement("input", { type: "text", className: "form-control", placeholder: "None",
-                    "aria-describedby": 'basic-addon2' + panelId })
+                  React.createElement("input", { type: "text", className: "form-control", placeholder: "(Optional)",
+                    "aria-describedby": 'aggr-addon' + panelId })
                 )
               )
             ),
@@ -156,8 +262,7 @@ var TaskPanel = function (_React$Component2) {
               { style: { width: 20 + "%", verticalAlign: "top" } },
               React.createElement(
                 "div",
-                { className: "output-example",
-                  id: "output-example" + panelId },
+                { className: "output-example" },
                 React.createElement(EditableTable, { refs: "output-table", table: this.state.outputTable })
               )
             ),
@@ -166,7 +271,7 @@ var TaskPanel = function (_React$Component2) {
               { style: { width: 43 + "%", verticalAlign: "top" } },
               React.createElement(
                 "div",
-                { className: "vis", id: "display-panel" + panelId },
+                { className: "vis" },
                 React.createElement("div", { className: "pnl display-query", style: { display: "none" } }),
                 React.createElement("div", { className: "pnl display-vis", style: { display: "block" } })
               )
@@ -187,8 +292,8 @@ var TaskPanel = function (_React$Component2) {
                     style: { paddingLeft: 10 + "px", paddingRight: 10 + "px" } },
                   React.createElement(
                     "label",
-                    { id: "add_sub_input_example_btn" + panelId, onClick: this.addInputTable.bind(this),
-                      className: "btn btn-primary", style: { paddingLeft: 3 + "px", paddingRight: 3 + "px" } },
+                    { onClick: this.addDefaultInputTable.bind(this), className: "btn btn-primary",
+                      style: { paddingLeft: 3 + "px", paddingRight: 3 + "px" } },
                     React.createElement("span", { className: "glyphicon glyphicon-plus" }),
                     " Add Input Table"
                   ),
@@ -196,7 +301,8 @@ var TaskPanel = function (_React$Component2) {
                     "label",
                     { className: "btn btn-primary" },
                     "Load Data",
-                    React.createElement("input", { className: "fileupload", type: "file", style: { display: "none" }, name: "files[]" })
+                    React.createElement("input", { onChange: this.uploadInputTables.bind(this), className: "fileupload",
+                      type: "file", style: { display: "none" }, name: "files[]", multiple: true })
                   )
                 )
               )
@@ -206,15 +312,11 @@ var TaskPanel = function (_React$Component2) {
               null,
               React.createElement(
                 "div",
-                { id: 'synthesize-btn-container' + panelId },
+                { className: "buttons", style: { paddingLeft: "10px", paddingRight: "10px" } },
                 React.createElement(
-                  "div",
-                  { className: "buttons", style: { paddingLeft: "10px", paddingRight: "10px" } },
-                  React.createElement(
-                    "button",
-                    { className: "btn btn-primary btn-block" },
-                    "Synthesize"
-                  )
+                  "button",
+                  { className: "btn btn-primary btn-block", onClick: this.genScytheInputString.bind(this) },
+                  "Synthesize"
                 )
               )
             ),
@@ -474,8 +576,7 @@ var ETableBody = function (_React$Component4) {
             " ",
             this.props.table.map(function (val, i) {
               return React.createElement(ETableRow, { onCellUpdate: _this6.props.onCellUpdate, data: { rowContent: val, rowId: i },
-                deletable: true,
-                key: i, onDelEvent: _this6.props.onRowDel });
+                deletable: true, key: i, onDelEvent: _this6.props.onRowDel });
             })
           )
         ),

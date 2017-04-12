@@ -1,19 +1,31 @@
 class ScytheInterface extends React.Component {
-  renderPanel(i) {
-    return <TaskPanel />;
+  constructor(props) {
+    super(props);
+    this.state = {};
+    this.state.panels = [];
+    this.state.panels.push(<TaskPanel key={this.state.panels.length} />);
+  }
+  addPanel() {
+    this.state.panels.push(<TaskPanel key={this.state.panels.length} />);
+    this.setState(this.state.panels);
+  }
+  removePanel() {
+    if (this.state.panels.length == 0)
+      return;
+    this.state.panels.splice(-1, 1);
+    this.setState(this.state.panels);
   }
   render() {
     return (
       <div id="interactive-panels">
         <div className="buttons">
-          <button id="add_panel" className="btn btn-success">
-            <span className="glyphicon glyphicon-plus"></span> New Panel</button>
-          <button id="remove_panel" className="btn btn-danger">
-            <span className="glyphicon glyphicon-minus"></span> Remove Panel</button>
+          <button id="add_panel" className="btn btn-success" onClick={this.addPanel.bind(this)}>
+            <span className="glyphicon glyphicon-plus" /> New Panel</button>
+          <button id="remove_panel" className="btn btn-danger" onClick={this.removePanel.bind(this)}>
+            <span className="glyphicon glyphicon-minus" /> Remove Panel</button>
         </div>
-        {this.renderPanel(0)}
-      </div>
-    );
+        { this.state.panels.map(x => {return [x, <br />]}) }
+      </div>);
   }
 }
 
@@ -24,8 +36,60 @@ class TaskPanel extends React.Component {
     this.state.inputTables = [];
     this.state.inputTables.push(this.genDefaultTable("input_table_0"));
     this.state.outputTable = this.genDefaultTable("output_table");
+    this.state.constants = "";
+    this.state.aggrFunc = "";
+  }
+  uploadInputTables(evt) {
+
+    // When the control has changed, there are new files
+    if (!window.FileReader) {
+      return alert('FileReader API is not supported by your browser.');
+    }
+    var files = evt.target.files;
+    this.state.inputTables = [];
+    this.setState(this.state.inputTables);
+    if (files) {
+      //this.state.inputTables = [];
+      for (var i = 0; i < files.length; i++) {
+        // bind the function to "this" to update the react state
+        (function (file, t) {
+          var reader = new FileReader();
+
+          if (file.size > 50000) {
+            alert("[Error] Input example file " + file.name 
+                + "(" + (file.size / 1000) + "kB) exceeds the tool size limit (50kB).");
+            return;
+          }
+
+          // bind the function to "this" to update the react state
+          reader.onload = function () {
+            var csvdata = d3.csvParse(reader.result);
+
+            var header = [];
+            var fileName = file.name.replace(/\./g,"_");
+            var content = [];
+
+            for (var i = 0; i < csvdata.columns.length; i ++) 
+              header.push(csvdata.columns[i]);
+            for (var i = 0; i < csvdata.length; i++) {
+              var row = [];
+              for (var j = 0; j < csvdata.columns.length; j ++) {
+                var cell = csvdata[i][csvdata.columns[j]].trim();
+                row.push(cell);
+              }
+              content.push(row);
+            }
+            var table = {tableName: fileName, tableContent: content, tableHeader: header};
+            this.state.inputTables.push(table);
+            this.setState(this.state.inputTables);
+          }.bind(this);
+          reader.readAsText(file, "UTF-8");
+        }).bind(this)(files[i]);
+      }
+    }
   }
   genDefaultTable(tableName) {
+    /* generate a default 3x3 table*/
 
     var defaultTableRowNum = 3;
     var defaultTableColNum = 3;
@@ -48,10 +112,50 @@ class TaskPanel extends React.Component {
     return this.state.inputTables.map( 
         (t, i) => (<EditableTable refs={"input-table-" + i} key={i} table={t} />));
   }
-  addInputTable() {
+  addDefaultInputTable() {
     var newId = this.state.inputTables.length;
     this.state.inputTables.push(this.genDefaultTable("input_table_" + newId));
     this.setState(this.state.inputTables);
+  }
+  genScytheInputString() {
+    //generates the input to be used by the backend synthesizer
+    function tableToScytheStr(table, type) {
+      var s = "#" + type + ":" + table.tableName + "\n\n";
+      s += table.tableHeader.join(",") + "\n";
+      for (var i = 0; i < table.tableContent.length; i ++)
+        s += table.tableContent[i].join(",") + "\n";
+      s += "\n";
+      return s;
+    }
+    var scytheInputString = "";
+    for (var i = 0; i < this.state.inputTables.length; i++) {
+      scytheInputString += tableToScytheStr(this.state.inputTables[i], "input");
+    }
+    scytheInputString += tableToScytheStr(this.state.outputTable, "output");
+
+    // get constant and aggregation functions from the constraint panel
+    var constantStr = this.state.constants;
+    var aggrFuncStr = this.state.aggrFunc;
+
+    // default aggregation functions includes only max, min, and count
+    // TODO: thinking whether this can be re designed to utilize default aggregation functions in Scythe
+    if (aggrFuncStr == "") aggrFuncStr = '"max", "min", "count"';
+
+    // a special function that parses and formats the string provided by the user
+    function parseFormatCommaDelimitedStr(str) {
+      if (str == "") return "";
+      return str.split(",").map(function (x) {
+        return "\"" + x.trim().replace(/['"]+/g, '') + "\"";
+      });
+    }
+
+    // the string used as the input to the synthesizer
+    scytheInputString += "#constraint\n\n{\n  \"constants\": [" 
+    + parseFormatCommaDelimitedStr(constantStr) + "],\n" 
+    + "  \"aggregation_functions\": [" 
+    + parseFormatCommaDelimitedStr(aggrFuncStr) + "]\n}\n";
+
+    console.log(scytheInputString);
   }
   render() {
     {/* the id of the panel */}
@@ -65,25 +169,25 @@ class TaskPanel extends React.Component {
               <div className="input-example" id={"input-example" + panelId}>
                 {this.renderInputTables()}
               </div>
-              <div id={'constraint-panel' + panelId}>
+              <div>
                 <div className='input-group input-group-sm input-box constant-panel'>
-                  <span className='input-group-addon' id={'basic-addon1' + panelId}>Constants</span>
-                  <input type='text' className='form-control' placeholder='None' 
-                         aria-describedby={'basic-addon1' + panelId} />
+                  <span className='input-group-addon' id={'constant-addon' + panelId}>Constants</span>
+                  <input type='text' className='form-control' placeholder='None' aria-describedby={'constant-addon' + panelId} />
                 </div>
                 <div className='input-group input-group-sm input-box aggr-func-panel'>
-                  <span className='input-group-addon' id='basic-addon2" + panelId + "'>Aggregators</span>
-                  <input type='text' className='form-control' placeholder='None' 
-                          aria-describedby={'basic-addon2' + panelId} />
+                  <span className='input-group-addon' id={'aggr-addon' + panelId}>Aggregators</span>
+                  <input type='text' className='form-control' placeholder='(Optional)' 
+                          aria-describedby={'aggr-addon' + panelId} />
                 </div>
               </div>
             </td>
             <td style={{width: 20+ "%", verticalAlign:"top"}}>
-              <div className="output-example" 
-                   id={"output-example" + panelId}><EditableTable refs="output-table" table={this.state.outputTable} /></div>
+              <div className="output-example">
+                <EditableTable refs="output-table" table={this.state.outputTable} />
+              </div>
             </td>
             <td style={{width: 43+ "%", verticalAlign:"top"}}>
-              <div className="vis"  id={"display-panel" + panelId}>
+              <div className="vis">
                 <div className="pnl display-query" style={{display:"none"}}></div>
                 <div className="pnl display-vis" style={{display:"block"}}></div>
               </div>
@@ -94,22 +198,23 @@ class TaskPanel extends React.Component {
               <div id={"input-panel-btns" + panelId}>
                 <div className="buttons btn-group btn-group-justified" 
                      style={{paddingLeft:10 + "px", paddingRight:10 + "px"}}>
-                  <label id={"add_sub_input_example_btn" + panelId} onClick={this.addInputTable.bind(this)}
-                         className="btn btn-primary" style={{paddingLeft:3+"px", paddingRight:3 + "px"}}>
-                    <span className="glyphicon glyphicon-plus"></span> Add Input Table
+                  <label onClick={this.addDefaultInputTable.bind(this)} className="btn btn-primary" 
+                         style={{paddingLeft:3+"px", paddingRight:3 + "px"}}>
+                    <span className="glyphicon glyphicon-plus" /> Add Input Table
                   </label>
                   <label className="btn btn-primary">
                     Load Data
-                    <input className="fileupload" type="file" style={{display: "none"}} name="files[]" />
+                    <input onChange={this.uploadInputTables.bind(this)} className="fileupload" 
+                           type="file" style={{display: "none"}} name="files[]" multiple />
                   </label>
                 </div>
               </div>
             </td>
-            <td><div id={'synthesize-btn-container' + panelId}>
-                  <div className="buttons" style={{paddingLeft:"10px", paddingRight:"10px"}}>
-                    <button className="btn btn-primary btn-block">Synthesize</button>
-                  </div>
-                </div></td>
+            <td>
+              <div className="buttons" style={{paddingLeft:"10px", paddingRight:"10px"}}>
+                <button className="btn btn-primary btn-block" onClick={this.genScytheInputString.bind(this)}>Synthesize</button>
+              </div>
+            </td>
             <td style={{textAlign:"center"}}>
               <div className="buttons btn-group" 
                    style={{margin:"0 auto", paddingLeft:10+"px", paddingRight:10+"px"}}>
@@ -259,9 +364,8 @@ class ETableBody extends React.Component {
                     deletable={false} />
           </thead>
           <tbody> {this.props.table.map((val, i) =>
-              (<ETableRow onCellUpdate={this.props.onCellUpdate} data={{rowContent: val, rowId: i}} 
-                   deletable={true}
-                  key={i} onDelEvent={this.props.onRowDel}/>))}
+              <ETableRow onCellUpdate={this.props.onCellUpdate} data={{rowContent: val, rowId: i}} 
+                  deletable={true} key={i} onDelEvent={this.props.onRowDel} />)}
           </tbody>
         </table>
         <button type="button" onClick={this.props.onRowAdd} 
