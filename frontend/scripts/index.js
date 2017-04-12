@@ -81,6 +81,9 @@ var TaskPanel = function (_React$Component2) {
     _this2.state.outputTable = _this2.genDefaultTable("output_table");
     _this2.state.constants = "";
     _this2.state.aggrFunc = "";
+
+    // stores json objects of form {query: XXX, data: XXX}
+    _this2.state.synthesisResult = [];
     return _this2;
   }
 
@@ -178,6 +181,13 @@ var TaskPanel = function (_React$Component2) {
       var newId = this.state.inputTables.length;
       this.state.inputTables.push(this.genDefaultTable("input_table_" + newId));
       this.setState(this.state.inputTables);
+    }
+  }, {
+    key: "removeLastInputTable",
+    value: function removeLastInputTable() {
+      this.state.inputTables.splice(-1, 1);
+      this.setState(this.state.inputTables);
+      if (this.state.inputTables.length == 0) this.addDefaultInputTable();
     }
   }, {
     key: "genScytheInputString",
@@ -306,7 +316,14 @@ var TaskPanel = function (_React$Component2) {
                     { onClick: this.addDefaultInputTable.bind(this), className: "btn btn-primary",
                       style: { paddingLeft: 3 + "px", paddingRight: 3 + "px" } },
                     React.createElement("span", { className: "glyphicon glyphicon-plus" }),
-                    " Add Input Table"
+                    " Add Table"
+                  ),
+                  React.createElement(
+                    "label",
+                    { onClick: this.removeLastInputTable.bind(this), className: "btn btn-primary",
+                      style: { paddingLeft: 3 + "px", paddingRight: 3 + "px" } },
+                    React.createElement("span", { className: "glyphicon glyphicon-minus" }),
+                    " Remove Table"
                   ),
                   React.createElement(
                     "label",

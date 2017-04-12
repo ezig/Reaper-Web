@@ -38,6 +38,9 @@ class TaskPanel extends React.Component {
     this.state.outputTable = this.genDefaultTable("output_table");
     this.state.constants = "";
     this.state.aggrFunc = "";
+
+    // stores json objects of form {query: XXX, data: XXX}
+    this.state.synthesisResult = [];
   }
   uploadInputTables(evt) {
 
@@ -123,6 +126,12 @@ class TaskPanel extends React.Component {
     this.state.inputTables.push(this.genDefaultTable("input_table_" + newId));
     this.setState(this.state.inputTables);
   }
+  removeLastInputTable() {
+    this.state.inputTables.splice(-1, 1);
+    this.setState(this.state.inputTables);
+    if (this.state.inputTables.length == 0)
+      this.addDefaultInputTable();
+  }
   genScytheInputString() {
     //generates the input to be used by the backend synthesizer
     function tableToScytheStr(table, type) {
@@ -207,7 +216,11 @@ class TaskPanel extends React.Component {
                      style={{paddingLeft:10 + "px", paddingRight:10 + "px"}}>
                   <label onClick={this.addDefaultInputTable.bind(this)} className="btn btn-primary" 
                          style={{paddingLeft:3+"px", paddingRight:3 + "px"}}>
-                    <span className="glyphicon glyphicon-plus" /> Add Input Table
+                    <span className="glyphicon glyphicon-plus" /> Add Table
+                  </label>
+                  <label onClick={this.removeLastInputTable.bind(this)} className="btn btn-primary" 
+                         style={{paddingLeft:3+"px", paddingRight:3 + "px"}}>
+                    <span className="glyphicon glyphicon-minus" /> Remove Table
                   </label>
                   <label className="btn btn-primary">
                     Load Data
