@@ -112,6 +112,12 @@ class TaskPanel extends React.Component {
     return this.state.inputTables.map( 
         (t, i) => (<EditableTable refs={"input-table-" + i} key={i} table={t} />));
   }
+  updateConstants(evt) {
+    this.setState({constants: evt.target.value});
+  }
+  updateAggrFunc(evt) {
+    this.setState({aggrFunc: evt.target.value});
+  }
   addDefaultInputTable() {
     var newId = this.state.inputTables.length;
     this.state.inputTables.push(this.genDefaultTable("input_table_" + newId));
@@ -172,12 +178,13 @@ class TaskPanel extends React.Component {
               <div>
                 <div className='input-group input-group-sm input-box constant-panel'>
                   <span className='input-group-addon' id={'constant-addon' + panelId}>Constants</span>
-                  <input type='text' className='form-control' placeholder='None' aria-describedby={'constant-addon' + panelId} />
+                  <input type='text' className='form-control' placeholder='None' 
+                         onChange={this.updateConstants.bind(this)} aria-describedby={'constant-addon' + panelId} />
                 </div>
                 <div className='input-group input-group-sm input-box aggr-func-panel'>
                   <span className='input-group-addon' id={'aggr-addon' + panelId}>Aggregators</span>
                   <input type='text' className='form-control' placeholder='(Optional)' 
-                          aria-describedby={'aggr-addon' + panelId} />
+                          onChange={this.updateAggrFunc.bind(this)} aria-describedby={'aggr-addon' + panelId} />
                 </div>
               </div>
             </td>
@@ -265,13 +272,11 @@ class EditableTable extends React.Component {
   constructor(props) {
     super(props);
     this.state = {};
-    this.state.tableName = this.props.table.tableName;
-    this.state.header = this.props.table.tableHeader;
-    this.state.table = this.props.table.tableContent;
+    this.state.table = this.props.table;
   }
   getCSVTable() {
-    var tableClone = this.state.table.slice();
-    tableClone.splice(0, 0, this.state.header);
+    var tableClone = this.state.table.tableContent.slice();
+    tableClone.splice(0, 0, this.state.table.tableHeader);
     var csvString = "";
     for (var i = 0; i < tableClone.length; i++) {
       var s = "";
@@ -279,84 +284,84 @@ class EditableTable extends React.Component {
         s += tableClone[i][j] + ", ";
       csvString += s.substring(0, s.length-2) + "\n";
     }
-    return {"name": this.state.tableName, "content": csvString};
+    return {"name": this.state.table.tableName, "content": csvString};
   }
   updateTableName(name) {
-    this.state.tableName = name;
-    this.setState({tableName: this.state.tableName});
+    this.state.table.tableName = name;
+    this.setState(this.state.table);
   }
   handleRowDel(rowId) {
-    if (this.state.table.length == 1)
+    if (this.state.table.tableContent.length == 1)
       return;
-    this.state.table.splice(rowId, 1);
+    this.state.table.tableContent.splice(rowId, 1);
     this.setState(this.state.table);
   }
   handleColDel() {
-    if (this.state.table[0].length == 1)
+    if (this.state.table.tableContent[0].length == 1)
       return;
-    this.state.table.map(row => row.splice(-1, 1));
-    this.state.header.splice(-1, 1);
-    this.setState(this.state.header);
-    this.setState(this.state.table);
+    this.state.table.tableContent.map(row => row.splice(-1, 1));
+    this.state.table.tableHeader.splice(-1, 1);
+    this.setState(this.state.table.tableHeader);
+    this.setState(this.state.table.tableContent);
   }
   handleRowAdd(evt) {
     console.log(this.getCSVTable());
     var id = (+ new Date() + Math.floor(Math.random() * 999999)).toString(36);
     var row = [];
-    for (var i = 0; i < this.state.table[0].length; i ++)
+    for (var i = 0; i < this.state.table.tableContent[0].length; i ++)
       row.push(0);
-    this.state.table.push(row);
+    this.state.table.tableContent.push(row);
     this.setState(this.state.table);
   }
   handleColAdd(evt) {
     var id = (+ new Date() + Math.floor(Math.random() * 999999)).toString(36);
-    this.state.header.splice(this.state.table[0].length, 0, "c" + this.state.table[0].length);
-    this.state.table.map(row => row.splice(this.state.table[0].length, 0, 0));
-    this.setState(this.state.header);
+    this.state.table.tableHeader.splice(this.state.table.tableContent[0].length, 
+            0, "c" + this.state.table.tableContent[0].length);
+    this.state.table.tableContent.map(row => row.splice(this.state.table.tableContent[0].length, 0, 0));
     this.setState(this.state.table);
   }
   handleCellUpdate(r, c, val) {
-    var table = this.state.table.slice();
-    var newTable = []
-    for (var i = 0; i < table.length; i ++) {
-      var newRow = [];
-      for (var j = 0; j < table[i].length; j ++) {
-        if (i == r && j == c)
-          newRow.push(val);
-        else
-          newRow.push(table[i][j]);
-      }
-      newTable.push(newRow);
-    }
-    this.setState({table: newTable});
+    this.state.table.tableContent[r][c] = val;
+    this.setState(this.state.table);
   }
   handleHeaderUpdate(r, c, val) {
-    this.state.header.splice(c, 1, val);
-    this.setState(this.state.header);
+    this.state.table.tableHeader.splice(c, 1, val);
+    this.setState(this.state.table.tableHeader);
   }
   render() {
     return (
-      <div>
-        <ETableBody onCellUpdate={this.handleCellUpdate.bind(this)} 
-                      onRowAdd={this.handleRowAdd.bind(this)} 
-                      onRowDel={this.handleRowDel.bind(this)}
-                      onColDel={this.handleColDel.bind(this)}
-                      onColAdd={this.handleColAdd.bind(this)}
-                      updateTableName={this.updateTableName.bind(this)}
-                      onHeadUpdate={this.handleHeaderUpdate.bind(this)} 
-                      table={this.state.table}
-                      tableName={this.state.tableName}
-                      header={this.state.header}/>
-      </div>);}
+      <div style={{border: "dashed 1px #EEE", padding: "2px 2px 2px 2px"}}>
+        <input type='text' value= {this.state.table.tableName} className="table_name" size="10"
+              onChange={e => {this.updateTableName.bind(this)(e.target.value)}}
+              style={{ width: "100%", textAlign: "center", border: "none", marginBottom: "2px"}} />
+        <table className="table dataTable cell-border">
+          <thead> 
+            <ETableRow onCellUpdate={this.handleHeaderUpdate.bind(this)} 
+                    data={{rowContent: this.state.table.tableHeader, rowId: "H"}}
+                    deletable={false} />
+          </thead>
+          <tbody> {this.state.table.tableContent.map((val, i) =>
+              <ETableRow onCellUpdate={this.handleCellUpdate.bind(this)} data={{rowContent: val, rowId: i}} 
+                  deletable={true} key={i} onDelEvent={this.handleRowDel.bind(this)} />)}
+          </tbody>
+        </table>
+        <button type="button" onClick={this.handleRowAdd.bind(this)} 
+              className="btn btn-super-sm btn-default">Add Row</button>
+        <button type="button" onClick={this.handleColAdd.bind(this)} 
+                className="btn btn-super-sm btn-default">Add Col</button>
+        <button type="button" onClick={this.handleColDel.bind(this)} 
+                className="btn btn-super-sm btn-default">Del Col</button>
+      </div>);
+  }
 }
 
-class ETableBody extends React.Component {
+/*class ETableBody extends React.Component {
   render() {
     return (
       <div style={{border: "dashed 1px #EEE", padding: "2px 2px 2px 2px"}}>
       <input type='text' value= {this.props.tableName} className="table_name" size="10"
             onChange={e => {this.props.updateTableName(e.target.value)}}
-            style={{ width: "100%", textAlign: "center", border: "none"}} />
+            style={{ width: "100%", textAlign: "center", border: "none", marginBottom: "2px"}} />
         <table className="table dataTable cell-border">
           <thead> 
             <ETableRow onCellUpdate={this.props.onHeadUpdate} 
@@ -377,7 +382,7 @@ class ETableBody extends React.Component {
       </div>
     );
   }
-}
+}*/
 
 class ETableRow extends React.Component {
   render() {
@@ -393,7 +398,7 @@ class ETableRow extends React.Component {
     return (
       <tr>
         {this.props.data.rowContent.map((x, i) => { 
-          return <ETableCell onCellUpdate={this.props.onCellUpdate}
+          return <ETableCell onCellUpdate={this.props.onCellUpdate.bind(this)}
             key={this.props.data.rowId + "," + i}
             cellData={{
               val: x,
@@ -413,7 +418,7 @@ class ETableCell extends React.Component {
       <td className="editable-table-cell"> 
         <input type='text' value= {this.props.cellData.val}
             onChange={e => this.props.onCellUpdate(this.props.cellData.rowId, 
-                           this.props.cellData.colId, e.target.value)}
+                              this.props.cellData.colId, e.target.value)}
             style={{ width: "100%", textAlign: "center", border: "none"}} />
       </td>);
   }

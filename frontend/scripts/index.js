@@ -163,6 +163,16 @@ var TaskPanel = function (_React$Component2) {
       });
     }
   }, {
+    key: "updateConstants",
+    value: function updateConstants(evt) {
+      this.setState({ constants: evt.target.value });
+    }
+  }, {
+    key: "updateAggrFunc",
+    value: function updateAggrFunc(evt) {
+      this.setState({ aggrFunc: evt.target.value });
+    }
+  }, {
     key: "addDefaultInputTable",
     value: function addDefaultInputTable() {
       var newId = this.state.inputTables.length;
@@ -242,7 +252,8 @@ var TaskPanel = function (_React$Component2) {
                     { className: "input-group-addon", id: 'constant-addon' + panelId },
                     "Constants"
                   ),
-                  React.createElement("input", { type: "text", className: "form-control", placeholder: "None", "aria-describedby": 'constant-addon' + panelId })
+                  React.createElement("input", { type: "text", className: "form-control", placeholder: "None",
+                    onChange: this.updateConstants.bind(this), "aria-describedby": 'constant-addon' + panelId })
                 ),
                 React.createElement(
                   "div",
@@ -253,7 +264,7 @@ var TaskPanel = function (_React$Component2) {
                     "Aggregators"
                   ),
                   React.createElement("input", { type: "text", className: "form-control", placeholder: "(Optional)",
-                    "aria-describedby": 'aggr-addon' + panelId })
+                    onChange: this.updateAggrFunc.bind(this), "aria-describedby": 'aggr-addon' + panelId })
                 )
               )
             ),
@@ -427,17 +438,15 @@ var EditableTable = function (_React$Component3) {
     var _this3 = _possibleConstructorReturn(this, (EditableTable.__proto__ || Object.getPrototypeOf(EditableTable)).call(this, props));
 
     _this3.state = {};
-    _this3.state.tableName = _this3.props.table.tableName;
-    _this3.state.header = _this3.props.table.tableHeader;
-    _this3.state.table = _this3.props.table.tableContent;
+    _this3.state.table = _this3.props.table;
     return _this3;
   }
 
   _createClass(EditableTable, [{
     key: "getCSVTable",
     value: function getCSVTable() {
-      var tableClone = this.state.table.slice();
-      tableClone.splice(0, 0, this.state.header);
+      var tableClone = this.state.table.tableContent.slice();
+      tableClone.splice(0, 0, this.state.table.tableHeader);
       var csvString = "";
       for (var i = 0; i < tableClone.length; i++) {
         var s = "";
@@ -445,31 +454,31 @@ var EditableTable = function (_React$Component3) {
           s += tableClone[i][j] + ", ";
         }csvString += s.substring(0, s.length - 2) + "\n";
       }
-      return { "name": this.state.tableName, "content": csvString };
+      return { "name": this.state.table.tableName, "content": csvString };
     }
   }, {
     key: "updateTableName",
     value: function updateTableName(name) {
-      this.state.tableName = name;
-      this.setState({ tableName: this.state.tableName });
+      this.state.table.tableName = name;
+      this.setState(this.state.table);
     }
   }, {
     key: "handleRowDel",
     value: function handleRowDel(rowId) {
-      if (this.state.table.length == 1) return;
-      this.state.table.splice(rowId, 1);
+      if (this.state.table.tableContent.length == 1) return;
+      this.state.table.tableContent.splice(rowId, 1);
       this.setState(this.state.table);
     }
   }, {
     key: "handleColDel",
     value: function handleColDel() {
-      if (this.state.table[0].length == 1) return;
-      this.state.table.map(function (row) {
+      if (this.state.table.tableContent[0].length == 1) return;
+      this.state.table.tableContent.map(function (row) {
         return row.splice(-1, 1);
       });
-      this.state.header.splice(-1, 1);
-      this.setState(this.state.header);
-      this.setState(this.state.table);
+      this.state.table.tableHeader.splice(-1, 1);
+      this.setState(this.state.table.tableHeader);
+      this.setState(this.state.table.tableContent);
     }
   }, {
     key: "handleRowAdd",
@@ -477,9 +486,9 @@ var EditableTable = function (_React$Component3) {
       console.log(this.getCSVTable());
       var id = (+new Date() + Math.floor(Math.random() * 999999)).toString(36);
       var row = [];
-      for (var i = 0; i < this.state.table[0].length; i++) {
+      for (var i = 0; i < this.state.table.tableContent[0].length; i++) {
         row.push(0);
-      }this.state.table.push(row);
+      }this.state.table.tableContent.push(row);
       this.setState(this.state.table);
     }
   }, {
@@ -488,113 +497,72 @@ var EditableTable = function (_React$Component3) {
       var _this4 = this;
 
       var id = (+new Date() + Math.floor(Math.random() * 999999)).toString(36);
-      this.state.header.splice(this.state.table[0].length, 0, "c" + this.state.table[0].length);
-      this.state.table.map(function (row) {
-        return row.splice(_this4.state.table[0].length, 0, 0);
+      this.state.table.tableHeader.splice(this.state.table.tableContent[0].length, 0, "c" + this.state.table.tableContent[0].length);
+      this.state.table.tableContent.map(function (row) {
+        return row.splice(_this4.state.table.tableContent[0].length, 0, 0);
       });
-      this.setState(this.state.header);
       this.setState(this.state.table);
     }
   }, {
     key: "handleCellUpdate",
     value: function handleCellUpdate(r, c, val) {
-      var table = this.state.table.slice();
-      var newTable = [];
-      for (var i = 0; i < table.length; i++) {
-        var newRow = [];
-        for (var j = 0; j < table[i].length; j++) {
-          if (i == r && j == c) newRow.push(val);else newRow.push(table[i][j]);
-        }
-        newTable.push(newRow);
-      }
-      this.setState({ table: newTable });
+      this.state.table.tableContent[r][c] = val;
+      this.setState(this.state.table);
     }
   }, {
     key: "handleHeaderUpdate",
     value: function handleHeaderUpdate(r, c, val) {
-      this.state.header.splice(c, 1, val);
-      this.setState(this.state.header);
+      this.state.table.tableHeader.splice(c, 1, val);
+      this.setState(this.state.table.tableHeader);
     }
   }, {
     key: "render",
     value: function render() {
-      return React.createElement(
-        "div",
-        null,
-        React.createElement(ETableBody, { onCellUpdate: this.handleCellUpdate.bind(this),
-          onRowAdd: this.handleRowAdd.bind(this),
-          onRowDel: this.handleRowDel.bind(this),
-          onColDel: this.handleColDel.bind(this),
-          onColAdd: this.handleColAdd.bind(this),
-          updateTableName: this.updateTableName.bind(this),
-          onHeadUpdate: this.handleHeaderUpdate.bind(this),
-          table: this.state.table,
-          tableName: this.state.tableName,
-          header: this.state.header })
-      );
-    }
-  }]);
-
-  return EditableTable;
-}(React.Component);
-
-var ETableBody = function (_React$Component4) {
-  _inherits(ETableBody, _React$Component4);
-
-  function ETableBody() {
-    _classCallCheck(this, ETableBody);
-
-    return _possibleConstructorReturn(this, (ETableBody.__proto__ || Object.getPrototypeOf(ETableBody)).apply(this, arguments));
-  }
-
-  _createClass(ETableBody, [{
-    key: "render",
-    value: function render() {
-      var _this6 = this;
+      var _this5 = this;
 
       return React.createElement(
         "div",
         { style: { border: "dashed 1px #EEE", padding: "2px 2px 2px 2px" } },
-        React.createElement("input", { type: "text", value: this.props.tableName, className: "table_name", size: "10",
+        React.createElement("input", { type: "text", value: this.state.table.tableName, className: "table_name", size: "10",
           onChange: function onChange(e) {
-            _this6.props.updateTableName(e.target.value);
+            _this5.updateTableName.bind(_this5)(e.target.value);
           },
-          style: { width: "100%", textAlign: "center", border: "none" } }),
+          style: { width: "100%", textAlign: "center", border: "none", marginBottom: "2px" } }),
         React.createElement(
           "table",
           { className: "table dataTable cell-border" },
           React.createElement(
             "thead",
             null,
-            React.createElement(ETableRow, { onCellUpdate: this.props.onHeadUpdate,
-              data: { rowContent: this.props.header, rowId: "H" },
+            React.createElement(ETableRow, { onCellUpdate: this.handleHeaderUpdate.bind(this),
+              data: { rowContent: this.state.table.tableHeader, rowId: "H" },
               deletable: false })
           ),
           React.createElement(
             "tbody",
             null,
             " ",
-            this.props.table.map(function (val, i) {
-              return React.createElement(ETableRow, { onCellUpdate: _this6.props.onCellUpdate, data: { rowContent: val, rowId: i },
-                deletable: true, key: i, onDelEvent: _this6.props.onRowDel });
+            this.state.table.tableContent.map(function (val, i) {
+              return React.createElement(ETableRow, { onCellUpdate: _this5.handleCellUpdate.bind(_this5), data: { rowContent: val, rowId: i },
+                deletable: true, key: i, onDelEvent: _this5.handleRowDel.bind(_this5) });
             })
           )
         ),
         React.createElement(
           "button",
-          { type: "button", onClick: this.props.onRowAdd,
+          { type: "button", onClick: this.handleRowAdd.bind(this),
             className: "btn btn-super-sm btn-default" },
           "Add Row"
         ),
         React.createElement(
           "button",
-          { type: "button", onClick: this.props.onColAdd,
+          { type: "button", onClick: this.handleColAdd.bind(this),
             className: "btn btn-super-sm btn-default" },
           "Add Col"
         ),
         React.createElement(
           "button",
-          { type: "button", onClick: this.props.onColDel,
+          { type: "button", onClick: this.handleColDel.bind(this),
             className: "btn btn-super-sm btn-default" },
           "Del Col"
         )
@@ -602,11 +570,40 @@ var ETableBody = function (_React$Component4) {
     }
   }]);
 
-  return ETableBody;
+  return EditableTable;
 }(React.Component);
 
-var ETableRow = function (_React$Component5) {
-  _inherits(ETableRow, _React$Component5);
+/*class ETableBody extends React.Component {
+  render() {
+    return (
+      <div style={{border: "dashed 1px #EEE", padding: "2px 2px 2px 2px"}}>
+      <input type='text' value= {this.props.tableName} className="table_name" size="10"
+            onChange={e => {this.props.updateTableName(e.target.value)}}
+            style={{ width: "100%", textAlign: "center", border: "none", marginBottom: "2px"}} />
+        <table className="table dataTable cell-border">
+          <thead> 
+            <ETableRow onCellUpdate={this.props.onHeadUpdate} 
+                    data={{rowContent: this.props.header, rowId: "H"}}
+                    deletable={false} />
+          </thead>
+          <tbody> {this.props.table.map((val, i) =>
+              <ETableRow onCellUpdate={this.props.onCellUpdate} data={{rowContent: val, rowId: i}} 
+                  deletable={true} key={i} onDelEvent={this.props.onRowDel} />)}
+          </tbody>
+        </table>
+        <button type="button" onClick={this.props.onRowAdd} 
+              className="btn btn-super-sm btn-default">Add Row</button>
+        <button type="button" onClick={this.props.onColAdd} 
+                className="btn btn-super-sm btn-default">Add Col</button>
+        <button type="button" onClick={this.props.onColDel} 
+                className="btn btn-super-sm btn-default">Del Col</button>
+      </div>
+    );
+  }
+}*/
+
+var ETableRow = function (_React$Component4) {
+  _inherits(ETableRow, _React$Component4);
 
   function ETableRow() {
     _classCallCheck(this, ETableRow);
@@ -617,7 +614,7 @@ var ETableRow = function (_React$Component5) {
   _createClass(ETableRow, [{
     key: "render",
     value: function render() {
-      var _this8 = this;
+      var _this7 = this;
 
       var delButton = null;
       if (this.props.deletable) {
@@ -625,7 +622,7 @@ var ETableRow = function (_React$Component5) {
           "td",
           { className: "del-cell editable-table-cell" },
           React.createElement("input", { type: "button", onClick: function onClick(e) {
-              return _this8.props.onDelEvent(_this8.props.data.rowId);
+              return _this7.props.onDelEvent(_this7.props.data.rowId);
             },
             value: "X", className: "btn btn-default btn-super-sm" })
         );
@@ -636,11 +633,11 @@ var ETableRow = function (_React$Component5) {
         "tr",
         null,
         this.props.data.rowContent.map(function (x, i) {
-          return React.createElement(ETableCell, { onCellUpdate: _this8.props.onCellUpdate,
-            key: _this8.props.data.rowId + "," + i,
+          return React.createElement(ETableCell, { onCellUpdate: _this7.props.onCellUpdate.bind(_this7),
+            key: _this7.props.data.rowId + "," + i,
             cellData: {
               val: x,
-              rowId: _this8.props.data.rowId,
+              rowId: _this7.props.data.rowId,
               colId: i
             } });
         }),
@@ -652,8 +649,8 @@ var ETableRow = function (_React$Component5) {
   return ETableRow;
 }(React.Component);
 
-var ETableCell = function (_React$Component6) {
-  _inherits(ETableCell, _React$Component6);
+var ETableCell = function (_React$Component5) {
+  _inherits(ETableCell, _React$Component5);
 
   function ETableCell() {
     _classCallCheck(this, ETableCell);
@@ -664,14 +661,14 @@ var ETableCell = function (_React$Component6) {
   _createClass(ETableCell, [{
     key: "render",
     value: function render() {
-      var _this10 = this;
+      var _this9 = this;
 
       return React.createElement(
         "td",
         { className: "editable-table-cell" },
         React.createElement("input", { type: "text", value: this.props.cellData.val,
           onChange: function onChange(e) {
-            return _this10.props.onCellUpdate(_this10.props.cellData.rowId, _this10.props.cellData.colId, e.target.value);
+            return _this9.props.onCellUpdate(_this9.props.cellData.rowId, _this9.props.cellData.colId, e.target.value);
           },
           style: { width: "100%", textAlign: "center", border: "none" } })
       );
