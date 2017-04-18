@@ -14,6 +14,11 @@ app.debug = True
 # Index page for GET
 @app.route('/')
 def index():
+    return render_template('ae_index.html') 
+
+# Index page for GET
+@app.route('/demo')
+def demo():
     return render_template('index.html')
 
 @app.route('/<path:path>')

@@ -590,35 +590,6 @@ var EditableTable = function (_React$Component3) {
   return EditableTable;
 }(React.Component);
 
-/*class ETableBody extends React.Component {
-  render() {
-    return (
-      <div style={{border: "dashed 1px #EEE", padding: "2px 2px 2px 2px"}}>
-      <input type='text' value= {this.props.tableName} className="table_name" size="10"
-            onChange={e => {this.props.updateTableName(e.target.value)}}
-            style={{ width: "100%", textAlign: "center", border: "none", marginBottom: "2px"}} />
-        <table className="table dataTable cell-border">
-          <thead> 
-            <ETableRow onCellUpdate={this.props.onHeadUpdate} 
-                    data={{rowContent: this.props.header, rowId: "H"}}
-                    deletable={false} />
-          </thead>
-          <tbody> {this.props.table.map((val, i) =>
-              <ETableRow onCellUpdate={this.props.onCellUpdate} data={{rowContent: val, rowId: i}} 
-                  deletable={true} key={i} onDelEvent={this.props.onRowDel} />)}
-          </tbody>
-        </table>
-        <button type="button" onClick={this.props.onRowAdd} 
-              className="btn btn-super-sm btn-default">Add Row</button>
-        <button type="button" onClick={this.props.onColAdd} 
-                className="btn btn-super-sm btn-default">Add Col</button>
-        <button type="button" onClick={this.props.onColDel} 
-                className="btn btn-super-sm btn-default">Del Col</button>
-      </div>
-    );
-  }
-}*/
-
 var ETableRow = function (_React$Component4) {
   _inherits(ETableRow, _React$Component4);
 
