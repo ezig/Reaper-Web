@@ -158,7 +158,7 @@ class TaskPanel extends React.Component {
       if (this.state.displayOption.queryId != null)
         content = this.state.synthesisResult[this.state.displayOption.queryId].query;
       return <div className="pnl display-query" style={{display:"block"}}>
-              <div><pre style={{height:"100%", overflow:"auto", margin: "0 0 5px"}}>
+              <div className="query_output_container"><pre style={{height:"100%", overflow:"auto", margin: "0 0 5px"}}>
                 <span className="inner-pre" style={{fontSize: "12px"}}>
                   {content}
                 </span>

@@ -188,9 +188,12 @@ var TaskPanel = function (_React$Component2) {
 
       var options = [];
       var querySelectorName = makeid();
+
+      // prepare options in the drop down menu
       for (var i = 0; i < this.state.synthesisResult.length; i++) {
         options.push({ value: i, label: 'Query#' + (i + 1), tempId: makeid(), checked: this.state.displayOption.queryId == i });
-      }return React.createElement(
+      } // generate the drop down menu in the enhanced drop down fashion
+      return React.createElement(
         "div",
         { className: "btn-group" },
         React.createElement(
@@ -235,7 +238,7 @@ var TaskPanel = function (_React$Component2) {
           { className: "pnl display-query", style: { display: "block" } },
           React.createElement(
             "div",
-            null,
+            { className: "query_output_container" },
             React.createElement(
               "pre",
               { style: { height: "100%", overflow: "auto", margin: "0 0 5px" } },
