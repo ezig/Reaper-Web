@@ -8,6 +8,14 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
+function makeid() {
+  var text = "";
+  var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  for (var i = 0; i < 5; i++) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }return text;
+}
+
 var ScytheInterface = function (_React$Component) {
   _inherits(ScytheInterface, _React$Component);
 
@@ -84,6 +92,7 @@ var TaskPanel = function (_React$Component2) {
 
     // stores json objects of form {query: XXX, data: XXX}
     _this2.state.synthesisResult = [];
+    _this2.state.displayOption = { type: "vis", queryId: -1 };
     return _this2;
   }
 
@@ -166,6 +175,88 @@ var TaskPanel = function (_React$Component2) {
       });
     }
   }, {
+    key: "updateDisplayOption",
+    value: function updateDisplayOption(val) {
+      this.state.displayOption.queryId = val;
+      this.state.displayOption.type = "query";
+      this.setState(this.state.displayOption);
+    }
+  }, {
+    key: "renderDropDownMenu",
+    value: function renderDropDownMenu() {
+      var _this3 = this;
+
+      var options = [];
+      var querySelectorName = makeid();
+      for (var i = 0; i < this.state.synthesisResult.length; i++) {
+        options.push({ value: i, label: 'Query#' + (i + 1), tempId: makeid(), checked: this.state.displayOption.queryId == i });
+      }return React.createElement(
+        "div",
+        { className: "btn-group" },
+        React.createElement(
+          "label",
+          { className: "btn btn-default query-btn" },
+          "Query"
+        ),
+        React.createElement(
+          "label",
+          { "data-toggle": "dropdown", className: "viz-query-choice btn btn-default dropdown-toggle",
+            "data-placeholder": "false" },
+          React.createElement("span", { className: "caret" })
+        ),
+        React.createElement(
+          "ul",
+          { className: "dropdown-menu" },
+          options.map(function (d, i) {
+            return React.createElement(
+              "li",
+              { key: i },
+              React.createElement("input", { type: "radio", onChange: function onChange(e) {
+                  return _this3.updateDisplayOption.bind(_this3)(e.target.value);
+                }, id: d.tempId, name: querySelectorName, value: i, checked: d.checked }),
+              React.createElement(
+                "label",
+                { htmlFor: d.tempId },
+                d.label
+              )
+            );
+          })
+        )
+      );
+    }
+  }, {
+    key: "renderDisplayPanel",
+    value: function renderDisplayPanel() {
+      if (this.state.displayOption.type == "query") {
+        var content = null;
+        if (this.state.displayOption.queryId != null) content = this.state.synthesisResult[this.state.displayOption.queryId].query;
+        return React.createElement(
+          "div",
+          { className: "pnl display-query", style: { display: "block" } },
+          React.createElement(
+            "div",
+            null,
+            React.createElement(
+              "pre",
+              { style: { height: "100%", overflow: "auto", margin: "0 0 5px" } },
+              React.createElement(
+                "span",
+                { className: "inner-pre", style: { fontSize: "12px" } },
+                content
+              )
+            )
+          )
+        );
+      }
+      if (this.state.displayOption.type == "vis") {
+        return React.createElement(
+          "div",
+          { className: "pnl display-vis", style: { display: "block" } },
+          this.state.displayOption.content
+        );
+      }
+    }
+  }, {
     key: "updateConstants",
     value: function updateConstants(evt) {
       this.setState({ constants: evt.target.value });
@@ -192,6 +283,8 @@ var TaskPanel = function (_React$Component2) {
   }, {
     key: "genScytheInputString",
     value: function genScytheInputString() {
+      var _this4 = this;
+
       //generates the input to be used by the backend synthesizer
       function tableToScytheStr(table, type) {
         var s = "#" + type + ":" + table.tableName + "\n\n";
@@ -227,6 +320,29 @@ var TaskPanel = function (_React$Component2) {
       scytheInputString += "#constraint\n\n{\n  \"constants\": [" + parseFormatCommaDelimitedStr(constantStr) + "],\n" + "  \"aggregation_functions\": [" + parseFormatCommaDelimitedStr(aggrFuncStr) + "]\n}\n";
 
       console.log(scytheInputString);
+
+      // make a request to the server
+      var scytheRequest = new Request('/scythe', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ example: scytheInputString })
+      });
+
+      // handle response from the server
+      fetch(scytheRequest).then(function (response) {
+        return response.json();
+      }).then(function (responseJson) {
+        if (responseJson.status == "error") console.log(responseJson.status.message);
+        for (var i in responseJson.queries) {
+          _this4.state.synthesisResult.push({ "query": responseJson.queries[i], "data": null });
+        }
+        _this4.setState(_this4.state.synthesisResult);
+      }).catch(function (error) {
+        console.error(error);
+      });
     }
   }, {
     key: "render",
@@ -293,8 +409,7 @@ var TaskPanel = function (_React$Component2) {
               React.createElement(
                 "div",
                 { className: "vis" },
-                React.createElement("div", { className: "pnl display-query", style: { display: "none" } }),
-                React.createElement("div", { className: "pnl display-vis", style: { display: "block" } })
+                this.renderDisplayPanel()
               )
             )
           ),
@@ -351,6 +466,7 @@ var TaskPanel = function (_React$Component2) {
             React.createElement(
               "td",
               { style: { textAlign: "center" } },
+              this.renderDropDownMenu(),
               React.createElement(
                 "div",
                 { className: "buttons btn-group",
@@ -452,11 +568,11 @@ var EditableTable = function (_React$Component3) {
   function EditableTable(props) {
     _classCallCheck(this, EditableTable);
 
-    var _this3 = _possibleConstructorReturn(this, (EditableTable.__proto__ || Object.getPrototypeOf(EditableTable)).call(this, props));
+    var _this5 = _possibleConstructorReturn(this, (EditableTable.__proto__ || Object.getPrototypeOf(EditableTable)).call(this, props));
 
-    _this3.state = {};
-    _this3.state.table = _this3.props.table;
-    return _this3;
+    _this5.state = {};
+    _this5.state.table = _this5.props.table;
+    return _this5;
   }
 
   _createClass(EditableTable, [{
@@ -511,12 +627,12 @@ var EditableTable = function (_React$Component3) {
   }, {
     key: "handleColAdd",
     value: function handleColAdd(evt) {
-      var _this4 = this;
+      var _this6 = this;
 
       var id = (+new Date() + Math.floor(Math.random() * 999999)).toString(36);
       this.state.table.tableHeader.splice(this.state.table.tableContent[0].length, 0, "c" + this.state.table.tableContent[0].length);
       this.state.table.tableContent.map(function (row) {
-        return row.splice(_this4.state.table.tableContent[0].length, 0, 0);
+        return row.splice(_this6.state.table.tableContent[0].length, 0, 0);
       });
       this.setState(this.state.table);
     }
@@ -535,14 +651,14 @@ var EditableTable = function (_React$Component3) {
   }, {
     key: "render",
     value: function render() {
-      var _this5 = this;
+      var _this7 = this;
 
       return React.createElement(
         "div",
         { style: { border: "dashed 1px #EEE", padding: "2px 2px 2px 2px" } },
         React.createElement("input", { type: "text", value: this.state.table.tableName, className: "table_name", size: "10",
           onChange: function onChange(e) {
-            _this5.updateTableName.bind(_this5)(e.target.value);
+            _this7.updateTableName.bind(_this7)(e.target.value);
           },
           style: { width: "100%", textAlign: "center", border: "none", marginBottom: "2px" } }),
         React.createElement(
@@ -560,8 +676,8 @@ var EditableTable = function (_React$Component3) {
             null,
             " ",
             this.state.table.tableContent.map(function (val, i) {
-              return React.createElement(ETableRow, { onCellUpdate: _this5.handleCellUpdate.bind(_this5), data: { rowContent: val, rowId: i },
-                deletable: true, key: i, onDelEvent: _this5.handleRowDel.bind(_this5) });
+              return React.createElement(ETableRow, { onCellUpdate: _this7.handleCellUpdate.bind(_this7), data: { rowContent: val, rowId: i },
+                deletable: true, key: i, onDelEvent: _this7.handleRowDel.bind(_this7) });
             })
           )
         ),
@@ -602,7 +718,7 @@ var ETableRow = function (_React$Component4) {
   _createClass(ETableRow, [{
     key: "render",
     value: function render() {
-      var _this7 = this;
+      var _this9 = this;
 
       var delButton = null;
       if (this.props.deletable) {
@@ -610,7 +726,7 @@ var ETableRow = function (_React$Component4) {
           "td",
           { className: "del-cell editable-table-cell" },
           React.createElement("input", { type: "button", onClick: function onClick(e) {
-              return _this7.props.onDelEvent(_this7.props.data.rowId);
+              return _this9.props.onDelEvent(_this9.props.data.rowId);
             },
             value: "X", className: "btn btn-default btn-super-sm" })
         );
@@ -621,11 +737,11 @@ var ETableRow = function (_React$Component4) {
         "tr",
         null,
         this.props.data.rowContent.map(function (x, i) {
-          return React.createElement(ETableCell, { onCellUpdate: _this7.props.onCellUpdate.bind(_this7),
-            key: _this7.props.data.rowId + "," + i,
+          return React.createElement(ETableCell, { onCellUpdate: _this9.props.onCellUpdate.bind(_this9),
+            key: _this9.props.data.rowId + "," + i,
             cellData: {
               val: x,
-              rowId: _this7.props.data.rowId,
+              rowId: _this9.props.data.rowId,
               colId: i
             } });
         }),
@@ -649,14 +765,14 @@ var ETableCell = function (_React$Component5) {
   _createClass(ETableCell, [{
     key: "render",
     value: function render() {
-      var _this9 = this;
+      var _this11 = this;
 
       return React.createElement(
         "td",
         { className: "editable-table-cell" },
         React.createElement("input", { type: "text", value: this.props.cellData.val,
           onChange: function onChange(e) {
-            return _this9.props.onCellUpdate(_this9.props.cellData.rowId, _this9.props.cellData.colId, e.target.value);
+            return _this11.props.onCellUpdate(_this11.props.cellData.rowId, _this11.props.cellData.colId, e.target.value);
           },
           style: { width: "100%", textAlign: "center", border: "none" } })
       );

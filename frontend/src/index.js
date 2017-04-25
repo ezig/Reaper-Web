@@ -1,3 +1,11 @@
+function makeid() {
+    var text = "";
+    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    for( var i=0; i < 5; i++ )
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+    return text;
+}
+
 class ScytheInterface extends React.Component {
   constructor(props) {
     super(props);
@@ -41,6 +49,7 @@ class TaskPanel extends React.Component {
 
     // stores json objects of form {query: XXX, data: XXX}
     this.state.synthesisResult = [];
+    this.state.displayOption = {type: "vis", queryId: -1};
   }
   uploadInputTables(evt) {
 
@@ -115,6 +124,51 @@ class TaskPanel extends React.Component {
     return this.state.inputTables.map( 
         (t, i) => (<EditableTable refs={"input-table-" + i} key={i} table={t} />));
   }
+  updateDisplayOption(val) {
+    this.state.displayOption.queryId = val;
+    this.state.displayOption.type = "query";
+    this.setState(this.state.displayOption);
+  }
+  renderDropDownMenu() {
+    var options = [];
+    var querySelectorName = makeid();
+    
+    // prepare options in the drop down menu
+    for (var i = 0 ; i < this.state.synthesisResult.length; i ++)
+      options.push({value: i, label: 'Query#' + (i + 1), tempId: makeid(), checked: (this.state.displayOption.queryId == i)});
+    
+    // generate the drop down menu in the enhanced drop down fashion
+    return <div className='btn-group'>
+            <label className="btn btn-default query-btn">Query</label>
+             <label data-toggle='dropdown' className='viz-query-choice btn btn-default dropdown-toggle' 
+                   data-placeholder="false"><span className='caret'></span>
+            </label>
+            <ul className='dropdown-menu'>
+              {options.map((d, i) =>
+                  <li key={i}>
+                    <input type='radio' onChange={e => this.updateDisplayOption.bind(this)(e.target.value)} id={d.tempId} name={querySelectorName} value={i} checked={d.checked}/>
+                    <label htmlFor={d.tempId}>{d.label}</label>
+                  </li>)}
+            </ul>
+          </div>;
+  }
+  renderDisplayPanel() {
+    if (this.state.displayOption.type == "query") {
+      let content = null;
+      if (this.state.displayOption.queryId != null)
+        content = this.state.synthesisResult[this.state.displayOption.queryId].query;
+      return <div className="pnl display-query" style={{display:"block"}}>
+              <div><pre style={{height:"100%", overflow:"auto", margin: "0 0 5px"}}>
+                <span className="inner-pre" style={{fontSize: "12px"}}>
+                  {content}
+                </span>
+              </pre></div>
+             </div>;
+    }
+    if (this.state.displayOption.type == "vis") {
+      return <div className="pnl display-vis" style={{display:"block"}}>{this.state.displayOption.content}</div>;
+    }
+  }
   updateConstants(evt) {
     this.setState({constants: evt.target.value});
   }
@@ -171,6 +225,32 @@ class TaskPanel extends React.Component {
     + parseFormatCommaDelimitedStr(aggrFuncStr) + "]\n}\n";
 
     console.log(scytheInputString);
+
+    // make a request to the server
+    var scytheRequest = new Request('/scythe', 
+      { 
+        method: 'POST', 
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ example: scytheInputString})
+      });
+
+    // handle response from the server
+    fetch(scytheRequest)
+    .then((response) => response.json())
+    .then((responseJson) => {
+      if (responseJson.status == "error")
+        console.log(responseJson.status.message);
+      for (var i in responseJson.queries) {
+        this.state.synthesisResult.push({"query": responseJson.queries[i], "data": null});
+      }
+      this.setState(this.state.synthesisResult);
+    })
+    .catch((error) => {
+      console.error(error);
+    });
   }
   render() {
     {/* the id of the panel */}
@@ -204,8 +284,7 @@ class TaskPanel extends React.Component {
             </td>
             <td style={{width: 43+ "%", verticalAlign:"top"}}>
               <div className="vis">
-                <div className="pnl display-query" style={{display:"none"}}></div>
-                <div className="pnl display-vis" style={{display:"block"}}></div>
+                {this.renderDisplayPanel()}
               </div>
             </td>
           </tr>
@@ -236,11 +315,12 @@ class TaskPanel extends React.Component {
               </div>
             </td>
             <td style={{textAlign:"center"}}>
+              {this.renderDropDownMenu()}
               <div className="buttons btn-group" 
                    style={{margin:"0 auto", paddingLeft:10+"px", paddingRight:10+"px"}}>
                 <div className='btn-group' id={"query-choice" + panelId}>
                   <label className="btn btn-default query-btn">Query</label>
-                  <label data-toggle='dropdown' className='viz-query-choice btn btn-default dropdown-toggle' 
+                   <label data-toggle='dropdown' className='viz-query-choice btn btn-default dropdown-toggle' 
                          data-placeholder="false"><span className='caret'></span>
                   </label>
                   <ul className='dropdown-menu' ></ul>

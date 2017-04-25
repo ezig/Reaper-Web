@@ -10,6 +10,7 @@ template_dir = os.path.abspath('../frontend')
 static_dir = os.path.abspath('../frontend')
 app = Flask(__name__,template_folder=template_dir, static_folder=static_dir)
 app.debug = True
+synthesizer_time_limit = 30
 
 # Index page for GET
 @app.route('/')
@@ -43,13 +44,23 @@ def run_query():
 # Synthesizer api call
 @app.route('/scythe', methods = ['POST'])
 def synthesize():
-    example = request.form.get('example')
-    text_file = open("tmp", "w")
+
+    request_data = request.get_json()
+
+    if not "example" in request_data:
+        return jsonify({
+            "status": "error",
+            "message": "Wrong data format."
+        })
+
+    example = request_data['example']
+    text_file = open("tmp", "w+")
     text_file.write(example)
     text_file.close()
 
     try:
-        output = check_output(['java', '-jar', 'Scythe.jar', 'tmp', 'StagedEnumerator', '-aggr'], stdin=PIPE, stderr=PIPE, timeout=30)
+        output = check_output(['java', '-jar', 'Scythe.jar', 'tmp', 'StagedEnumerator', '-aggr'], 
+                                stdin=PIPE, stderr=PIPE, timeout=synthesizer_time_limit)
     
         lines = output.splitlines()
         queries = []
@@ -66,7 +77,12 @@ def synthesize():
                 current += line + "\n"
             else:
                 continue
-        return jsonify(queries)
-        
+        return jsonify({
+            "status": "success",
+            "queries": queries
+        })
     except TimeoutExpired:
-        return jsonify(["[Error] Sorry, the synthesizer timed out."])
+        return jsonify({
+            "status": "error",
+            "message": "Timeout (" + str(synthesizer_time_limit) + " seconds)"
+        })
