@@ -11,7 +11,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 function makeid() {
   var text = "";
   var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  for (var i = 0; i < 5; i++) {
+  for (var i = 0; i < 10; i++) {
     text += possible.charAt(Math.floor(Math.random() * possible.length));
   }return text;
 }
@@ -92,7 +92,7 @@ var TaskPanel = function (_React$Component2) {
 
     // stores json objects of form {query: XXX, data: XXX}
     _this2.state.synthesisResult = [];
-    _this2.state.displayOption = { type: "vis", queryId: -1 };
+    _this2.state.displayOption = { type: "vis", queryId: -1, visDataSrc: "example data" };
     return _this2;
   }
 
@@ -176,9 +176,9 @@ var TaskPanel = function (_React$Component2) {
     }
   }, {
     key: "updateDisplayOption",
-    value: function updateDisplayOption(val) {
-      this.state.displayOption.queryId = val;
-      this.state.displayOption.type = "query";
+    value: function updateDisplayOption(attr, val) {
+      this.state.displayOption[attr] = val;
+      console.log(this.state.displayOption);
       this.setState(this.state.displayOption);
     }
   }, {
@@ -188,42 +188,102 @@ var TaskPanel = function (_React$Component2) {
 
       var options = [];
       var querySelectorName = makeid();
+      var displaySelected = "Select One";
+      if (this.state.displayOption.queryId != -1) displaySelected = "Query " + this.state.displayOption.queryId;
+      var disableSelect = this.state.synthesisResult.length == 0;
 
       // prepare options in the drop down menu
       for (var i = 0; i < this.state.synthesisResult.length; i++) {
-        options.push({ value: i, label: 'Query#' + (i + 1), tempId: makeid(), checked: this.state.displayOption.queryId == i });
-      } // generate the drop down menu in the enhanced drop down fashion
+        options.push({ value: i,
+          label: 'Query ' + (i + 1),
+          tempId: makeid(),
+          checked: this.state.displayOption.queryId == i });
+      }var visTypeChoiceName = makeid();
+      var visTypeDropDown = [{ value: "example data", label: "Example Data", tempId: makeid(), disabled: false,
+        checked: this.state.displayOption.visDataSrc == "example data" }, { value: "query result", label: "Query Result", tempId: makeid(),
+        checked: this.state.displayOption.visDataSrc == "query result",
+        disabled: disableSelect }];
+
+      // Generate the drop down menu in the enhanced drop down fashion
+      // When there are multiple note that items in the list should all have the same name
       return React.createElement(
         "div",
         { className: "btn-group" },
         React.createElement(
-          "label",
-          { className: "btn btn-default query-btn" },
-          "Query"
+          "div",
+          { className: "btn-group" },
+          React.createElement(
+            "label",
+            { "data-toggle": "dropdown", "data-placeholder": "false",
+              className: 'btn btn-default dropdown-toggle ' + (disableSelect ? "disabled" : "") },
+            displaySelected + " ",
+            React.createElement("span", { className: "caret" })
+          ),
+          React.createElement(
+            "ul",
+            { className: "dropdown-menu" },
+            options.map(function (d, i) {
+              return React.createElement(
+                "li",
+                { key: i },
+                React.createElement("input", { type: "radio", id: d.tempId, name: querySelectorName, value: i, checked: d.checked,
+                  onChange: function onChange(e) {
+                    return _this3.updateDisplayOption.bind(_this3)("queryId", e.target.value);
+                  } }),
+                React.createElement(
+                  "label",
+                  { htmlFor: d.tempId },
+                  d.label
+                )
+              );
+            })
+          )
         ),
         React.createElement(
           "label",
-          { "data-toggle": "dropdown", className: "viz-query-choice btn btn-default dropdown-toggle",
-            "data-placeholder": "false" },
-          React.createElement("span", { className: "caret" })
+          { className: "btn btn-default query-btn " + (disableSelect ? "disabled" : ""),
+            onClick: function onClick(e) {
+              return _this3.updateDisplayOption.bind(_this3)("type", "query");
+            } },
+          "Show Query"
         ),
         React.createElement(
-          "ul",
-          { className: "dropdown-menu" },
-          options.map(function (d, i) {
-            return React.createElement(
-              "li",
-              { key: i },
-              React.createElement("input", { type: "radio", onChange: function onChange(e) {
-                  return _this3.updateDisplayOption.bind(_this3)(e.target.value);
-                }, id: d.tempId, name: querySelectorName, value: i, checked: d.checked }),
-              React.createElement(
-                "label",
-                { htmlFor: d.tempId },
-                d.label
-              )
-            );
-          })
+          "div",
+          { className: "btn-group" },
+          React.createElement(
+            "label",
+            { className: "btn btn-default query-btn",
+              onClick: function onClick(e) {
+                return _this3.updateDisplayOption.bind(_this3)("type", "vis");
+              } },
+            "Show Chart"
+          ),
+          React.createElement(
+            "label",
+            { "data-toggle": "dropdown", className: "btn btn-default dropdown-toggle",
+              "data-placeholder": "false" },
+            React.createElement("span", { className: "caret" })
+          ),
+          React.createElement(
+            "ul",
+            { className: "dropdown-menu" },
+            visTypeDropDown.map(function (d, i) {
+              return React.createElement(
+                "li",
+                { key: i },
+                React.createElement("input", { disabled: d.disabled, type: "radio", id: d.tempId, name: visTypeChoiceName,
+                  value: d.value, checked: d.checked,
+                  onChange: function onChange(e) {
+                    return _this3.updateDisplayOption.bind(_this3)("visDataSrc", e.target.value);
+                  } }),
+                React.createElement(
+                  "label",
+                  { htmlFor: d.tempId },
+                  d.label
+                )
+              );
+            })
+          )
         )
       );
     }
@@ -232,7 +292,7 @@ var TaskPanel = function (_React$Component2) {
     value: function renderDisplayPanel() {
       if (this.state.displayOption.type == "query") {
         var content = null;
-        if (this.state.displayOption.queryId != null) content = this.state.synthesisResult[this.state.displayOption.queryId].query;
+        if (this.state.displayOption.queryId != -1) content = this.state.synthesisResult[this.state.displayOption.queryId].query;
         return React.createElement(
           "div",
           { className: "pnl display-query", style: { display: "block" } },
@@ -284,8 +344,8 @@ var TaskPanel = function (_React$Component2) {
       if (this.state.inputTables.length == 0) this.addDefaultInputTable();
     }
   }, {
-    key: "genScytheInputString",
-    value: function genScytheInputString() {
+    key: "invokeScythe",
+    value: function invokeScythe() {
       var _this4 = this;
 
       //generates the input to be used by the backend synthesizer
@@ -339,6 +399,7 @@ var TaskPanel = function (_React$Component2) {
         return response.json();
       }).then(function (responseJson) {
         if (responseJson.status == "error") console.log(responseJson.status.message);
+        _this4.state.synthesisResult = [];
         for (var i in responseJson.queries) {
           _this4.state.synthesisResult.push({ "query": responseJson.queries[i], "data": null });
         }
@@ -382,7 +443,8 @@ var TaskPanel = function (_React$Component2) {
                     "Constants"
                   ),
                   React.createElement("input", { type: "text", className: "form-control", placeholder: "None",
-                    onChange: this.updateConstants.bind(this), "aria-describedby": 'constant-addon' + panelId })
+                    onChange: this.updateConstants.bind(this),
+                    "aria-describedby": 'constant-addon' + panelId })
                 ),
                 React.createElement(
                   "div",
@@ -393,7 +455,8 @@ var TaskPanel = function (_React$Component2) {
                     "Aggregators"
                   ),
                   React.createElement("input", { type: "text", className: "form-control", placeholder: "(Optional)",
-                    onChange: this.updateAggrFunc.bind(this), "aria-describedby": 'aggr-addon' + panelId })
+                    onChange: this.updateAggrFunc.bind(this),
+                    "aria-describedby": 'aggr-addon' + panelId })
                 )
               )
             ),
@@ -461,7 +524,8 @@ var TaskPanel = function (_React$Component2) {
                 { className: "buttons", style: { paddingLeft: "10px", paddingRight: "10px" } },
                 React.createElement(
                   "button",
-                  { className: "btn btn-primary btn-block", onClick: this.genScytheInputString.bind(this) },
+                  { className: "btn btn-primary btn-block",
+                    onClick: this.invokeScythe.bind(this) },
                   "Synthesize"
                 )
               )
@@ -469,92 +533,7 @@ var TaskPanel = function (_React$Component2) {
             React.createElement(
               "td",
               { style: { textAlign: "center" } },
-              this.renderDropDownMenu(),
-              React.createElement(
-                "div",
-                { className: "buttons btn-group",
-                  style: { margin: "0 auto", paddingLeft: 10 + "px", paddingRight: 10 + "px" } },
-                React.createElement(
-                  "div",
-                  { className: "btn-group", id: "query-choice" + panelId },
-                  React.createElement(
-                    "label",
-                    { className: "btn btn-default query-btn" },
-                    "Query"
-                  ),
-                  React.createElement(
-                    "label",
-                    { "data-toggle": "dropdown", className: "viz-query-choice btn btn-default dropdown-toggle",
-                      "data-placeholder": "false" },
-                    React.createElement("span", { className: "caret" })
-                  ),
-                  React.createElement("ul", { className: "dropdown-menu" })
-                ),
-                React.createElement(
-                  "div",
-                  { className: "btn-group", id: 'vis-choice' + panelId },
-                  React.createElement(
-                    "label",
-                    { className: "btn btn-default vis-btn" },
-                    "Visualization"
-                  ),
-                  React.createElement(
-                    "label",
-                    { "data-toggle": "dropdown", className: "btn btn-default dropdown-toggle",
-                      "data-placeholder": "false" },
-                    React.createElement("span", { className: "caret" })
-                  ),
-                  React.createElement(
-                    "ul",
-                    { className: "dropdown-menu" },
-                    React.createElement(
-                      "li",
-                      null,
-                      React.createElement("input", { type: "radio", id: 'vis_data_' + panelId + '_1',
-                        name: 'vis_data_' + panelId, value: "1", defaultChecked: true }),
-                      React.createElement(
-                        "label",
-                        { htmlFor: 'vis_data_' + panelId + '_1' },
-                        "Example Output"
-                      )
-                    ),
-                    React.createElement(
-                      "li",
-                      null,
-                      React.createElement("input", { type: "radio", id: 'vis_data_' + panelId + '_2', name: 'vis_data_' + panelId, value: "2" }),
-                      React.createElement(
-                        "label",
-                        { htmlFor: 'vis_data_' + panelId + '_2' },
-                        "Full Output"
-                      )
-                    ),
-                    React.createElement("li", { className: "divider" }),
-                    React.createElement(
-                      "li",
-                      null,
-                      React.createElement("input", { type: "radio", id: 'vis_type_' + panelId + '_1',
-                        name: 'vis_type' + panelId, value: "1", defaultChecked: true }),
-                      React.createElement(
-                        "label",
-                        { htmlFor: 'vis_type_' + panelId + '_1' },
-                        React.createElement("i", { className: "icon-edit" }),
-                        " Histogram"
-                      )
-                    ),
-                    React.createElement(
-                      "li",
-                      null,
-                      React.createElement("input", { type: "radio", id: 'vis_type_' + panelId + '_2', name: 'vis_type' + panelId, value: "2" }),
-                      React.createElement(
-                        "label",
-                        { htmlFor: 'vis_type_' + panelId + '_2' },
-                        React.createElement("i", { className: "icon-remove" }),
-                        " 3D Histogram"
-                      )
-                    )
-                  )
-                )
-              )
+              this.renderDropDownMenu()
             )
           )
         )

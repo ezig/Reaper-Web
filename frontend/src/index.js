@@ -1,7 +1,7 @@
 function makeid() {
     var text = "";
     var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    for( var i=0; i < 5; i++ )
+    for( var i=0; i < 10; i++ )
         text += possible.charAt(Math.floor(Math.random() * possible.length));
     return text;
 }
@@ -49,7 +49,7 @@ class TaskPanel extends React.Component {
 
     // stores json objects of form {query: XXX, data: XXX}
     this.state.synthesisResult = [];
-    this.state.displayOption = {type: "vis", queryId: -1};
+    this.state.displayOption = {type: "vis", queryId: -1, visDataSrc: "example data"};
   }
   uploadInputTables(evt) {
 
@@ -124,41 +124,84 @@ class TaskPanel extends React.Component {
     return this.state.inputTables.map( 
         (t, i) => (<EditableTable refs={"input-table-" + i} key={i} table={t} />));
   }
-  updateDisplayOption(val) {
-    this.state.displayOption.queryId = val;
-    this.state.displayOption.type = "query";
+  updateDisplayOption(attr, val) {
+    this.state.displayOption[attr] = val;
+    console.log(this.state.displayOption);
     this.setState(this.state.displayOption);
   }
   renderDropDownMenu() {
     var options = [];
     var querySelectorName = makeid();
+    var displaySelected = "Select One";
+    if (this.state.displayOption.queryId != -1)
+      displaySelected = "Query " + this.state.displayOption.queryId;
+    var disableSelect = (this.state.synthesisResult.length == 0);
     
     // prepare options in the drop down menu
     for (var i = 0 ; i < this.state.synthesisResult.length; i ++)
-      options.push({value: i, label: 'Query#' + (i + 1), tempId: makeid(), checked: (this.state.displayOption.queryId == i)});
+      options.push({value: i, 
+                    label: 'Query ' + (i + 1), 
+                    tempId: makeid(), 
+                    checked: (this.state.displayOption.queryId == i)});
     
-    // generate the drop down menu in the enhanced drop down fashion
+    var visTypeChoiceName = makeid();
+    var visTypeDropDown = [{value: "example data", label: "Example Data", tempId: makeid(), disabled: false,
+                            checked: (this.state.displayOption.visDataSrc == "example data")},
+                          {value: "query result", label: "Query Result", tempId: makeid(), 
+                           checked: (this.state.displayOption.visDataSrc == "query result"), 
+                           disabled: disableSelect}];
+
+    // Generate the drop down menu in the enhanced drop down fashion
+    // When there are multiple note that items in the list should all have the same name
     return <div className='btn-group'>
-            <label className="btn btn-default query-btn">Query</label>
-             <label data-toggle='dropdown' className='viz-query-choice btn btn-default dropdown-toggle' 
-                   data-placeholder="false"><span className='caret'></span>
-            </label>
-            <ul className='dropdown-menu'>
-              {options.map((d, i) =>
+            <div className='btn-group'>
+              <label data-toggle='dropdown' data-placeholder="false"
+                     className={'btn btn-default dropdown-toggle ' + (disableSelect ? "disabled" : "")}>
+                {displaySelected + " "}
+                <span className='caret'></span>
+              </label>
+              <ul className='dropdown-menu'>
+                {options.map((d, i) =>
                   <li key={i}>
-                    <input type='radio' onChange={e => this.updateDisplayOption.bind(this)(e.target.value)} id={d.tempId} name={querySelectorName} value={i} checked={d.checked}/>
+                    <input type='radio' id={d.tempId} name={querySelectorName} value={i} checked={d.checked}
+                    onChange={e => this.updateDisplayOption.bind(this)("queryId", e.target.value)} />
                     <label htmlFor={d.tempId}>{d.label}</label>
                   </li>)}
-            </ul>
+              </ul>
+            </div>
+            <label className={"btn btn-default query-btn " + (disableSelect ? "disabled" : "")}
+                   onClick={e => this.updateDisplayOption.bind(this)("type", "query")}>
+              Show Query
+            </label>
+            <div className='btn-group'>
+              <label className="btn btn-default query-btn"
+                     onClick={e => this.updateDisplayOption.bind(this)("type", "vis")}>
+                Show Chart
+              </label>
+              <label data-toggle='dropdown' className='btn btn-default dropdown-toggle'
+                     data-placeholder="false">
+                <span className='caret'></span>
+              </label>
+              <ul className='dropdown-menu'>
+                {visTypeDropDown.map((d, i) =>
+                  <li key={i}>
+                    <input disabled={d.disabled} type='radio' id={d.tempId} name={visTypeChoiceName} 
+                      value={d.value} checked={d.checked}
+                      onChange={e => this.updateDisplayOption.bind(this)("visDataSrc", e.target.value)}/>
+                    <label htmlFor={d.tempId}>{d.label}</label>
+                  </li>)}
+              </ul>
+            </div>
           </div>;
   }
   renderDisplayPanel() {
     if (this.state.displayOption.type == "query") {
       let content = null;
-      if (this.state.displayOption.queryId != null)
+      if (this.state.displayOption.queryId != -1)
         content = this.state.synthesisResult[this.state.displayOption.queryId].query;
       return <div className="pnl display-query" style={{display:"block"}}>
-              <div className="query_output_container"><pre style={{height:"100%", overflow:"auto", margin: "0 0 5px"}}>
+              <div className="query_output_container">
+                <pre style={{height:"100%", overflow:"auto", margin: "0 0 5px"}}>
                 <span className="inner-pre" style={{fontSize: "12px"}}>
                   {content}
                 </span>
@@ -166,7 +209,9 @@ class TaskPanel extends React.Component {
              </div>;
     }
     if (this.state.displayOption.type == "vis") {
-      return <div className="pnl display-vis" style={{display:"block"}}>{this.state.displayOption.content}</div>;
+      return <div className="pnl display-vis" style={{display:"block"}}>
+                {this.state.displayOption.content}
+              </div>;
     }
   }
   updateConstants(evt) {
@@ -186,7 +231,7 @@ class TaskPanel extends React.Component {
     if (this.state.inputTables.length == 0)
       this.addDefaultInputTable();
   }
-  genScytheInputString() {
+  invokeScythe() {
     //generates the input to be used by the backend synthesizer
     function tableToScytheStr(table, type) {
       var s = "#" + type + ":" + table.tableName + "\n\n";
@@ -220,9 +265,9 @@ class TaskPanel extends React.Component {
 
     // the string used as the input to the synthesizer
     scytheInputString += "#constraint\n\n{\n  \"constants\": [" 
-    + parseFormatCommaDelimitedStr(constantStr) + "],\n" 
-    + "  \"aggregation_functions\": [" 
-    + parseFormatCommaDelimitedStr(aggrFuncStr) + "]\n}\n";
+                          + parseFormatCommaDelimitedStr(constantStr) + "],\n" 
+                          + "  \"aggregation_functions\": [" 
+                          + parseFormatCommaDelimitedStr(aggrFuncStr) + "]\n}\n";
 
     console.log(scytheInputString);
 
@@ -243,6 +288,7 @@ class TaskPanel extends React.Component {
     .then((responseJson) => {
       if (responseJson.status == "error")
         console.log(responseJson.status.message);
+      this.state.synthesisResult = [];
       for (var i in responseJson.queries) {
         this.state.synthesisResult.push({"query": responseJson.queries[i], "data": null});
       }
@@ -268,12 +314,14 @@ class TaskPanel extends React.Component {
                 <div className='input-group input-group-sm input-box constant-panel'>
                   <span className='input-group-addon' id={'constant-addon' + panelId}>Constants</span>
                   <input type='text' className='form-control' placeholder='None' 
-                         onChange={this.updateConstants.bind(this)} aria-describedby={'constant-addon' + panelId} />
+                         onChange={this.updateConstants.bind(this)} 
+                         aria-describedby={'constant-addon' + panelId} />
                 </div>
                 <div className='input-group input-group-sm input-box aggr-func-panel'>
                   <span className='input-group-addon' id={'aggr-addon' + panelId}>Aggregators</span>
                   <input type='text' className='form-control' placeholder='(Optional)' 
-                          onChange={this.updateAggrFunc.bind(this)} aria-describedby={'aggr-addon' + panelId} />
+                          onChange={this.updateAggrFunc.bind(this)} 
+                          aria-describedby={'aggr-addon' + panelId} />
                 </div>
               </div>
             </td>
@@ -311,48 +359,12 @@ class TaskPanel extends React.Component {
             </td>
             <td>
               <div className="buttons" style={{paddingLeft:"10px", paddingRight:"10px"}}>
-                <button className="btn btn-primary btn-block" onClick={this.genScytheInputString.bind(this)}>Synthesize</button>
+                <button className="btn btn-primary btn-block" 
+                        onClick={this.invokeScythe.bind(this)}>Synthesize</button>
               </div>
             </td>
             <td style={{textAlign:"center"}}>
               {this.renderDropDownMenu()}
-              <div className="buttons btn-group" 
-                   style={{margin:"0 auto", paddingLeft:10+"px", paddingRight:10+"px"}}>
-                <div className='btn-group' id={"query-choice" + panelId}>
-                  <label className="btn btn-default query-btn">Query</label>
-                   <label data-toggle='dropdown' className='viz-query-choice btn btn-default dropdown-toggle' 
-                         data-placeholder="false"><span className='caret'></span>
-                  </label>
-                  <ul className='dropdown-menu' ></ul>
-                </div>
-                {/*below is the visualization choice panel, note that items in the list should all have the same name*/}
-                <div className='btn-group' id={'vis-choice' + panelId}>
-                  <label className="btn btn-default vis-btn">Visualization</label>
-                  <label data-toggle='dropdown' className='btn btn-default dropdown-toggle' 
-                         data-placeholder="false"><span className='caret'></span></label>
-                  <ul className='dropdown-menu'>
-                    <li>
-                      <input type='radio' id={'vis_data_' + panelId + '_1'} 
-                             name={'vis_data_' + panelId} value='1' defaultChecked />
-                      <label htmlFor={'vis_data_' + panelId + '_1'}>Example Output</label>
-                    </li>
-                    <li>
-                      <input type='radio' id={'vis_data_' + panelId + '_2'} name={'vis_data_' + panelId} value='2' />
-                      <label htmlFor={'vis_data_' + panelId + '_2'}>Full Output</label>
-                    </li>
-                    <li className='divider'></li>
-                    <li>
-                      <input type='radio' id={'vis_type_' + panelId + '_1'} 
-                             name={'vis_type' + panelId} value='1' defaultChecked />
-                      <label htmlFor={'vis_type_' + panelId + '_1'}><i className='icon-edit'></i> Histogram</label>
-                    </li>
-                    <li>
-                      <input type='radio' id={'vis_type_' + panelId + '_2'} name={'vis_type' + panelId} value='2' />
-                      <label htmlFor={'vis_type_' + panelId + '_2'}><i className='icon-remove'></i> 3D Histogram</label>
-                    </li>
-                  </ul>
-                </div>
-              </div>
             </td>
           </tr>
         </tbody>
