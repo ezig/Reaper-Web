@@ -189,7 +189,7 @@ var TaskPanel = function (_React$Component2) {
       var options = [];
       var querySelectorName = makeid();
       var displaySelected = "Select One";
-      if (this.state.displayOption.queryId != -1) displaySelected = "Query " + this.state.displayOption.queryId;
+      if (this.state.displayOption.queryId != -1) displaySelected = "Query " + (this.state.displayOption.queryId + 1);
       var disableSelect = this.state.synthesisResult.length == 0;
 
       // prepare options in the drop down menu
@@ -199,7 +199,7 @@ var TaskPanel = function (_React$Component2) {
           tempId: makeid(),
           checked: this.state.displayOption.queryId == i });
       }var visTypeChoiceName = makeid();
-      var visTypeDropDown = [{ value: "example data", label: "Example Data", tempId: makeid(), disabled: false,
+      var visTypeDropDown = [{ value: "example data", label: "Output Example", tempId: makeid(), disabled: false,
         checked: this.state.displayOption.visDataSrc == "example data" }, { value: "query result", label: "Query Result", tempId: makeid(),
         checked: this.state.displayOption.visDataSrc == "query result",
         disabled: disableSelect }];
@@ -228,7 +228,7 @@ var TaskPanel = function (_React$Component2) {
                 { key: i },
                 React.createElement("input", { type: "radio", id: d.tempId, name: querySelectorName, value: i, checked: d.checked,
                   onChange: function onChange(e) {
-                    return _this3.updateDisplayOption.bind(_this3)("queryId", e.target.value);
+                    return _this3.updateDisplayOption.bind(_this3)("queryId", parseInt(e.target.value));
                   } }),
                 React.createElement(
                   "label",

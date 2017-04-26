@@ -134,7 +134,7 @@ class TaskPanel extends React.Component {
     var querySelectorName = makeid();
     var displaySelected = "Select One";
     if (this.state.displayOption.queryId != -1)
-      displaySelected = "Query " + this.state.displayOption.queryId;
+      displaySelected = "Query " + (this.state.displayOption.queryId + 1);
     var disableSelect = (this.state.synthesisResult.length == 0);
     
     // prepare options in the drop down menu
@@ -145,7 +145,7 @@ class TaskPanel extends React.Component {
                     checked: (this.state.displayOption.queryId == i)});
     
     var visTypeChoiceName = makeid();
-    var visTypeDropDown = [{value: "example data", label: "Example Data", tempId: makeid(), disabled: false,
+    var visTypeDropDown = [{value: "example data", label: "Output Example", tempId: makeid(), disabled: false,
                             checked: (this.state.displayOption.visDataSrc == "example data")},
                           {value: "query result", label: "Query Result", tempId: makeid(), 
                            checked: (this.state.displayOption.visDataSrc == "query result"), 
@@ -164,7 +164,7 @@ class TaskPanel extends React.Component {
                 {options.map((d, i) =>
                   <li key={i}>
                     <input type='radio' id={d.tempId} name={querySelectorName} value={i} checked={d.checked}
-                    onChange={e => this.updateDisplayOption.bind(this)("queryId", e.target.value)} />
+                    onChange={e => this.updateDisplayOption.bind(this)("queryId", parseInt(e.target.value))} />
                     <label htmlFor={d.tempId}>{d.label}</label>
                   </li>)}
               </ul>
