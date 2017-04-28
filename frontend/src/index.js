@@ -12,25 +12,126 @@ class ScytheInterface extends React.Component {
     this.state = {};
     this.state.panels = [];
     this.state.panels.push(<TaskPanel key={this.state.panels.length} />);
+
+    this.state.dbKey = null;
+    // tables to be uploaded to the backend database
+    this.state.tableQueue = [];
+    this.createTempDB.bind(this)();
   }
   addPanel() {
     this.state.panels.push(<TaskPanel key={this.state.panels.length} />);
     this.setState(this.state.panels);
   }
   removePanel() {
-    if (this.state.panels.length == 0)
+    if (this.state.panels.length == 0) 
       return;
     this.state.panels.splice(-1, 1);
     this.setState(this.state.panels);
   }
+  createTempDB() {
+    // make a request to the server
+    var request = new Request('/create_temp_db', 
+      { method: 'POST', 
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        }
+      });
+    // handle response from the server
+    // return the promise
+    fetch(request)
+    .then((response) => response.json())
+    .then((responseJson) => {
+      console.log("New DBKey allocated: " + responseJson.dbKey);
+      this.state.dbKey = responseJson.dbKey;
+      this.setState({dbKey: this.state.dbKey});
+      for (var t in this.state.tableQueue) {
+        this.transmitDataTable.bind(this)(t);
+      }
+      this.state.tableQueue = [];
+      this.setState(this.state.tableQueue);
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+  }
+  loadCSVAndTransfer(evt) {
+    // When the control has changed, there are new files
+    if (!window.FileReader) {
+      return alert('FileReader API is not supported by your browser.');
+    }
+    var files = evt.target.files;
+    this.state.inputTables = [];
+    this.setState(this.state.inputTables);
+    if (files) {
+      //this.state.inputTables = [];
+      for (var i = 0; i < files.length; i++) {
+        // bind the function to "this" to update the react state
+        (function (file, t) {
+          var reader = new FileReader();
+          if (file.size > 5000000) {
+            alert("[Error] Input example file " + file.name 
+              + "(" + (file.size / 1000) + "kB) exceeds the tool size limit (5MB).");
+            return;
+          }
+          // bind the function to "this" to update the react state
+          reader.onload = function () {
+            var csvdata = d3.csvParse(reader.result);
+            var table = {name: file.name.replace(/\./g,"_"), content: [], header: []};
+            for (var i = 0; i < csvdata.columns.length; i ++) 
+              table.header.push(csvdata.columns[i]);
+            for (var i = 0; i < csvdata.length; i++) {
+              var row = [];
+              for (var j = 0; j < csvdata.columns.length; j ++) {
+                var cell = csvdata[i][csvdata.columns[j]].trim();
+                row.push(cell);
+              }
+              table.content.push(row);
+            }
+            this.transmitDataTable.bind(this)(table);
+          }.bind(this);
+          reader.readAsText(file, "UTF-8");
+        }).bind(this)(files[i]);
+      }
+    }
+  }
+  transmitDataTable(table) {
+    var dbKey = this.state.dbKey;
+    if (dbKey == null) { 
+      this.state.tableQueue.push(table);
+      return;
+    }
+    var transRequest = new Request('/insert_csv_table', 
+    { method: 'POST', 
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        'table': table,
+        'db_key': dbKey
+      })
+    });
+
+    // handle response from the server
+    fetch(transRequest)
+      .then((response) => response.json())
+      .then((responseJson) => { console.log(responseJson); })
+      .catch((error) => { console.error(error); });
+  }
   render() {
     return (
       <div id="interactive-panels">
-        <div className="buttons">
-          <button id="add_panel" className="btn btn-success" onClick={this.addPanel.bind(this)}>
-            <span className="glyphicon glyphicon-plus" /> New Panel</button>
-          <button id="remove_panel" className="btn btn-danger" onClick={this.removePanel.bind(this)}>
-            <span className="glyphicon glyphicon-minus" /> Remove Panel</button>
+        <div className="buttons btn-group">
+          <label className="btn btn-primary" onClick={this.addPanel.bind(this)}>
+            <span className="glyphicon glyphicon-plus" /> New Panel</label>
+          <label className="btn btn-primary" onClick={this.removePanel.bind(this)}>
+            <span className="glyphicon glyphicon-minus" /> Remove Panel</label>
+          <label className="btn btn-primary">
+            Upload Data
+            <input onChange={this.loadCSVAndTransfer.bind(this)} className="fileupload" 
+                   type="file" style={{display: "none"}} name="files[]" multiple />
+          </label>
         </div>
         { this.state.panels.map(x => {return [x, <br />]}) }
       </div>);
@@ -126,7 +227,6 @@ class TaskPanel extends React.Component {
   }
   updateDisplayOption(attr, val) {
     this.state.displayOption[attr] = val;
-    console.log(this.state.displayOption);
     this.setState(this.state.displayOption);
   }
   renderDropDownMenu() {
@@ -350,7 +450,7 @@ class TaskPanel extends React.Component {
                     <span className="glyphicon glyphicon-minus" /> Remove Table
                   </label>
                   <label className="btn btn-primary">
-                    Load Data
+                    Load Example
                     <input onChange={this.uploadInputTables.bind(this)} className="fileupload" 
                            type="file" style={{display: "none"}} name="files[]" multiple />
                   </label>
