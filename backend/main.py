@@ -4,6 +4,7 @@ import os
 import local_subprocess32
 from local_subprocess32 import check_output, PIPE, TimeoutExpired
 from datetime import datetime
+import dateutil.parser
 import sqlite3
 
 from flask import Flask, render_template, request, jsonify
@@ -46,12 +47,24 @@ def run_query():
     query = request_data["query"]
     target_db = request_data['dbKey']
 
+# check time stamp of all created temporary db and remove those created >30 min ago
+def clean_old_temp_db():
+    files = [f for f in os.listdir('.') if os.path.isfile(f)]
+    for f in files:
+        if f.startswith("tempDB") and f.endswith(".db"):
+            f_timestamp = dateutil.parser.parse(f[6:-3])
+            time_diff = (datetime.now() - f_timestamp).total_seconds()
+            if time_diff > 1800:
+                print "TempDB %s removed after 1800s of creation." % {f}
+                os.remove(f)
+
 # create and destruct temp db
 @app.route('/create_temp_db', methods = ['POST'])
 def create_temp_db():
     db_key = "tempDB" + (datetime.now().isoformat()) + ".db"
     conn = sqlite3.connect(db_key)
     print "Temporary database (" + db_key + ") created and opened successfully"
+    clean_old_temp_db()
     return jsonify({"dbKey": db_key})
 
 @app.route('/insert_csv_table', methods=['POST'])
