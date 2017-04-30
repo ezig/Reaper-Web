@@ -14,9 +14,9 @@
     "react-dom": "^15.4.2",
     "react-dropdown": "^1.2.1",
     "react-select": "^1.0.0-rc.3",
-    "vega": "^3.0.0-beta.27",
-    "vega-embed": "^3.0.0-beta.7",
-    "vega-lite": "^2.0.0-alpha.8"
+    "vega": "^3.0.0-beta.30",
+    "vega-embed": "^3.0.0-beta.11",
+    "vega-lite": "^2.0.0-beta.1"
   },
   "devDependencies": {
     "babel-cli": "^6.24.0"

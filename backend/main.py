@@ -39,59 +39,6 @@ def upload_file():
     f.write(file_coddntent)
     return file_name
 
-@app.route('/run_query', methods = ['POST'])
-def run_query():
-    request_data = request.get_json()
-    if (not "query" in request_data) or (not "dbKey" in request_data):
-        return False
-    query = request_data["query"]
-    target_db = request_data['dbKey']
-
-# check time stamp of all created temporary db and remove those created >30 min ago
-def clean_old_temp_db():
-    files = [f for f in os.listdir('.') if os.path.isfile(f)]
-    for f in files:
-        if f.startswith("tempDB") and f.endswith(".db"):
-            f_timestamp = dateutil.parser.parse(f[6:-3])
-            time_diff = (datetime.now() - f_timestamp).total_seconds()
-            if time_diff > 1800:
-                print "TempDB %s removed after 1800s of creation." % {f}
-                os.remove(f)
-
-# create and destruct temp db
-@app.route('/create_temp_db', methods = ['POST'])
-def create_temp_db():
-    db_key = "tempDB" + (datetime.now().isoformat()) + ".db"
-    conn = sqlite3.connect(db_key)
-    print "Temporary database (" + db_key + ") created and opened successfully"
-    clean_old_temp_db()
-    return jsonify({"dbKey": db_key})
-
-@app.route('/insert_csv_table', methods=['POST'])
-def insert_csv_table():
-    request_data = request.get_json()
-    if ("db_key" in request_data and "table" in request_data):
-        dbKey = request_data["db_key"]
-        table = request_data["table"]
-        conn = sqlite3.connect(dbKey)
-        cursor = conn.cursor()
-        # careful! if the table already exists in the database, we would simply insert rows into it
-        cursor.execute("CREATE TABLE IF NOT EXISTS %s (%s);" % (table["name"], ",".join(table["header"])))
-        cursor.executemany("INSERT INTO %s (%s) VALUES (%s);" 
-            % (table["name"], ",".join(table["header"]), ",".join("?"*len(table["header"]))), table["content"])
-        conn.commit()
-        conn.close()
-        print ("table %s(%s) successfully uploaded to database %s" 
-                % (table["name"], ",".join(table["header"]), dbKey))
-        return jsonify({"status": "success"})
-    return jsonify({"status": "failed"}) 
-
-@app.route('/destruct_temp_db')
-def destruct_temp_db():
-    request_data = request.get_json()
-    if "dbKey" in request_data:
-        os.remove(request_data["dbKey"])
-
 # Synthesizer api call
 @app.route('/scythe', methods = ['POST'])
 def synthesize():
@@ -142,3 +89,66 @@ def synthesize():
             "status": "error",
             "message": "Timeout (" + str(synthesizer_time_limit) + " seconds)"
         })
+
+
+################## Database related services ##############
+
+# check time stamp of all created temporary db and remove those created >30 min ago
+def clean_old_temp_db():
+    files = [f for f in os.listdir('.') if os.path.isfile(f)]
+    for f in files:
+        if f.startswith("tempDB") and f.endswith(".db"):
+            f_timestamp = dateutil.parser.parse(f[6:-3])
+            time_diff = (datetime.now() - f_timestamp.replace(tzinfo=None)).total_seconds()
+            if time_diff > 1800:
+                print "TempDB %s removed after 1800s of creation." % {f}
+                os.remove(f)
+
+# create and destruct temp db
+@app.route('/create_temp_db', methods = ['POST'])
+def create_temp_db():
+    request_data = request.get_json()
+    if not "db_key" in request_data:
+        return jsonify({"status": "error"})
+    db_key = request_data["db_key"]
+    conn = sqlite3.connect(db_key)
+    print "Temporary database (" + db_key + ") created and opened successfully"
+    clean_old_temp_db()
+    return jsonify({"status": "success", "dbKey": db_key})
+
+@app.route('/insert_csv_table', methods=['POST'])
+def insert_csv_table():
+    request_data = request.get_json()
+    if ("db_key" in request_data and "table" in request_data):
+        db_key = request_data["db_key"]
+        table = request_data["table"]
+        conn = sqlite3.connect(db_key)
+        cursor = conn.cursor()
+        # careful! if the table already exists in the database, we would simply insert rows into it
+        cursor.execute("CREATE TABLE IF NOT EXISTS %s (%s);" % (table["name"], ",".join(table["header"])))
+        cursor.executemany("INSERT INTO %s (%s) VALUES (%s);" 
+            % (table["name"], ",".join(table["header"]), 
+                ",".join("?"*len(table["header"]))), table["content"])
+        conn.commit()
+        conn.close()
+        print ("table %s(%s) successfully uploaded to database %s" 
+                % (table["name"], ",".join(table["header"]), db_key))
+        return jsonify({"status": "success"})
+    return jsonify({"status": "error"})
+
+@app.route('/query_temp_db', methods=['POST'])
+def query_temp_db():
+    request_data = request.get_json()
+    print request_data
+    if ("db_key" in request_data) and ("query" in request_data):
+        db_key = request_data["db_key"]
+        query = request_data["query"]
+        return jsonify({"status": "success", "data": ""})
+    return jsonify({"status": "error"})
+
+# manually destruct a database
+@app.route('/destruct_temp_db', methods=['POST'])
+def destruct_temp_db():
+    request_data = request.get_json()
+    if "db_key" in request_data:
+        os.remove(request_data["db_key"])

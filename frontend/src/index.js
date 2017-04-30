@@ -10,16 +10,18 @@ class ScytheInterface extends React.Component {
   constructor(props) {
     super(props);
     this.state = {};
-    this.state.panels = [];
-    this.state.panels.push(<TaskPanel key={this.state.panels.length} />);
+    //TODO: this is very badly designed, changing the format will affect the backend as well
+    this.state.dbKey = "tempDB" + new Date().toISOString() + ".db";
 
-    this.state.dbKey = null;
+    this.state.panels = [];
+    this.state.panels.push(<TaskPanel key={this.state.panels.length}  dbKey={this.state.dbKey}/>);
+
     // tables to be uploaded to the backend database
     this.state.tableQueue = [];
     this.createTempDB.bind(this)();
   }
   addPanel() {
-    this.state.panels.push(<TaskPanel key={this.state.panels.length} />);
+    this.state.panels.push(<TaskPanel key={this.state.panels.length} dbKey={this.state.dbKey} />);
     this.setState(this.state.panels);
   }
   removePanel() {
@@ -35,16 +37,15 @@ class ScytheInterface extends React.Component {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
-        }
+        },
+        body: JSON.stringify({'db_key': this.state.dbKey })
       });
     // handle response from the server
     // return the promise
     fetch(request)
     .then((response) => response.json())
     .then((responseJson) => {
-      console.log("New DBKey allocated: " + responseJson.dbKey);
-      this.state.dbKey = responseJson.dbKey;
-      this.setState({dbKey: this.state.dbKey});
+      console.log("Databased successfully created on server: " + responseJson.dbKey);
       for (var t in this.state.tableQueue) {
         this.transmitDataTable.bind(this)(t);
       }
@@ -147,10 +148,11 @@ class TaskPanel extends React.Component {
     this.state.outputTable = this.genDefaultTable("output_table");
     this.state.constants = "";
     this.state.aggrFunc = "";
+    this.state.dbKey = this.props.dbKey; // get DB key from the parent
 
     // stores json objects of form {query: XXX, data: XXX}
     this.state.synthesisResult = [];
-    this.state.displayOption = {type: "vis", queryId: -1, visDataSrc: "example data"};
+    this.state.displayOption = {type: "query", queryId: -1, visDataSrc: "example data"};
   }
   uploadInputTables(evt) {
 
@@ -229,6 +231,48 @@ class TaskPanel extends React.Component {
     this.state.displayOption[attr] = val;
     this.setState(this.state.displayOption);
   }
+  // execute the currently selected query on the database to acquire the result 
+  runQueryOnDatabase() {
+
+    console.log(this.state);
+
+    if (this.state.synthesisResult[this.state.displayOption.queryId].data != null)
+      return;
+
+    var query = this.state.synthesisResult[this.state.displayOption.queryId].query;
+    var dbKey = this.state.dbKey;
+
+    var req = new Request('/query_temp_db', 
+    { method: 'POST', 
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: query,
+        db_key: dbKey,
+      })
+    });
+
+    console.log(JSON.stringify({
+        'query': query,
+        'db_key': dbKey,
+      }));
+
+    // handle response from the server
+    fetch(req)
+      .then((response) => response.json())
+      .then((responseJson) => { 
+        console.log(responseJson);
+        if (responseJson.status == "success") {
+          console.log(query);
+          console.log(responseJson);
+          this.state.synthesisResult[this.state.displayOption.queryId].data = responseJson.data;
+          this.setState(this.state.synthesisResult);
+        }
+      })
+      .catch((error) => { console.error(error); });
+  }
   renderDropDownMenu() {
     var options = [];
     var querySelectorName = makeid();
@@ -273,6 +317,10 @@ class TaskPanel extends React.Component {
                    onClick={e => this.updateDisplayOption.bind(this)("type", "query")}>
               Show Query
             </label>
+            <label className={"btn btn-default query-btn " + (disableSelect ? "disabled" : "")}
+                   onClick={this.runQueryOnDatabase.bind(this)}>
+              Run on DB
+            </label>
             <div className='btn-group'>
               <label className="btn btn-default query-btn"
                      onClick={e => this.updateDisplayOption.bind(this)("type", "vis")}>
@@ -297,16 +345,25 @@ class TaskPanel extends React.Component {
   renderDisplayPanel() {
     if (this.state.displayOption.type == "query") {
       let content = null;
-      if (this.state.displayOption.queryId != -1)
-        content = this.state.synthesisResult[this.state.displayOption.queryId].query;
-      return <div className="pnl display-query" style={{display:"block"}}>
-              <div className="query_output_container">
-                <pre style={{height:"100%", overflow:"auto", margin: "0 0 5px"}}>
-                <span className="inner-pre" style={{fontSize: "12px"}}>
-                  {content}
-                </span>
-              </pre></div>
-             </div>;
+      if (this.state.displayOption.queryId != -1) {
+        return <div className="pnl display-query" style={{display:"block"}}>
+                <div className="query_output_container">
+                  <pre style={{height:"100%", overflow:"auto", margin: "0 0 5px"}}>
+                  <span className="inner-pre" style={{fontSize: "12px"}}>
+                    {this.state.synthesisResult[this.state.displayOption.queryId].query}
+                  </span>
+                </pre></div>
+               </div>;
+      } else {
+        if (this.state.synthesisResult.length == 0)
+          return <div className="pnl display-query" style={{display:"block"}}>
+                    Query not yet available.
+                  </div>;
+        else
+          return <div className="pnl display-query" style={{display:"block"}}>
+                  Query synthesized, select a result to display.
+                  </div>;
+      }
     }
     if (this.state.displayOption.type == "vis") {
       return <div className="pnl display-vis" style={{display:"block"}}>
