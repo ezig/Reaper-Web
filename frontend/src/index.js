@@ -254,19 +254,13 @@ class TaskPanel extends React.Component {
       })
     });
 
-    console.log(JSON.stringify({
-        'query': query,
-        'db_key': dbKey,
-      }));
-
     // handle response from the server
     fetch(req)
       .then((response) => response.json())
       .then((responseJson) => { 
         console.log(responseJson);
         if (responseJson.status == "success") {
-          console.log(query);
-          console.log(responseJson);
+          console.log("Successfully executed query.");
           this.state.synthesisResult[this.state.displayOption.queryId].data = responseJson.data;
           this.setState(this.state.synthesisResult);
         }

@@ -136,14 +136,30 @@ def insert_csv_table():
         return jsonify({"status": "success"})
     return jsonify({"status": "error"})
 
+MAX_ROW_KEPT = 5000
+
 @app.route('/query_temp_db', methods=['POST'])
 def query_temp_db():
     request_data = request.get_json()
-    print request_data
     if ("db_key" in request_data) and ("query" in request_data):
+        print "Received a query request for database:", request_data["db_key"]
         db_key = request_data["db_key"]
         query = request_data["query"]
-        return jsonify({"status": "success", "data": ""})
+        conn = sqlite3.connect(db_key)
+        c = conn.cursor()
+        c.execute(query)
+        table = {}
+        table["content"] = []
+        table["header"] = None
+        count = 0
+        table["header"] = [description[0] for description in c.description]
+        for row in c:
+            count += 1
+            if count > MAX_ROW_KEPT:
+                break
+            table["content"].append(row)
+        print table
+        return jsonify({"status": "success", "data": table})
     return jsonify({"status": "error"})
 
 # manually destruct a database
