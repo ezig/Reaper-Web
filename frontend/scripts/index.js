@@ -16,6 +16,15 @@ function makeid() {
   }return text;
 }
 
+function tableToCSV(table) {
+  var csvStr = "";
+  csvStr += table["header"].join(",") + "\n";
+  for (var r in table["content"]) {
+    csvStr += r.join(",") + "\n";
+  }
+  return csvStr;
+}
+
 var ScytheInterface = function (_React$Component) {
   _inherits(ScytheInterface, _React$Component);
 
@@ -55,7 +64,6 @@ var ScytheInterface = function (_React$Component) {
     value: function createTempDB() {
       var _this2 = this;
 
-      console.log(this.state.dbKey);
       // make a request to the server
       var request = new Request('/create_temp_db', { method: 'POST',
         headers: {
@@ -69,7 +77,7 @@ var ScytheInterface = function (_React$Component) {
       fetch(request).then(function (response) {
         return response.json();
       }).then(function (responseJson) {
-        console.log("Databased successfully created: " + responseJson.dbKey);
+        console.log("Databased successfully created on server: " + responseJson.dbKey);
         for (var t in _this2.state.tableQueue) {
           _this2.transmitDataTable.bind(_this2)(t);
         }
@@ -203,7 +211,7 @@ var TaskPanel = function (_React$Component2) {
     _this3.state.aggrFunc = "";
     _this3.state.dbKey = _this3.props.dbKey; // get DB key from the parent
 
-    // stores json objects of form {query: XXX, data: XXX}
+    // stores json objects of form {query: XXX, data: XXX}, data field is null by default
     _this3.state.synthesisResult = [];
     _this3.state.displayOption = { type: "query", queryId: -1, visDataSrc: "example data" };
     return _this3;
@@ -293,6 +301,8 @@ var TaskPanel = function (_React$Component2) {
       this.state.displayOption[attr] = val;
       this.setState(this.state.displayOption);
     }
+    // execute the currently selected query on the database to acquire the result 
+
   }, {
     key: "runQueryOnDatabase",
     value: function runQueryOnDatabase() {
@@ -316,19 +326,13 @@ var TaskPanel = function (_React$Component2) {
         })
       });
 
-      console.log(JSON.stringify({
-        'query': query,
-        'db_key': dbKey
-      }));
-
       // handle response from the server
       fetch(req).then(function (response) {
         return response.json();
       }).then(function (responseJson) {
         console.log(responseJson);
         if (responseJson.status == "success") {
-          console.log(query);
-          console.log(responseJson);
+          console.log("Successfully executed query.");
           _this4.state.synthesisResult[_this4.state.displayOption.queryId].data = responseJson.data;
           _this4.setState(_this4.state.synthesisResult);
         }
@@ -401,6 +405,14 @@ var TaskPanel = function (_React$Component2) {
               return _this5.updateDisplayOption.bind(_this5)("type", "query");
             } },
           "Show Query"
+        ),
+        React.createElement(
+          "label",
+          { className: "btn btn-default query-btn " + (disableSelect ? "disabled" : ""),
+            onClick: function onClick(e) {
+              return _this5.updateDisplayOption.bind(_this5)("type", "data");
+            } },
+          "Show Data"
         ),
         React.createElement(
           "label",
@@ -482,13 +494,31 @@ var TaskPanel = function (_React$Component2) {
             "Query synthesized, select a result to display."
           );
         }
-      }
-      if (this.state.displayOption.type == "vis") {
+      } else if (this.state.displayOption.type == "vis") {
         return React.createElement(
           "div",
           { className: "pnl display-vis", style: { display: "block" } },
           this.state.displayOption.content
         );
+      } else if (this.state.displayOption.type == "data") {
+        var _content = null;
+        if (this.state.displayOption.queryId != -1 && this.state.synthesisResult[this.state.displayOption.queryId].data != null) {
+          return React.createElement(
+            "div",
+            { className: "pnl display-query", style: { display: "block" } },
+            React.createElement(
+              "div",
+              { className: "query_output_container" },
+              tableToCSV(this.state.synthesisResult[this.state.displayOption.queryId].data)
+            )
+          );
+        } else {
+          return React.createElement(
+            "div",
+            { className: "pnl display-vis", style: { display: "block" } },
+            "The data is not yet available, please run the query on database."
+          );
+        }
       }
     }
   }, {

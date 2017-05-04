@@ -78,7 +78,12 @@ def synthesize():
                 current += line + "\n"
             else:
                 continue
+        # handle the last query
+        if current != "":
+            queries.append(current)
+
         os.remove(tempfile_name)
+
         return jsonify({
             "status": "success",
             "queries": queries
@@ -124,8 +129,20 @@ def insert_csv_table():
         table = request_data["table"]
         conn = sqlite3.connect(db_key)
         cursor = conn.cursor()
+
+        col_type = {}
+        typed_col = []
+        sample_length = 10 if len(table["content"]) > 10 else len(table["content"])
+        for col_id in range(0, len(table["header"])):
+            values = []
+            for i in range(0, sample_length):
+                values.append(table["content"][i][col_id])
+            ty = try_infer_datatype(values)
+            col_type[table["header"][col_id]] = ty
+            typed_col.append(table["header"][col_id] + " " + ty)
+
         # careful! if the table already exists in the database, we would simply insert rows into it
-        cursor.execute("CREATE TABLE IF NOT EXISTS %s (%s);" % (table["name"], ",".join(table["header"])))
+        cursor.execute("CREATE TABLE IF NOT EXISTS %s (%s);" % (table["name"], ",".join(typed_col)))
         cursor.executemany("INSERT INTO %s (%s) VALUES (%s);" 
             % (table["name"], ",".join(table["header"]), 
                 ",".join("?"*len(table["header"]))), table["content"])
@@ -168,3 +185,34 @@ def destruct_temp_db():
     request_data = request.get_json()
     if "db_key" in request_data:
         os.remove(request_data["db_key"])
+
+def try_infer_datatype(values):
+    
+    def infer_one(val):
+        try:
+            int(val)
+            return "INTEGER"
+        except:
+            pass
+        try:
+            float(val)
+            return "REAL"
+        except ValueError:
+            pass
+        return "TEXT"
+
+    is_int = True
+    for v in values:
+        ty = infer_one(v)
+        if  ty == "TEXT":
+            return "TEXT"
+        elif ty == "REAL":
+            is_int = False
+
+    if is_int:
+        return "INTEGER"
+    return "REAL"
+
+if __name__ == '__main__':
+    print try_infer_datatype(["1s", "2", "3"])
+

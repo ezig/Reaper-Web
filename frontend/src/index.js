@@ -6,6 +6,15 @@ function makeid() {
     return text;
 }
 
+function tableToCSV(table) {
+  var csvStr = "";
+  csvStr += table["header"].join(",") + "\n";
+  for (var r in table["content"]) {
+    csvStr += r.join(",") + "\n";
+  }
+  return csvStr;
+}
+
 class ScytheInterface extends React.Component {
   constructor(props) {
     super(props);
@@ -150,7 +159,7 @@ class TaskPanel extends React.Component {
     this.state.aggrFunc = "";
     this.state.dbKey = this.props.dbKey; // get DB key from the parent
 
-    // stores json objects of form {query: XXX, data: XXX}
+    // stores json objects of form {query: XXX, data: XXX}, data field is null by default
     this.state.synthesisResult = [];
     this.state.displayOption = {type: "query", queryId: -1, visDataSrc: "example data"};
   }
@@ -312,6 +321,10 @@ class TaskPanel extends React.Component {
               Show Query
             </label>
             <label className={"btn btn-default query-btn " + (disableSelect ? "disabled" : "")}
+                   onClick={e => this.updateDisplayOption.bind(this)("type", "data")}>
+              Show Data
+            </label>
+            <label className={"btn btn-default query-btn " + (disableSelect ? "disabled" : "")}
                    onClick={this.runQueryOnDatabase.bind(this)}>
               Run on DB
             </label>
@@ -353,16 +366,28 @@ class TaskPanel extends React.Component {
           return <div className="pnl display-query" style={{display:"block"}}>
                     Query not yet available.
                   </div>;
-        else
-          return <div className="pnl display-query" style={{display:"block"}}>
+        else return <div className="pnl display-query" style={{display:"block"}}>
                   Query synthesized, select a result to display.
                   </div>;
       }
-    }
-    if (this.state.displayOption.type == "vis") {
+    } else if (this.state.displayOption.type == "vis") {
       return <div className="pnl display-vis" style={{display:"block"}}>
                 {this.state.displayOption.content}
               </div>;
+    } else if (this.state.displayOption.type == "data") {
+      let content = null;
+      if (this.state.displayOption.queryId != -1 
+            && this.state.synthesisResult[this.state.displayOption.queryId].data != null) {
+        return <div className="pnl display-query" style={{display:"block"}}>
+                <div className="query_output_container">
+                  {tableToCSV(this.state.synthesisResult[this.state.displayOption.queryId].data)}
+                </div>
+               </div>;
+      } else {
+        return <div className="pnl display-vis" style={{display:"block"}}>
+                The data is not yet available, please run the query on database.
+              </div>;
+      }
     }
   }
   updateConstants(evt) {
