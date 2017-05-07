@@ -1,3 +1,4 @@
+python-dateutil==2.5.3
 backports.ssl-match-hostname==3.5.0.1
 click==6.6
 docker-pycreds==0.2.1
