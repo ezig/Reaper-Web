@@ -1,9 +1,9 @@
 var global_table_id = 0;
 
 // The function that creates a table within given div
-function tabulate(data, columns, div_id) {
+function tabulate(data, columns, divId) {
 
-  var table = d3.select(div_id + " .tbl").append("table"),
+  var table = d3.select(divId + " .tbl").append("table"),
       thead = table.append("thead"),
       tbody = table.append("tbody");
 
@@ -84,26 +84,26 @@ function htmlForTextWithEmbeddedNewlines(text) {
 
 // creating histogram
 // plot a histogram from mpg data in a .csv file
-function gen_histogram(csvdata, div_id) {
+function genHistogram(table, divId, targetCol) {
   
   // whitespace on either side of the bars in units of MPG
   var binmargin = .5; 
   var margin = {top: 40, right: 20, bottom: 40, left: 50};
-  var height = $(div_id).height() - margin.top - margin.bottom;
-  var width = Math.min($(div_id).width() - margin.left - margin.right, 
-                       $(div_id).height() + 200 - margin.left - margin.right);
+  var height = $(divId).height() - margin.top - margin.bottom;
+  var width = Math.min($(divId).width() - margin.left - margin.right, 
+                       $(divId).height() + 200 - margin.left - margin.right);
 
   var ymax = 0;
   var cnt_data = {};
-  for (var i = 0; i < csvdata.length; i ++) {
-    if (csvdata[i].c2 in cnt_data) {
-      cnt_data[csvdata[i].c2] ++;
-      if (cnt_data[csvdata[i].c2] > ymax)
-        ymax = cnt_data[csvdata[i].c2];
+  for (var i = 0; i < table["content"].length; i ++) {
+    if (table["content"][i][targetCol] in cnt_data) {
+      cnt_data[table["content"][i][targetCol]] ++;
+      if (cnt_data[table["content"][i][targetCol]] > ymax)
+        ymax = cnt_data[table["content"][i][targetCol]];
     } else {
-      cnt_data[csvdata[i].c2] = 1;
-      if (cnt_data[csvdata[i].c2] > ymax)
-        ymax = cnt_data[csvdata[i].c2];
+      cnt_data[table["content"][i][targetCol]] = 1;
+      if (cnt_data[table["content"][i][targetCol]] > ymax)
+        ymax = cnt_data[table["content"][i][targetCol]];
     }
   }
 
@@ -117,9 +117,9 @@ function gen_histogram(csvdata, div_id) {
 
   var binwidth = (width - 0) / 62 - 2 * binmargin;
 
-  histdata = [];
-  for (i in cnt_data) {
-    dt = { 
+  var histdata = [];
+  for (var i in cnt_data) {
+    var dt = { 
       numfill: parseInt(cnt_data[i]), 
       meta: parseInt(i),
     };
@@ -148,12 +148,12 @@ function gen_histogram(csvdata, div_id) {
   .direction('e')
   .offset([0, 20])
   .html(function(d) {
-    return '<table id="tiptable">' + "<tr><td>Year: "
+    return '<table id="tiptable">' + "<tr><td>Label: "
             + d.meta + "</td></tr><tr><td> Count: " + d.numfill + "</td></tr></table>";
   });
 
   // put the graph in the "mpg" div
-  var svg = d3.select(div_id).append("svg")
+  var svg = d3.select(divId).append("svg")
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom)
       .append("g")
@@ -214,32 +214,56 @@ function gen_histogram(csvdata, div_id) {
     .text("count");//.text("Count");
 }
 
-function build_pubviz(csvdata, div_id) {
+function gen2DHistogram(table, divId) {
 
   // whitespace on either side of the bars in units of MPG
   var binmargin = .2; 
   var margin = {top: 40, right: 20, bottom: 40, left: 50};
-  var height = $(div_id).height() - margin.top - margin.bottom;
-  var width = Math.min($(div_id).width() - margin.left - margin.right, 
-                       $(div_id).height() + 200 - margin.left - margin.right);
+  var height = $(divId).height() - margin.top - margin.bottom;
+  var width = Math.min($(divId).width() - margin.left - margin.right, 
+                       $(divId).height() + 200 - margin.left - margin.right);
 
   var xvals = [];
   var yvals = [];
   var data = [];
   var maxcnt = 1;
 
-  xydata = []
+  var xydata = []
 
-  for (var i = 0; i < csvdata.length; i ++) {
-    x = Number.parseInt(csvdata[i][csvdata.columns[0]]);
-    y = Number.parseInt(csvdata[i][csvdata.columns[1]]);
-    z = Number.parseInt(csvdata[i][csvdata.columns[2]]);
-    if (z > maxcnt) {
-      maxcnt = z; 
+  if (table["header"].length < 3)
+    return;
+
+  var map = {}
+  for (var i = 0; i < table["content"].length; i++) {
+    if (table["content"][i][1] == "" || table["content"][i][2] == "" 
+        || isNaN(table["content"][i][1]) || isNaN( table["content"][i][2])) 
+      continue;
+    x = Number.parseInt(table["content"][i][1]);
+    y = Number.parseInt(table["content"][i][2]);
+    if (x in map) {
+      if (y in map[x]) {
+        map[x][y] += 1;
+      } else {
+        map[x][y] = 1;
+      }
+    } else {
+      map[x] = {};
+      map[x][y] = 1;
     }
-    xydata.push([x,y,z]);
-    xvals.push[x];
-    yvals.push[y];
+  }
+
+  for (var i in map) {
+    for (var j in map[i]) {
+      var x = Number.parseInt(i);
+      var y = Number.parseInt(j);
+      var z = Number.parseInt(map[i][j]);
+      if (z > maxcnt) {
+        maxcnt = z; 
+      }
+      xydata.push([x,y,z]);
+      xvals.push[x];
+      yvals.push[y];
+    }
   }
 
   // Set the limits of the x axis
@@ -269,14 +293,14 @@ function build_pubviz(csvdata, div_id) {
   .direction('e')
   .offset([0, 20])
   .html(function(d) {
-    return '<table id="tiptable"><tr><td>Career Length: ' 
-    + d[0] + "</td></tr><tr><td> Most Cited Paper Year: " 
+    return '<table id="tiptable"><tr><td>Label1: ' 
+    + d[0] + "</td></tr><tr><td> Label2: " 
     + d[1] + "</td></tr><tr><td>Count: " 
     + d[2] + "</td></tr></table>";
   });
 
   // put the graph in the "mpg" div
-  var svg = d3.select(div_id).append("svg")
+  var svg = d3.select(divId).append("svg")
               .attr("width", width + margin.left + margin.right)
               .attr("height", height + margin.top + margin.bottom)
               .append("g")
@@ -292,7 +316,7 @@ function build_pubviz(csvdata, div_id) {
               .on('mouseover', tip.show)
               .on('mouseout', tip.hide);
 
-  circle_radius = 0.98 * (height / (55+2)) / 2;
+  var circle_radius = 0.98 * (height / (55+2)) / 2;
 
   // add rectangles of correct size at correct location
   bar.append("circle")

@@ -8,11 +8,20 @@ function makeid() {
 
 function tableToCSV(table) {
   var csvStr = "";
-  csvStr += table["header"].join(",") + "\n";
-  for (var r in table["content"]) {
-    csvStr += r.join(",") + "\n";
+  csvStr += table["header"].join(", ") + "\n";
+  for (var i = 0; i < table["content"].length; i ++) {
+    csvStr += table["content"][i].join(", ") + "\n";
   }
   return csvStr;
+}
+
+function csvToTable(csvStr, name) {
+  var lines = csvStr.split("\n");
+  var content = [];
+  for (var i = 1; i < lines.length; i ++) {
+    content.push(lines[i].split(","));
+  }
+  return {name: name, content: content, header: lines[0].split(",")};
 }
 
 class ScytheInterface extends React.Component {
@@ -21,13 +30,14 @@ class ScytheInterface extends React.Component {
     this.state = {};
     //TODO: this is very badly designed, changing the format will affect the backend as well
     this.state.dbKey = "tempDB" + new Date().toISOString() + ".db";
+    this.state.connected = false
 
+    // starting with empty chart because we want the database to be connected first
     this.state.panels = [];
-    this.state.panels.push(<TaskPanel key={this.state.panels.length}  dbKey={this.state.dbKey}/>);
 
     // tables to be uploaded to the backend database
     this.state.tableQueue = [];
-    this.createTempDB.bind(this)();
+    //this.createTempDB.bind(this)();
   }
   addPanel() {
     this.state.panels.push(<TaskPanel key={this.state.panels.length} dbKey={this.state.dbKey} />);
@@ -55,6 +65,9 @@ class ScytheInterface extends React.Component {
     .then((response) => response.json())
     .then((responseJson) => {
       console.log("Databased successfully created on server: " + responseJson.dbKey);
+      this.state.connected = true;
+      this.setState({connected: true});
+
       for (var t in this.state.tableQueue) {
         this.transmitDataTable.bind(this)(t);
       }
@@ -130,6 +143,20 @@ class ScytheInterface extends React.Component {
       .catch((error) => { console.error(error); });
   }
   render() {
+
+    var connectedInfo = null;
+    var uploadDataBtn = null;
+    if (this.state.connected) {
+      connectedInfo = <label style={{float: "right", marginRight: "10px", fontWeight: "normal", paddingTop: "5px"}}>
+                        Connected to database: {this.state.dbKey}
+                      </label>;
+      uploadDataBtn = <label className="btn btn-primary">
+                      Upload Data
+                      <input onChange={this.loadCSVAndTransfer.bind(this)} className="fileupload" 
+                             type="file" style={{display: "none"}} name="files[]" multiple />
+                    </label>;
+    }
+
     return (
       <div id="interactive-panels">
         <div className="buttons btn-group">
@@ -137,12 +164,14 @@ class ScytheInterface extends React.Component {
             <span className="glyphicon glyphicon-plus" /> New Panel</label>
           <label className="btn btn-primary" onClick={this.removePanel.bind(this)}>
             <span className="glyphicon glyphicon-minus" /> Remove Panel</label>
-          <label className="btn btn-primary">
-            Upload Data
-            <input onChange={this.loadCSVAndTransfer.bind(this)} className="fileupload" 
-                   type="file" style={{display: "none"}} name="files[]" multiple />
-          </label>
         </div>
+        <div className="buttons btn-group">
+          <label className="btn btn-primary" onClick={this.createTempDB.bind(this)}>
+            Create Temp DB
+          </label>
+          {uploadDataBtn}
+        </div>
+        {connectedInfo}
         { this.state.panels.map(x => {return [x, <br />]}) }
       </div>);
   }
@@ -162,6 +191,60 @@ class TaskPanel extends React.Component {
     // stores json objects of form {query: XXX, data: XXX}, data field is null by default
     this.state.synthesisResult = [];
     this.state.displayOption = {type: "query", queryId: -1, visDataSrc: "example data"};
+
+    // a dumb field used to identify stuff...
+    this.state.visDivId = "vis" + makeid();
+  }
+  componentDidUpdate(prevProps, prevState){
+    // very bad implementation here, should fix soon
+    $("#" + prevState.visDivId).empty();
+
+    if (prevState.displayOption.type == "vis") {
+        var visData = null;
+        if (prevState.visDataSrc == "example data")
+          visData = prevState.outputTable;
+        else if (prevState.visDataSrc == "query result") {
+          //visData = prevState.synthesisResult[prevState.displayOption.queryId].data;
+          if (prevState.outputTable["name"].includes("author_career_2d")) {
+            $.ajax({
+                url: '/author_career.csv',
+                method: 'GET',
+                data: {},
+                success: function success(data) {
+                  console.log(csvToTable(data, "author_career"));
+                  gen2DHistogram(csvToTable(data, "author_career"), "#" + prevState.visDivId);
+                }
+              });
+          } else if (prevState.outputTable["name"].includes("author_career_2")) {
+            $.ajax({
+              url: '/author_career.csv',
+              method: 'GET',
+              data: {},
+              success: function success(data) {
+                genHistogram(csvToTable(data, "author_career"), "#" + prevState.visDivId, 2);
+              }
+            });
+          } else if (prevState.outputTable["name"].includes("author_career")) {
+            $.ajax({
+              url: '/author_career.csv',
+              method: 'GET',
+              data: {},
+              success: function success(data) {
+                genHistogram(csvToTable(data, "author_career"), "#" + prevState.visDivId, 1);
+              }
+            });
+          }
+          return;
+        }
+
+        if (visData != null) {
+          $("#" + prevState.visDivId).empty();
+          if (visData["header"].includes("2D"))
+            gen2DHistogram(visData, "#" + prevState.visDivId);
+          else
+            genHistogram(visData, "#" + prevState.visDivId);
+        }
+    }
   }
   uploadInputTables(evt) {
 
@@ -203,7 +286,7 @@ class TaskPanel extends React.Component {
               }
               content.push(row);
             }
-            var table = {tableName: fileName, tableContent: content, tableHeader: header};
+            var table = {name: fileName, content: content, header: header};
             this.state.inputTables.push(table);
             this.setState(this.state.inputTables);
           }.bind(this);
@@ -230,7 +313,7 @@ class TaskPanel extends React.Component {
     for (var c = 0; c < defaultTableColNum; c ++)
       tableHeader.push("c" + c);
 
-    return {tableName: tableName, tableContent: tableContent, tableHeader: tableHeader};
+    return {name: tableName, content: tableContent, header: tableHeader};
   }
   renderInputTables() {
     return this.state.inputTables.map( 
@@ -371,18 +454,23 @@ class TaskPanel extends React.Component {
                   </div>;
       }
     } else if (this.state.displayOption.type == "vis") {
-      return <div className="pnl display-vis" style={{display:"block"}}>
-                {this.state.displayOption.content}
+
+      //this.state.displayOption = {type: "query", queryId: -1, visDataSrc: "example data"};
+      return <div id={this.state.visDivId} className="pnl display-vis" style={{display:"block"}}>
               </div>;
+
     } else if (this.state.displayOption.type == "data") {
       let content = null;
       if (this.state.displayOption.queryId != -1 
             && this.state.synthesisResult[this.state.displayOption.queryId].data != null) {
         return <div className="pnl display-query" style={{display:"block"}}>
                 <div className="query_output_container">
-                  {tableToCSV(this.state.synthesisResult[this.state.displayOption.queryId].data)}
-                </div>
-               </div>;
+                  <pre style={{height:"100%", overflow:"scroll", margin: "0 0 5px"}}>
+                    <span className="inner-pre" style={{fontSize: "10px"}}>
+                    {tableToCSV(this.state.synthesisResult[this.state.displayOption.queryId].data)}
+                    </span>
+                  </pre>
+               </div></div>;
       } else {
         return <div className="pnl display-vis" style={{display:"block"}}>
                 The data is not yet available, please run the query on database.
@@ -410,10 +498,10 @@ class TaskPanel extends React.Component {
   invokeScythe() {
     //generates the input to be used by the backend synthesizer
     function tableToScytheStr(table, type) {
-      var s = "#" + type + ":" + table.tableName + "\n\n";
-      s += table.tableHeader.join(",") + "\n";
-      for (var i = 0; i < table.tableContent.length; i ++)
-        s += table.tableContent[i].join(",") + "\n";
+      var s = "#" + type + ":" + table.name + "\n\n";
+      s += table.header.join(",") + "\n";
+      for (var i = 0; i < table.content.length; i ++)
+        s += table.content[i].join(",") + "\n";
       s += "\n";
       return s;
     }
@@ -451,7 +539,7 @@ class TaskPanel extends React.Component {
     var scytheRequest = new Request('/scythe', 
       { 
         method: 'POST', 
-        headers: {
+        headers: { 
           'Accept': 'application/json',
           'Content-Type': 'application/json',
         },
@@ -556,8 +644,8 @@ class EditableTable extends React.Component {
     this.state.table = this.props.table;
   }
   getCSVTable() {
-    var tableClone = this.state.table.tableContent.slice();
-    tableClone.splice(0, 0, this.state.table.tableHeader);
+    var tableClone = this.state.table.content.slice();
+    tableClone.splice(0, 0, this.state.table.header);
     var csvString = "";
     for (var i = 0; i < tableClone.length; i++) {
       var s = "";
@@ -565,63 +653,63 @@ class EditableTable extends React.Component {
         s += tableClone[i][j] + ", ";
       csvString += s.substring(0, s.length-2) + "\n";
     }
-    return {"name": this.state.table.tableName, "content": csvString};
+    return {"name": this.state.table.name, "content": csvString};
   }
   updateTableName(name) {
-    this.state.table.tableName = name;
+    this.state.table.name = name;
     this.setState(this.state.table);
   }
   handleRowDel(rowId) {
-    if (this.state.table.tableContent.length == 1)
+    if (this.state.table.content.length == 1)
       return;
-    this.state.table.tableContent.splice(rowId, 1);
+    this.state.table.content.splice(rowId, 1);
     this.setState(this.state.table);
   }
   handleColDel() {
-    if (this.state.table.tableContent[0].length == 1)
+    if (this.state.table.content[0].length == 1)
       return;
-    this.state.table.tableContent.map(row => row.splice(-1, 1));
-    this.state.table.tableHeader.splice(-1, 1);
-    this.setState(this.state.table.tableHeader);
-    this.setState(this.state.table.tableContent);
+    this.state.table.content.map(row => row.splice(-1, 1));
+    this.state.table.header.splice(-1, 1);
+    this.setState(this.state.table.header);
+    this.setState(this.state.table.content);
   }
   handleRowAdd(evt) {
     console.log(this.getCSVTable());
     var id = (+ new Date() + Math.floor(Math.random() * 999999)).toString(36);
     var row = [];
-    for (var i = 0; i < this.state.table.tableContent[0].length; i ++)
+    for (var i = 0; i < this.state.table.content[0].length; i ++)
       row.push(0);
-    this.state.table.tableContent.push(row);
+    this.state.table.content.push(row);
     this.setState(this.state.table);
   }
   handleColAdd(evt) {
     var id = (+ new Date() + Math.floor(Math.random() * 999999)).toString(36);
-    this.state.table.tableHeader.splice(this.state.table.tableContent[0].length, 
-            0, "c" + this.state.table.tableContent[0].length);
-    this.state.table.tableContent.map(row => row.splice(this.state.table.tableContent[0].length, 0, 0));
+    this.state.table.header.splice(this.state.table.content[0].length, 
+            0, "c" + this.state.table.content[0].length);
+    this.state.table.content.map(row => row.splice(this.state.table.content[0].length, 0, 0));
     this.setState(this.state.table);
   }
   handleCellUpdate(r, c, val) {
-    this.state.table.tableContent[r][c] = val;
+    this.state.table.content[r][c] = val;
     this.setState(this.state.table);
   }
   handleHeaderUpdate(r, c, val) {
-    this.state.table.tableHeader.splice(c, 1, val);
-    this.setState(this.state.table.tableHeader);
+    this.state.table.header.splice(c, 1, val);
+    this.setState(this.state.table.header);
   }
   render() {
     return (
       <div style={{border: "dashed 1px #EEE", padding: "2px 2px 2px 2px"}}>
-        <input type='text' value= {this.state.table.tableName} className="table_name" size="10"
+        <input type='text' value= {this.state.table.name} className="table_name" size="10"
               onChange={e => {this.updateTableName.bind(this)(e.target.value)}}
               style={{ width: "100%", textAlign: "center", border: "none", marginBottom: "2px"}} />
         <table className="table dataTable cell-border">
           <thead> 
             <ETableRow onCellUpdate={this.handleHeaderUpdate.bind(this)} 
-                    data={{rowContent: this.state.table.tableHeader, rowId: "H"}}
+                    data={{rowContent: this.state.table.header, rowId: "H"}}
                     deletable={false} />
           </thead>
-          <tbody> {this.state.table.tableContent.map((val, i) =>
+          <tbody> {this.state.table.content.map((val, i) =>
               <ETableRow onCellUpdate={this.handleCellUpdate.bind(this)} data={{rowContent: val, rowId: i}} 
                   deletable={true} key={i} onDelEvent={this.handleRowDel.bind(this)} />)}
           </tbody>
