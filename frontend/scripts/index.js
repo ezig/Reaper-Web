@@ -182,13 +182,6 @@ var ScytheInterface = function (_React$Component) {
           "Connected to database: ",
           this.state.dbKey
         );
-        uploadDataBtn = React.createElement(
-          "label",
-          { className: "btn btn-primary" },
-          "Upload Data",
-          React.createElement("input", { onChange: this.loadCSVAndTransfer.bind(this), className: "fileupload",
-            type: "file", style: { display: "none" }, name: "files[]", multiple: true })
-        );
       }
 
       return React.createElement(
@@ -210,17 +203,6 @@ var ScytheInterface = function (_React$Component) {
             " Remove Panel"
           )
         ),
-        React.createElement(
-          "div",
-          { className: "buttons btn-group" },
-          React.createElement(
-            "label",
-            { className: "btn btn-primary", onClick: this.createTempDB.bind(this) },
-            "Create Temp DB"
-          ),
-          uploadDataBtn
-        ),
-        connectedInfo,
         this.state.panels.map(function (x) {
           return [x, React.createElement("br", null)];
         })
@@ -492,58 +474,6 @@ var TaskPanel = function (_React$Component2) {
               return _this5.updateDisplayOption.bind(_this5)("type", "query");
             } },
           "Show Query"
-        ),
-        React.createElement(
-          "label",
-          { className: "btn btn-default query-btn " + (disableSelect ? "disabled" : ""),
-            onClick: function onClick(e) {
-              return _this5.updateDisplayOption.bind(_this5)("type", "data");
-            } },
-          "Show Data"
-        ),
-        React.createElement(
-          "label",
-          { className: "btn btn-default query-btn " + (disableSelect ? "disabled" : ""),
-            onClick: this.runQueryOnDatabase.bind(this) },
-          "Run on DB"
-        ),
-        React.createElement(
-          "div",
-          { className: "btn-group" },
-          React.createElement(
-            "label",
-            { className: "btn btn-default query-btn",
-              onClick: function onClick(e) {
-                return _this5.updateDisplayOption.bind(_this5)("type", "vis");
-              } },
-            "Show Chart"
-          ),
-          React.createElement(
-            "label",
-            { "data-toggle": "dropdown", className: "btn btn-default dropdown-toggle",
-              "data-placeholder": "false" },
-            React.createElement("span", { className: "caret" })
-          ),
-          React.createElement(
-            "ul",
-            { className: "dropdown-menu" },
-            visTypeDropDown.map(function (d, i) {
-              return React.createElement(
-                "li",
-                { key: i },
-                React.createElement("input", { disabled: d.disabled, type: "radio", id: d.tempId, name: visTypeChoiceName,
-                  value: d.value, checked: d.checked,
-                  onChange: function onChange(e) {
-                    return _this5.updateDisplayOption.bind(_this5)("visDataSrc", e.target.value);
-                  } }),
-                React.createElement(
-                  "label",
-                  { htmlFor: d.tempId },
-                  d.label
-                )
-              );
-            })
-          )
         )
       );
     }

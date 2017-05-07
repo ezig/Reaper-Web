@@ -150,11 +150,6 @@ class ScytheInterface extends React.Component {
       connectedInfo = <label style={{float: "right", marginRight: "10px", fontWeight: "normal", paddingTop: "5px"}}>
                         Connected to database: {this.state.dbKey}
                       </label>;
-      uploadDataBtn = <label className="btn btn-primary">
-                      Upload Data
-                      <input onChange={this.loadCSVAndTransfer.bind(this)} className="fileupload" 
-                             type="file" style={{display: "none"}} name="files[]" multiple />
-                    </label>;
     }
 
     return (
@@ -165,13 +160,6 @@ class ScytheInterface extends React.Component {
           <label className="btn btn-primary" onClick={this.removePanel.bind(this)}>
             <span className="glyphicon glyphicon-minus" /> Remove Panel</label>
         </div>
-        <div className="buttons btn-group">
-          <label className="btn btn-primary" onClick={this.createTempDB.bind(this)}>
-            Create Temp DB
-          </label>
-          {uploadDataBtn}
-        </div>
-        {connectedInfo}
         { this.state.panels.map(x => {return [x, <br />]}) }
       </div>);
   }
@@ -403,7 +391,7 @@ class TaskPanel extends React.Component {
                    onClick={e => this.updateDisplayOption.bind(this)("type", "query")}>
               Show Query
             </label>
-            <label className={"btn btn-default query-btn " + (disableSelect ? "disabled" : "")}
+            {/*<label className={"btn btn-default query-btn " + (disableSelect ? "disabled" : "")}
                    onClick={e => this.updateDisplayOption.bind(this)("type", "data")}>
               Show Data
             </label>
@@ -429,7 +417,7 @@ class TaskPanel extends React.Component {
                     <label htmlFor={d.tempId}>{d.label}</label>
                   </li>)}
               </ul>
-            </div>
+            </div>*/}
           </div>;
   }
   renderDisplayPanel() {
