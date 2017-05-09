@@ -657,11 +657,13 @@ var TaskPanel = function (_React$Component2) {
         } else {
           if (this.state.synthesisResult.length == 0) return React.createElement(
             "div",
-            { className: "pnl display-query", style: { display: "block" } },
+            { className: "pnl display-query",
+              style: { display: "flex", alignItems: "center", justifyContent: "center" } },
             "Query not yet available."
           );else return React.createElement(
             "div",
-            { className: "pnl display-query", style: { display: "block" } },
+            { className: "pnl display-query",
+              style: { display: "flex", alignItems: "center", justifyContent: "center" } },
             "Query synthesized, select a result to display."
           );
         }

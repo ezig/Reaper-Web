@@ -490,19 +490,19 @@ class TaskPanel extends React.Component {
                </div>;
       } else {
         if (this.state.synthesisResult.length == 0)
-          return <div className="pnl display-query" style={{display:"block"}}>
+          return <div className="pnl display-query" 
+                      style={{display: "flex", alignItems: "center", justifyContent: "center"}}>
                     Query not yet available.
                  </div>;
-        else return <div className="pnl display-query" style={{display:"block"}}>
+        else return <div className="pnl display-query"
+                      style={{display: "flex", alignItems: "center", justifyContent: "center"}}>
                   Query synthesized, select a result to display.
                   </div>;
       }
     } else if (this.state.displayOption.type == "vis") {
-
       //this.state.displayOption = {type: "query", queryId: -1, visDataSrc: "example data"};
       return <div id={this.state.visDivId} className="pnl display-vis" style={{display:"block"}}>
               </div>;
-
     } else if (this.state.displayOption.type == "data") {
       let content = null;
       if (this.state.displayOption.queryId != -1 
