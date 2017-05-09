@@ -34,7 +34,9 @@
   <link rel="stylesheet" type="text/css" href="./lib/dropdowns-enhancement/dropdowns-enhancement.css" />
   
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/ju/dt-1.10.13/datatables.min.css"/>
-  <script type="text/javascript" src="https://cdn.datatables.net/v/ju/dt-1.10.13/datatables.min.js"></script>
+
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/styles/idea.min.css">
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js"></script>
 
   <!-- Import Vega 3 & Vega-Lite 2 js (does not have to be from cdn) -->
   <script src="./node_modules/vega/build/vega.js"></script>
@@ -64,8 +66,10 @@
   </div>
 </body>
 
+<script type="text/javascript">
+  hljs.initHighlightingOnLoad();
+</script>
 <script type="text/javascript" src="./scripts/index.js"></script>
-
 <script type="text/javascript">
   var spec = "https://raw.githubusercontent.com/vega/vega/master/test/specs-valid/bar.vg.json";
   vega.embed('#vis-test', spec);

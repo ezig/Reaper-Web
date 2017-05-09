@@ -9,8 +9,11 @@ import sqlite3
 
 from flask import Flask, render_template, request, jsonify
 
-template_dir = os.path.abspath('../frontend')
-static_dir = os.path.abspath('../frontend')
+template_dir = os.path.abspath(os.path.join('..', 'frontend'))
+# all databases are stored in this folder
+database_dir = os.path.abspath(os.path.join('..', 'database'))
+static_dir = os.path.abspath(os.path.join('..', 'frontend'))
+
 app = Flask(__name__,template_folder=template_dir, static_folder=static_dir)
 app.debug = True
 synthesizer_time_limit = 30
@@ -61,11 +64,9 @@ def synthesize():
     try:
         output = check_output(['java', '-jar', 'Scythe.jar', tempfile_name, 'StagedEnumerator', '-aggr'], 
                                 stdin=PIPE, stderr=PIPE, timeout=synthesizer_time_limit)
-    
         # parse the synthesis result to extract queries
         lines = output.splitlines()
         queries = []
-
         current = ""
         start_collect = False
         for line in lines:
@@ -98,16 +99,24 @@ def synthesize():
 
 ################## Database related services ##############
 
+@app.route('/database', methods = ['GET'])
+def list_database():
+    databases = []
+    for f in os.listdir(database_dir):
+        if os.path.isfile(os.path.join(database_dir, f)) and f.endswith(".db"):
+            databases.append(f)
+    return jsonify({"databases": databases})
+
 # check time stamp of all created temporary db and remove those created >30 min ago
 def clean_old_temp_db():
-    files = [f for f in os.listdir('.') if os.path.isfile(f)]
-    for f in files:
-        if f.startswith("tempDB") and f.endswith(".db"):
+    for f in os.listdir(database_dir):
+        if (os.path.isfile(os.path.join(database_dir, f)) 
+                and f.startswith("tempDB") and f.endswith(".db")):
             f_timestamp = dateutil.parser.parse(f[6:-3])
             time_diff = (datetime.now() - f_timestamp.replace(tzinfo=None)).total_seconds()
             if time_diff > 1800:
                 print "TempDB %s removed after 1800s of creation." % {f}
-                os.remove(f)
+                os.remove(os.path.join(database_dir, f))
 
 # create and destruct temp db
 @app.route('/create_temp_db', methods = ['POST'])
@@ -116,7 +125,7 @@ def create_temp_db():
     if not "db_key" in request_data:
         return jsonify({"status": "error"})
     db_key = request_data["db_key"]
-    conn = sqlite3.connect(db_key)
+    conn = sqlite3.connect(os.path.join(database_dir, db_key))
     print "Temporary database (" + db_key + ") created and opened successfully"
     clean_old_temp_db()
     return jsonify({"status": "success", "dbKey": db_key})
@@ -127,7 +136,7 @@ def insert_csv_table():
     if ("db_key" in request_data and "table" in request_data):
         db_key = request_data["db_key"]
         table = request_data["table"]
-        conn = sqlite3.connect(db_key)
+        conn = sqlite3.connect(os.path.join(database_dir, db_key))
         cursor = conn.cursor()
 
         col_type = {}
@@ -155,14 +164,14 @@ def insert_csv_table():
 
 MAX_ROW_KEPT = 5000
 
-@app.route('/query_temp_db', methods=['POST'])
-def query_temp_db():
+@app.route('/query_database', methods=['POST'])
+def query_database():
     request_data = request.get_json()
     if ("db_key" in request_data) and ("query" in request_data):
         print "Received a query request for database:", request_data["db_key"]
         db_key = request_data["db_key"]
         query = request_data["query"]
-        conn = sqlite3.connect(db_key)
+        conn = sqlite3.connect(os.path.join(databse_dir, db_key))
         c = conn.cursor()
         c.execute(query)
         table = {}
@@ -187,7 +196,6 @@ def destruct_temp_db():
         os.remove(request_data["db_key"])
 
 def try_infer_datatype(values):
-    
     def infer_one(val):
         try:
             int(val)
@@ -200,7 +208,6 @@ def try_infer_datatype(values):
         except ValueError:
             pass
         return "TEXT"
-
     is_int = True
     for v in values:
         ty = infer_one(v)
@@ -208,7 +215,6 @@ def try_infer_datatype(values):
             return "TEXT"
         elif ty == "REAL":
             is_int = False
-
     if is_int:
         return "INTEGER"
     return "REAL"

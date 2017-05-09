@@ -28,15 +28,34 @@ class ScytheInterface extends React.Component {
   constructor(props) {
     super(props);
     this.state = {};
+
     //TODO: this is very badly designed, changing the format will affect the backend as well
     this.state.dbKey = "tempDB" + new Date().toISOString() + ".db";
     this.state.connected = false
 
     // starting with empty chart because we want the database to be connected first
     this.state.panels = [];
+    this.state.databaseList = [];
+
+    var request = new Request('/database', 
+      { method: 'GET', 
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        }
+      });
+    // handle response from the server
+    fetch(request)
+    .then((response) => response.json())
+    .then((responseJson) => {
+      this.state.databaseList = responseJson.databases;
+      this.setState(this.state.databaseList);
+    })
+    .catch((error) => {
+      console.error(error);
+    });
 
     // tables to be uploaded to the backend database
-    this.state.tableQueue = [];
     //this.createTempDB.bind(this)();
   }
   addPanel() {
@@ -67,12 +86,6 @@ class ScytheInterface extends React.Component {
       console.log("Databased successfully created on server: " + responseJson.dbKey);
       this.state.connected = true;
       this.setState({connected: true});
-
-      for (var t in this.state.tableQueue) {
-        this.transmitDataTable.bind(this)(t);
-      }
-      this.state.tableQueue = [];
-      this.setState(this.state.tableQueue);
     })
     .catch((error) => {
       console.error(error);
@@ -118,10 +131,14 @@ class ScytheInterface extends React.Component {
       }
     }
   }
+  updateDBKey(val, connected) {
+    this.setState({dbKey: val});
+    this.setState({connected: connected});
+  }
   transmitDataTable(table) {
     var dbKey = this.state.dbKey;
     if (dbKey == null) { 
-      this.state.tableQueue.push(table);
+      console.log("Transmission failed due to no database connection.");
       return;
     }
     var transRequest = new Request('/insert_csv_table', 
@@ -148,31 +165,52 @@ class ScytheInterface extends React.Component {
     var uploadDataBtn = null;
     if (this.state.connected) {
       connectedInfo = <label style={{float: "right", marginRight: "10px", fontWeight: "normal", paddingTop: "5px"}}>
-                        Connected to database: {this.state.dbKey}
+                        Online (Connected to {this.state.dbKey})
                       </label>;
-      uploadDataBtn = <label className="btn btn-primary">
-                      Upload Data
-                      <input onChange={this.loadCSVAndTransfer.bind(this)} className="fileupload" 
-                             type="file" style={{display: "none"}} name="files[]" multiple />
-                    </label>;
+    } else {
+      connectedInfo = <label style={{float: "right", marginRight: "10px", fontWeight: "normal"}}>
+                        Offline Mode (No backend DB connected)
+                      </label>;
+    }
+
+    if (this.state.connected && this.state.dbKey.startsWith("tempDB")) {
+      uploadDataBtn = 
+        <label className="btn btn-primary" style={{marginLeft: "5px"}}> Upload Data
+          <input onChange={this.loadCSVAndTransfer.bind(this)} className="fileupload" 
+            type="file" style={{display: "none"}} name="files[]" multiple />
+        </label>;
     }
 
     return (
       <div id="interactive-panels">
-        <div className="buttons btn-group">
+        <div className="btn-group">
           <label className="btn btn-primary" onClick={this.addPanel.bind(this)}>
             <span className="glyphicon glyphicon-plus" /> New Panel</label>
           <label className="btn btn-primary" onClick={this.removePanel.bind(this)}>
             <span className="glyphicon glyphicon-minus" /> Remove Panel</label>
         </div>
-        <div className="buttons btn-group">
-          <label className="btn btn-primary" onClick={this.createTempDB.bind(this)}>
-            Create Temp DB
+        <div className='btn-group' style={{marginLeft: "5px"}}>
+          <label data-toggle='dropdown' className={'btn btn-primary dropdown-toggle' + (this.state.panels.length > 0 ? " disabled" : "")}>
+            <span data-label-placement="">Select Backend DB</span> <span className='caret'></span>
           </label>
-          {uploadDataBtn}
+          <ul className='dropdown-menu'>
+            <li onClick={e => this.updateDBKey.bind(this)(null, false)}><input type='radio' name={"dbSelect-offline"} value={"offline"}/>
+              <label htmlFor={"dbSelect-offline"}>Offline Mode</label>
+            </li>
+            <li className="divider"></li>
+            {this.state.databaseList.map((d, i) =>
+              <li key={i} onClick={e => this.updateDBKey.bind(this)(this.state.databaseList[i], true)}><input type='radio' name={"dbSelect-" + d} value={d}/>
+                <label htmlFor={"dbSelect-" + d}>{d}</label>
+              </li>)}
+            <li className="divider"></li>
+            <li onClick={this.createTempDB.bind(this)}><input type='radio' name={"dbSelect-new"} value={"newDB"}/>
+                <label htmlFor={"dbSelect-new"}>Create New Database</label>
+            </li>
+          </ul>
         </div>
+        {uploadDataBtn}
         {connectedInfo}
-        { this.state.panels.map(x => {return [x, <br />]}) }
+        { this.state.panels.map(x => {return [<br />, x]}) }
       </div>);
   }
 }
@@ -362,7 +400,7 @@ class TaskPanel extends React.Component {
   renderDropDownMenu() {
     var options = [];
     var querySelectorName = makeid();
-    var displaySelected = "Select One";
+    var displaySelected = "Select Query";
     if (this.state.displayOption.queryId != -1)
       displaySelected = "Query " + (this.state.displayOption.queryId + 1);
     var disableSelect = (this.state.synthesisResult.length == 0);
@@ -432,6 +470,12 @@ class TaskPanel extends React.Component {
             </div>
           </div>;
   }
+  componentDidUpdate(prevProps, prevState) {
+    // hightlight code
+    $('pre code').each(function(i, block) {
+      hljs.highlightBlock(block);
+    });
+  }
   renderDisplayPanel() {
     if (this.state.displayOption.type == "query") {
       let content = null;
@@ -439,16 +483,16 @@ class TaskPanel extends React.Component {
         return <div className="pnl display-query" style={{display:"block"}}>
                 <div className="query_output_container">
                   <pre style={{height:"100%", overflow:"auto", margin: "0 0 5px"}}>
-                  <span className="inner-pre" style={{fontSize: "12px"}}>
+                  <code className="inner-pre sql" style={{fontSize: "12px"}}>
                     {this.state.synthesisResult[this.state.displayOption.queryId].query}
-                  </span>
+                  </code>
                 </pre></div>
                </div>;
       } else {
         if (this.state.synthesisResult.length == 0)
           return <div className="pnl display-query" style={{display:"block"}}>
                     Query not yet available.
-                  </div>;
+                 </div>;
         else return <div className="pnl display-query" style={{display:"block"}}>
                   Query synthesized, select a result to display.
                   </div>;
@@ -567,7 +611,7 @@ class TaskPanel extends React.Component {
     var panelId = this.props.value;
     return (
       <table id={"panel"  + panelId} className="ipanel dash-box" 
-             style={{width: 100+ "%", tableLayout: "fixed"}}>
+             style={{width: 100+ "%", tableLayout: "fixed", marginTop: "5px"}}>
         <tbody>
           <tr>
             <td style={{width: 35+ "%", verticalAlign:"top", borderRight:1+"px dashed gray"}}>

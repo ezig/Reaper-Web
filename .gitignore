@@ -1,5 +1,5 @@
 
-backend/database/*
+database/*
 *.DS_Store
 *.pyc
 
