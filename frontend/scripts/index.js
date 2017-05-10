@@ -142,7 +142,6 @@ var ScytheInterface = function (_React$Component) {
         return response.json();
       }).then(function (responseJson) {
         console.log("Databased successfully created on server: " + responseJson.dbKey);
-        _this2.state.connected = true;
         _this2.setState({ connected: true });
       }).catch(function (error) {
         console.error(error);
@@ -183,6 +182,7 @@ var ScytheInterface = function (_React$Component) {
     value: function updateDBKey(val, connected) {
       this.setState({ dbKey: val });
       this.setState({ connected: connected });
+      console.log(val, connected);
     }
   }, {
     key: "transmitDataTable",
@@ -349,6 +349,10 @@ var TaskPanel = function (_React$Component2) {
     _this4.state.aggrFunc = "";
     _this4.state.dbKey = _this4.props.dbKey; // get DB key from the parent
 
+    // working status of the panel
+    _this4.state.callingScythe = false;
+    _this4.state.callingDB = false;
+
     // stores json objects of form {query: XXX, data: XXX}, data field is null by default
     _this4.state.synthesisResult = [];
     _this4.state.displayOption = { type: "query", queryId: -1, visDataSrc: "example data" };
@@ -486,7 +490,12 @@ var TaskPanel = function (_React$Component2) {
     value: function runQueryOnDatabase() {
       var _this5 = this;
 
+      // do nothing if connection is not established
+      if (this.state.connected == false || this.state.displayOption.queryId == -1) return;
+
       if (this.state.synthesisResult[this.state.displayOption.queryId].data != null) return;
+
+      this.setState({ callingDB: true });
 
       var query = this.state.synthesisResult[this.state.displayOption.queryId].query;
       var dbKey = this.state.dbKey;
@@ -509,11 +518,13 @@ var TaskPanel = function (_React$Component2) {
         console.log(responseJson);
         if (responseJson.status == "success") {
           console.log("Successfully executed query.");
+          _this5.setState({ callingDB: false });
           _this5.state.synthesisResult[_this5.state.displayOption.queryId].data = responseJson.data;
           _this5.setState(_this5.state.synthesisResult);
         }
       }).catch(function (error) {
-        console.error(error);
+        _this5.setState({ callingDB: false });
+        if (_this5.state.connected) alert("Failed to run query on the database (" + dbKey + ")");
       });
     }
   }, {
@@ -550,7 +561,7 @@ var TaskPanel = function (_React$Component2) {
           React.createElement(
             "label",
             { "data-toggle": "dropdown", "data-placeholder": "false",
-              className: 'btn btn-default dropdown-toggle ' + (disableSelect ? "disabled" : "") },
+              className: 'btn btn-default dropdown-toggle', disabled: disableSelect },
             displaySelected + " ",
             React.createElement("span", { className: "caret" })
           ),
@@ -576,7 +587,7 @@ var TaskPanel = function (_React$Component2) {
         ),
         React.createElement(
           "label",
-          { className: "btn btn-default query-btn " + (disableSelect ? "disabled" : ""),
+          { className: "btn btn-default query-btn", disabled: disableSelect,
             onClick: function onClick(e) {
               return _this6.updateDisplayOption.bind(_this6)("type", "query");
             } },
@@ -584,7 +595,7 @@ var TaskPanel = function (_React$Component2) {
         ),
         React.createElement(
           "label",
-          { className: "btn btn-default query-btn " + (disableSelect ? "disabled" : ""),
+          { className: "btn btn-default query-btn", disabled: disableSelect,
             onClick: function onClick(e) {
               return _this6.updateDisplayOption.bind(_this6)("type", "data");
             } },
@@ -592,7 +603,7 @@ var TaskPanel = function (_React$Component2) {
         ),
         React.createElement(
           "label",
-          { className: "btn btn-default query-btn " + (disableSelect ? "disabled" : ""),
+          { className: "btn btn-default query-btn", disabled: disableSelect || this.state.connected == false,
             onClick: this.runQueryOnDatabase.bind(this) },
           "Run on DB"
         ),
@@ -668,17 +679,21 @@ var TaskPanel = function (_React$Component2) {
             )
           );
         } else {
-          if (this.state.synthesisResult.length == 0) return React.createElement(
-            "div",
-            { className: "pnl display-query",
-              style: { display: "flex", alignItems: "center", justifyContent: "center" } },
-            "Query not yet available."
-          );else return React.createElement(
-            "div",
-            { className: "pnl display-query",
-              style: { display: "flex", alignItems: "center", justifyContent: "center" } },
-            "Query synthesized, select a result to display."
-          );
+          if (this.state.synthesisResult.length == 0) if (this.state.callingScythe == false) {
+            return React.createElement(
+              "div",
+              { className: "pnl display-query",
+                style: { display: "flex", alignItems: "center", justifyContent: "center" } },
+              "No query to display yet."
+            );
+          } else {
+            return React.createElement(
+              "div",
+              { className: "pnl display-query",
+                style: { display: "flex", alignItems: "center", justifyContent: "center" } },
+              React.createElement("img", { src: "./media/gears.gif", style: { width: "50px", height: "50px" } })
+            );
+          }
         }
       } else if (this.state.displayOption.type == "vis") {
         //this.state.displayOption = {type: "query", queryId: -1, visDataSrc: "example data"};
@@ -704,6 +719,14 @@ var TaskPanel = function (_React$Component2) {
             )
           );
         } else {
+          if (this.state.callingDB) {
+            return React.createElement(
+              "div",
+              { className: "pnl display-vis",
+                style: { display: "flex", alignItems: "center", justifyContent: "center" } },
+              React.createElement("img", { src: "./media/gears.gif", style: { width: "50px", height: "50px" } })
+            );
+          }
           return React.createElement(
             "div",
             { className: "pnl display-vis",
@@ -741,6 +764,12 @@ var TaskPanel = function (_React$Component2) {
     key: "invokeScythe",
     value: function invokeScythe() {
       var _this7 = this;
+
+      this.state.synthesisResult = [];
+      this.state.displayOption.queryId = -1;
+      this.setState(this.state.displayOption);
+      this.setState({ callingScythe: true });
+      this.setState(this.state.synthesisResult);
 
       //generates the input to be used by the backend synthesizer
       function tableToScytheStr(table, type) {
@@ -793,11 +822,12 @@ var TaskPanel = function (_React$Component2) {
         return response.json();
       }).then(function (responseJson) {
         if (responseJson.status == "error") console.log(responseJson.status.message);
-        _this7.state.synthesisResult = [];
         for (var i in responseJson.queries) {
           _this7.state.synthesisResult.push({ "query": responseJson.queries[i], "data": null });
         }
         _this7.state.synthesisResult = _this7.state.synthesisResult.reverse();
+        // automatically switching to displaying the first query synthesized
+        _this7.setState({ callingScythe: false });
         _this7.state.displayOption.queryId = 0;
         _this7.setState(_this7.state.displayOption);
         _this7.setState(_this7.state.synthesisResult);

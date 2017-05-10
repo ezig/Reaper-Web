@@ -126,7 +126,6 @@ class ScytheInterface extends React.Component {
     .then((response) => response.json())
     .then((responseJson) => {
       console.log("Databased successfully created on server: " + responseJson.dbKey);
-      this.state.connected = true;
       this.setState({connected: true});
     })
     .catch((error) => {
@@ -165,6 +164,7 @@ class ScytheInterface extends React.Component {
   updateDBKey(val, connected) {
     this.setState({dbKey: val});
     this.setState({connected: connected});
+    console.log(val, connected);
   }
   transmitDataTable(table) {
     var dbKey = this.state.dbKey;
@@ -258,6 +258,10 @@ class TaskPanel extends React.Component {
     this.state.constants = "";
     this.state.aggrFunc = "";
     this.state.dbKey = this.props.dbKey; // get DB key from the parent
+
+    // working status of the panel
+    this.state.callingScythe = false;
+    this.state.callingDB = false;
 
     // stores json objects of form {query: XXX, data: XXX}, data field is null by default
     this.state.synthesisResult = [];
@@ -389,8 +393,14 @@ class TaskPanel extends React.Component {
   // execute the currently selected query on the database to acquire the result 
   runQueryOnDatabase() {
 
+    // do nothing if connection is not established
+    if (this.state.connected == false || this.state.displayOption.queryId == -1)
+      return;
+
     if (this.state.synthesisResult[this.state.displayOption.queryId].data != null)
       return;
+
+    this.setState({callingDB :  true});
 
     var query = this.state.synthesisResult[this.state.displayOption.queryId].query;
     var dbKey = this.state.dbKey;
@@ -414,11 +424,16 @@ class TaskPanel extends React.Component {
         console.log(responseJson);
         if (responseJson.status == "success") {
           console.log("Successfully executed query.");
+          this.setState({callingDB :  false});
           this.state.synthesisResult[this.state.displayOption.queryId].data = responseJson.data;
           this.setState(this.state.synthesisResult);
         }
       })
-      .catch((error) => { console.error(error); });
+      .catch((error) => { 
+        this.setState({callingDB :  false});
+        if (this.state.connected)
+          alert("Failed to run query on the database (" + dbKey + ")");
+      });
   }
   renderDropDownMenu() {
     var options = [];
@@ -447,7 +462,7 @@ class TaskPanel extends React.Component {
     return <div className='btn-group'>
             <div className='btn-group'>
               <label data-toggle='dropdown' data-placeholder="false"
-                     className={'btn btn-default dropdown-toggle ' + (disableSelect ? "disabled" : "")}>
+                     className={'btn btn-default dropdown-toggle'} disabled={disableSelect}>
                 {displaySelected + " "}
                 <span className='caret'></span>
               </label>
@@ -460,15 +475,15 @@ class TaskPanel extends React.Component {
                   </li>)}
               </ul>
             </div>
-            <label className={"btn btn-default query-btn " + (disableSelect ? "disabled" : "")}
+            <label className={"btn btn-default query-btn"} disabled={disableSelect}
                    onClick={e => this.updateDisplayOption.bind(this)("type", "query")}>
               Show Query
             </label>
-            <label className={"btn btn-default query-btn " + (disableSelect ? "disabled" : "")}
+            <label className={"btn btn-default query-btn"} disabled={disableSelect}
                    onClick={e => this.updateDisplayOption.bind(this)("type", "data")}>
               Show Data
             </label>
-            <label className={"btn btn-default query-btn " + (disableSelect ? "disabled" : "")}
+            <label className={"btn btn-default query-btn"} disabled={disableSelect || this.state.connected==false}
                    onClick={this.runQueryOnDatabase.bind(this)}>
               Run on DB
             </label>
@@ -513,14 +528,17 @@ class TaskPanel extends React.Component {
                </div>;
       } else {
         if (this.state.synthesisResult.length == 0)
-          return <div className="pnl display-query" 
+          if (this.state.callingScythe == false) {
+            return <div className="pnl display-query" 
                       style={{display: "flex", alignItems: "center", justifyContent: "center"}}>
-                    Query not yet available.
+                    No query to display yet.
                  </div>;
-        else return <div className="pnl display-query"
+          } else {
+            return <div className="pnl display-query" 
                       style={{display: "flex", alignItems: "center", justifyContent: "center"}}>
-                  Query synthesized, select a result to display.
-                  </div>;
+                    <img src="./media/gears.gif" style={{width:"50px", height:"50px"}} />
+                 </div>;
+          }
       }
     } else if (this.state.displayOption.type == "vis") {
       //this.state.displayOption = {type: "query", queryId: -1, visDataSrc: "example data"};
@@ -539,6 +557,12 @@ class TaskPanel extends React.Component {
                   </pre>
                </div></div>;
       } else {
+        if (this.state.callingDB) {
+          return <div className="pnl display-vis" 
+                    style={{display: "flex", alignItems: "center", justifyContent: "center"}}>
+                    <img src="./media/gears.gif" style={{width:"50px", height:"50px"}} />
+                 </div>;
+        }
         return <div className="pnl display-vis" 
                     style={{display: "flex", alignItems: "center", justifyContent: "center"}}>
                 The data is not yet available, please run the query on database.
@@ -564,6 +588,13 @@ class TaskPanel extends React.Component {
       this.addDefaultInputTable();
   }
   invokeScythe() {
+    this.state.synthesisResult = [];
+    this.state.displayOption.queryId = -1;
+    this.setState(this.state.displayOption);
+    this.setState({callingScythe: true});
+    this.setState(this.state.synthesisResult);
+
+
     //generates the input to be used by the backend synthesizer
     function tableToScytheStr(table, type) {
       var s = "#" + type + ":" + table.name + "\n\n";
@@ -620,12 +651,12 @@ class TaskPanel extends React.Component {
     .then((responseJson) => {
       if (responseJson.status == "error")
         console.log(responseJson.status.message);
-      this.state.synthesisResult = [];
       for (var i in responseJson.queries) {
         this.state.synthesisResult.push({"query": responseJson.queries[i], "data": null});
       }
       this.state.synthesisResult = this.state.synthesisResult.reverse();
       // automatically switching to displaying the first query synthesized
+      this.setState({callingScythe: false})
       this.state.displayOption.queryId = 0;
       this.setState(this.state.displayOption);
       this.setState(this.state.synthesisResult);
