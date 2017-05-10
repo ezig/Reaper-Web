@@ -1,5 +1,6 @@
 
-database/*
+local_data/*
+database/*.db
 *.DS_Store
 *.pyc
 

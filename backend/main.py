@@ -6,6 +6,7 @@ from local_subprocess32 import check_output, PIPE, TimeoutExpired
 from datetime import datetime
 import dateutil.parser
 import sqlite3
+import types
 
 from flask import Flask, render_template, request, jsonify
 
@@ -171,7 +172,7 @@ def query_database():
         print "Received a query request for database:", request_data["db_key"]
         db_key = request_data["db_key"]
         query = request_data["query"]
-        conn = sqlite3.connect(os.path.join(databse_dir, db_key))
+        conn = sqlite3.connect(os.path.join(database_dir, db_key))
         c = conn.cursor()
         c.execute(query)
         table = {}
@@ -183,8 +184,13 @@ def query_database():
             count += 1
             if count > MAX_ROW_KEPT:
                 break
-            table["content"].append(row)
-        print table
+            formatted_row = []
+            for c in row:
+                if isinstance(c, types.BufferType):
+                    formatted_row.append(str(c))
+                else:
+                    formatted_row.append(c)
+            table["content"].append(formatted_row)
         return jsonify({"status": "success", "data": table})
     return jsonify({"status": "error"})
 

@@ -26,12 +26,49 @@ function tableToCSV(table) {
 }
 
 function csvToTable(csvStr, name) {
-  var lines = csvStr.split("\n");
+  if (csvStr.constructor === Array) csvStr = csvStr.join("\r\n");
+  var csvdata = d3.csvParse(csvStr);
+  var header = [];
   var content = [];
-  for (var i = 1; i < lines.length; i++) {
-    content.push(lines[i].split(","));
+  for (var i = 0; i < csvdata.columns.length; i++) {
+    header.push(csvdata.columns[i]);
+  }for (var i = 0; i < csvdata.length; i++) {
+    var row = [];
+    for (var j = 0; j < csvdata.columns.length; j++) {
+      var cell = csvdata[i][csvdata.columns[j]].trim();
+      row.push(cell);
+    }
+    content.push(row);
   }
-  return { name: name, content: content, header: lines[0].split(",") };
+  return { name: name, content: content, header: header };
+}
+
+function parseScytheExample(str) {
+  var content = str.split(/\r?\n/);
+  var i = 0;
+  var inputTables = [];
+  var outputTable = null;
+  while (i < content.length) {
+    if (content[i].startsWith("#")) {
+      var segName = content[i].substring(1);
+      var segContent = [];
+      i += 1;
+      while (i < content.length && !content[i].startsWith("#")) {
+        if (!(content[i].trim() == "")) segContent.push(content[i]);
+        i++;
+      }
+      if (segName.startsWith("input")) {
+        var baseTableName = segName.substring("input".length);
+        if (baseTableName == "") baseTableName = "input";else baseTableName = baseTableName.substring(1);
+        inputTables.push(csvToTable(segContent, baseTableName));
+      } else if (segName.startsWith("output")) {
+        outputTable = csvToTable(segContent, "output");
+      }
+    } else {
+      i += 1;
+    }
+  }
+  return { inputTables: inputTables, outputTable: outputTable };
 }
 
 var ScytheInterface = function (_React$Component) {
@@ -133,19 +170,8 @@ var ScytheInterface = function (_React$Component) {
             }
             // bind the function to "this" to update the react state
             reader.onload = function () {
-              var csvdata = d3.csvParse(reader.result);
-              var table = { name: file.name.replace(/\./g, "_"), content: [], header: [] };
-              for (var i = 0; i < csvdata.columns.length; i++) {
-                table.header.push(csvdata.columns[i]);
-              }for (var i = 0; i < csvdata.length; i++) {
-                var row = [];
-                for (var j = 0; j < csvdata.columns.length; j++) {
-                  var cell = csvdata[i][csvdata.columns[j]].trim();
-                  row.push(cell);
-                }
-                table.content.push(row);
-              }
-              this.transmitDataTable.bind(this)(table);
+              var tableName = file.name.replace(/\./g, "_");
+              this.transmitDataTable.bind(this)(csvToTable(reader.result, tableName));
             }.bind(this);
             reader.readAsText(file, "UTF-8");
           }).bind(this)(files[i]);
@@ -381,9 +407,8 @@ var TaskPanel = function (_React$Component2) {
       }
     }
   }, {
-    key: "uploadInputTables",
-    value: function uploadInputTables(evt) {
-
+    key: "uploadExample",
+    value: function uploadExample(evt) {
       // When the control has changed, there are new files
       if (!window.FileReader) {
         return alert('FileReader API is not supported by your browser.');
@@ -397,33 +422,30 @@ var TaskPanel = function (_React$Component2) {
           // bind the function to "this" to update the react state
           (function (file, t) {
             var reader = new FileReader();
-
             if (file.size > 50000) {
               alert("[Error] Input example file " + file.name + "(" + file.size / 1000 + "kB) exceeds the tool size limit (50kB).");
               return;
             }
-
             // bind the function to "this" to update the react state
             reader.onload = function () {
-              var csvdata = d3.csvParse(reader.result);
+              if (file.name.endsWith(".csv")) {
+                var table = csvToTable(reader.result, file.name.replace(/\./g, "_"));
+                this.state.inputTables.push(table);
+                this.setState(this.state.inputTables);
+              } else if (file.name.endsWith(".scythe.txt")) {
+                var examples = parseScytheExample(reader.result);
+                this.state.inputTables = examples.inputTables;
+                this.setState(this.state.inputTables);
 
-              var header = [];
-              var fileName = file.name.replace(/\./g, "_");
-              var content = [];
-
-              for (var i = 0; i < csvdata.columns.length; i++) {
-                header.push(csvdata.columns[i]);
-              }for (var i = 0; i < csvdata.length; i++) {
-                var row = [];
-                for (var j = 0; j < csvdata.columns.length; j++) {
-                  var cell = csvdata[i][csvdata.columns[j]].trim();
-                  row.push(cell);
-                }
-                content.push(row);
+                // This one is not the desired! 
+                // It only updates the state in panel but will not propogate to the subelement, 
+                // since the child is binded to the old value and they no longer points to the same memory object
+                //this.state.outputTable = examples.outputTable;
+                this.state.outputTable.header = examples.outputTable.header;
+                this.state.outputTable.content = examples.outputTable.content;
+                this.state.outputTable.name = examples.outputTable.name;
+                this.setState(this.state.outputTable);
               }
-              var table = { name: fileName, content: content, header: header };
-              this.state.inputTables.push(table);
-              this.setState(this.state.inputTables);
             }.bind(this);
             reader.readAsText(file, "UTF-8");
           }).bind(this)(files[i]);
@@ -452,13 +474,6 @@ var TaskPanel = function (_React$Component2) {
       }return { name: tableName, content: tableContent, header: tableHeader };
     }
   }, {
-    key: "renderInputTables",
-    value: function renderInputTables() {
-      return this.state.inputTables.map(function (t, i) {
-        return React.createElement(EditableTable, { refs: "input-table-" + i, key: i, table: t });
-      });
-    }
-  }, {
     key: "updateDisplayOption",
     value: function updateDisplayOption(attr, val) {
       this.state.displayOption[attr] = val;
@@ -471,14 +486,12 @@ var TaskPanel = function (_React$Component2) {
     value: function runQueryOnDatabase() {
       var _this5 = this;
 
-      console.log(this.state);
-
       if (this.state.synthesisResult[this.state.displayOption.queryId].data != null) return;
 
       var query = this.state.synthesisResult[this.state.displayOption.queryId].query;
       var dbKey = this.state.dbKey;
 
-      var req = new Request('/query_temp_db', { method: 'POST',
+      var req = new Request('/query_database', { method: 'POST',
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json'
@@ -515,7 +528,7 @@ var TaskPanel = function (_React$Component2) {
       var disableSelect = this.state.synthesisResult.length == 0;
 
       // prepare options in the drop down menu
-      for (var i = 0; i < this.state.synthesisResult.length; i++) {
+      for (var i = 0; i <= this.state.synthesisResult.length - 1; i++) {
         options.push({ value: i,
           label: 'Query ' + (i + 1),
           tempId: makeid(),
@@ -668,7 +681,6 @@ var TaskPanel = function (_React$Component2) {
           );
         }
       } else if (this.state.displayOption.type == "vis") {
-
         //this.state.displayOption = {type: "query", queryId: -1, visDataSrc: "example data"};
         return React.createElement("div", { id: this.state.visDivId, className: "pnl display-vis", style: { display: "block" } });
       } else if (this.state.displayOption.type == "data") {
@@ -682,7 +694,7 @@ var TaskPanel = function (_React$Component2) {
               { className: "query_output_container" },
               React.createElement(
                 "pre",
-                { style: { height: "100%", overflow: "scroll", margin: "0 0 5px" } },
+                { style: { maxHeight: "500px", overflow: "scroll", margin: "0 0 5px" } },
                 React.createElement(
                   "span",
                   { className: "inner-pre", style: { fontSize: "10px" } },
@@ -694,7 +706,8 @@ var TaskPanel = function (_React$Component2) {
         } else {
           return React.createElement(
             "div",
-            { className: "pnl display-vis", style: { display: "block" } },
+            { className: "pnl display-vis",
+              style: { display: "flex", alignItems: "center", justifyContent: "center" } },
             "The data is not yet available, please run the query on database."
           );
         }
@@ -784,6 +797,9 @@ var TaskPanel = function (_React$Component2) {
         for (var i in responseJson.queries) {
           _this7.state.synthesisResult.push({ "query": responseJson.queries[i], "data": null });
         }
+        _this7.state.synthesisResult = _this7.state.synthesisResult.reverse();
+        _this7.state.displayOption.queryId = 0;
+        _this7.setState(_this7.state.displayOption);
         _this7.setState(_this7.state.synthesisResult);
       }).catch(function (error) {
         console.error(error);
@@ -810,7 +826,9 @@ var TaskPanel = function (_React$Component2) {
               React.createElement(
                 "div",
                 { className: "input-example", id: "input-example" + panelId },
-                this.renderInputTables()
+                this.state.inputTables.map(function (t, i) {
+                  return React.createElement(EditableTable, { refs: "input-table-" + i, key: i, table: t });
+                })
               ),
               React.createElement(
                 "div",
@@ -847,7 +865,7 @@ var TaskPanel = function (_React$Component2) {
               React.createElement(
                 "div",
                 { className: "output-example" },
-                React.createElement(EditableTable, { refs: "output-table", table: this.state.outputTable })
+                React.createElement(EditableTable, { key: "ot", refs: "output-table", table: this.state.outputTable })
               )
             ),
             React.createElement(
@@ -891,7 +909,7 @@ var TaskPanel = function (_React$Component2) {
                     "label",
                     { className: "btn btn-primary" },
                     "Load Example",
-                    React.createElement("input", { onChange: this.uploadInputTables.bind(this), className: "fileupload",
+                    React.createElement("input", { onChange: this.uploadExample.bind(this), className: "fileupload",
                       type: "file", style: { display: "none" }, name: "files[]", multiple: true })
                   )
                 )
@@ -979,7 +997,6 @@ var EditableTable = function (_React$Component3) {
   }, {
     key: "handleRowAdd",
     value: function handleRowAdd(evt) {
-      console.log(this.getCSVTable());
       var id = (+new Date() + Math.floor(Math.random() * 999999)).toString(36);
       var row = [];
       for (var i = 0; i < this.state.table.content[0].length; i++) {
