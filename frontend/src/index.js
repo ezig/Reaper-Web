@@ -195,7 +195,8 @@ class ScytheInterface extends React.Component {
     var connectedInfo = null;
     var uploadDataBtn = null;
     if (this.state.connected) {
-      connectedInfo = <label style={{float: "right", marginRight: "10px", fontWeight: "normal", paddingTop: "5px"}}>
+      connectedInfo = <label style={{float: "right", marginRight: "10px", 
+                                     fontWeight: "normal", paddingTop: "5px"}}>
                         Online (Connected to {this.state.dbKey})
                       </label>;
     } else {
@@ -221,11 +222,13 @@ class ScytheInterface extends React.Component {
             <span className="glyphicon glyphicon-minus" /> Remove Panel</label>
         </div>
         <div className='btn-group' style={{marginLeft: "5px"}}>
-          <label data-toggle='dropdown' className={'btn btn-primary dropdown-toggle'} disabled={this.state.panels.length > 0}>
+          <label data-toggle='dropdown' className={'btn btn-primary dropdown-toggle'} 
+                disabled={this.state.panels.length > 0}>
             <span data-label-placement="">Select Backend DB</span> <span className='caret'></span>
           </label>
           <ul className='dropdown-menu'>
-            <li onClick={e => this.updateDBKey.bind(this)(null, false)}><input type='radio' name={"dbSelect-offline"} value={"offline"}/>
+            <li onClick={e => this.updateDBKey.bind(this)(null, false)}>
+              <input type='radio' name={"dbSelect-offline"} value={"offline"}/>
               <label htmlFor={"dbSelect-offline"}>Offline Mode</label>
             </li>
             <li className="divider"></li>
@@ -236,7 +239,8 @@ class ScytheInterface extends React.Component {
                 <label htmlFor={"dbSelect-" + d}>{d}</label>
               </li>)}
             <li className="divider"></li>
-            <li onClick={this.createTempDB.bind(this)}><input type='radio' name={"dbSelect-new"} value={"newDB"}/>
+            <li onClick={this.createTempDB.bind(this)}>
+                <input type='radio' name={"dbSelect-new"} value={"newDB"}/>
                 <label htmlFor={"dbSelect-new"}>Create New Database</label>
             </li>
           </ul>
@@ -265,61 +269,11 @@ class TaskPanel extends React.Component {
 
     // stores json objects of form {query: XXX, data: XXX}, data field is null by default
     this.state.synthesisResult = [];
-    this.state.displayOption = {type: "query", queryId: -1, visDataSrc: "example data", chartType: "hist"};
+    this.state.displayOption = {type: "query", queryId: -1, 
+                                visDataSrc: "example data", chartType: "hist"};
 
     // a dumb field used to identify stuff...
     this.state.visDivId = "vis" + makeid();
-  }
-  componentDidUpdate(prevProps, prevState){
-    // very bad implementation here, should fix soon
-    $("#" + prevState.visDivId).empty();
-
-    if (prevState.displayOption.type == "vis") {
-        var visData = null;
-        if (prevState.visDataSrc == "example data")
-          visData = prevState.outputTable;
-        else if (prevState.visDataSrc == "query result") {
-          //visData = prevState.synthesisResult[prevState.displayOption.queryId].data;
-          if (prevState.outputTable["name"].includes("author_career_2d")) {
-            $.ajax({
-                url: '/author_career.csv',
-                method: 'GET',
-                data: {},
-                success: function success(data) {
-                  console.log(csvToTable(data, "author_career"));
-                  gen2DHistogram(csvToTable(data, "author_career"), "#" + prevState.visDivId);
-                }
-              });
-          } else if (prevState.outputTable["name"].includes("author_career_2")) {
-            $.ajax({
-              url: '/author_career.csv',
-              method: 'GET',
-              data: {},
-              success: function success(data) {
-                genHistogram(csvToTable(data, "author_career"), "#" + prevState.visDivId, 2);
-              }
-            });
-          } else if (prevState.outputTable["name"].includes("author_career")) {
-            $.ajax({
-              url: '/author_career.csv',
-              method: 'GET',
-              data: {},
-              success: function success(data) {
-                genHistogram(csvToTable(data, "author_career"), "#" + prevState.visDivId, 1);
-              }
-            });
-          }
-          return;
-        }
-
-        if (visData != null) {
-          $("#" + prevState.visDivId).empty();
-          if (visData["header"].includes("2D"))
-            gen2DHistogram(visData, "#" + prevState.visDivId);
-          else
-            genHistogram(visData, "#" + prevState.visDivId);
-        }
-    }
   }
   uploadExample(evt) {
     // When the control has changed, there are new files
@@ -353,7 +307,8 @@ class TaskPanel extends React.Component {
 
               // This one is not the desired! 
               // It only updates the state in panel but will not propogate to the subelement, 
-              // since the child is binded to the old value and they no longer points to the same memory object
+              // since the child is binded to the old value,
+              // they no longer points to the same memory object
               //this.state.outputTable = examples.outputTable;
               this.state.outputTable.header = examples.outputTable.header;
               this.state.outputTable.content = examples.outputTable.content;
@@ -450,79 +405,112 @@ class TaskPanel extends React.Component {
                     tempId: makeid(),
                     checked: (this.state.displayOption.queryId == i)});
 
-    var visTypeChoiceName = makeid();
-    var visTargetDropDown = [{value: "example data", label: "Output Example", tempId: makeid(), disabled: false,
-                            checked: (this.state.displayOption.visDataSrc == "example data")},
-                          {value: "query result", label: "Query Result", tempId: makeid(), 
-                           checked: (this.state.displayOption.visDataSrc == "query result"), 
-                           disabled: disableSelect}];
+    var visTargetChoiceName = makeid();
+    var visTargetDropDown = 
+      [{value: "example data", label: "Output Example", tempId: makeid(), disabled: false,
+        checked: (this.state.displayOption.visDataSrc == "example data")},
+       {value: "query result", label: "Query Result", tempId: makeid(), 
+        checked: (this.state.displayOption.visDataSrc == "query result"), 
+        disabled: (disableSelect)}];
 
     var chartTypeChoiceName = makeid();
-    var chartTypeDropDown = [{value: "hist-1", label: "Histogram (c1)", tempId: makeid(), disabled: false,
-                            checked: (this.state.displayOption.chartType == "hist-1")},
-                            {value: "hist-2", label: "Histogram (c1)", tempId: makeid(), disabled: false,
-                            checked: (this.state.displayOption.chartType == "hist-2")},
-                            {value: "hist-3", label: "Histogram (c2-c1)", tempId: makeid(), disabled: false,
-                            checked: (this.state.displayOption.chartType == "hist-3")},
-                          {value: "2dhist", label: "2D Histogram (c1,c2)", tempId: makeid(), disabled: false, 
-                           checked: (this.state.displayOption.visDataSrc == "2dhist")}];
+    var chartTypeDropDown = 
+      [{value: "hist-1", label: "Histogram (c1)", tempId: makeid(), disabled: false,
+        checked: (this.state.displayOption.chartType == "hist-1")},
+       {value: "hist-2", label: "Histogram (c2)", tempId: makeid(), disabled: false,
+        checked: (this.state.displayOption.chartType == "hist-2")},
+       {value: "hist-3", label: "Histogram (c2-c1)", tempId: makeid(), disabled: false,
+        checked: (this.state.displayOption.chartType == "hist-3")},
+       {value: "2dhist-1", label: "2D Histogram (c1,c2)", tempId: makeid(), disabled: false, 
+        checked: (this.state.displayOption.visDataSrc == "2dhist-1")},
+       {value: "2dhist-2", label: "2D Histogram (c2-c1,c3-1)", tempId: makeid(), disabled: false, 
+        checked: (this.state.displayOption.visDataSrc == "2dhist-2")}];
 
     // Generate the drop down menu in the enhanced drop down fashion
     // When there are multiple note that items in the list should all have the same name
     return <div className='btn-group'>
-            <div className='btn-group'>
-              <label data-toggle='dropdown' data-placeholder="false"
-                     className={'btn btn-default dropdown-toggle'} disabled={disableSelect}>
-                {displaySelected + " "}
-                <span className='caret'></span>
-              </label>
-              <ul className='dropdown-menu'>
-                {options.map((d, i) =>
-                  <li key={i}>
-                    <input type='radio' id={d.tempId} name={querySelectorName} value={i} checked={d.checked}
-                    onChange={e => this.updateDisplayOption.bind(this)("queryId", parseInt(e.target.value))} />
-                    <label htmlFor={d.tempId}>{d.label}</label>
-                  </li>)}
-              </ul>
-            </div>
-            <label className={"btn btn-default query-btn"} disabled={disableSelect}
-                   onClick={e => this.updateDisplayOption.bind(this)("type", "query")}>
-              Show Query
-            </label>
-            <label className={"btn btn-default query-btn"} disabled={disableSelect}
-                   onClick={e => this.updateDisplayOption.bind(this)("type", "data")}>
-              Show Data
-            </label>
-            <label className={"btn btn-default query-btn"} disabled={disableSelect || this.state.connected==false}
-                   onClick={this.runQueryOnDatabase.bind(this)}>
-              Run on DB
-            </label>
-            <div className='btn-group'>
-              <label className="btn btn-default query-btn"
-                     onClick={e => this.updateDisplayOption.bind(this)("type", "vis")}>
-                Show Chart
-              </label>
-              <label data-toggle='dropdown' className='btn btn-default dropdown-toggle'
-                     data-placeholder="false">
-                <span className='caret'></span>
-              </label>
-              <ul className='dropdown-menu'>
-                {visTargetDropDown.map((d, i) =>
-                  <li key={i}>
-                    <input disabled={d.disabled} type='radio' id={d.tempId} name={visTypeChoiceName} 
-                      value={d.value} checked={d.checked}
-                      onChange={e => this.updateDisplayOption.bind(this)("visDataSrc", e.target.value)}/>
-                    <label htmlFor={d.tempId}>{d.label}</label>
-                  </li>)}
-              </ul>
-            </div>
-          </div>;
+        <div className='btn-group'>
+          <label data-toggle='dropdown' data-placeholder="false"
+                 className={'btn btn-default dropdown-toggle'} disabled={disableSelect}>
+            {displaySelected + " "}
+            <span className='caret'></span>
+          </label>
+          <ul className='dropdown-menu'>
+            {options.map((d, i) =>
+              <li key={i}>
+                <input type='radio' id={d.tempId} name={querySelectorName} 
+                  value={i} checked={d.checked}
+                onChange={e => 
+                  this.updateDisplayOption.bind(this)("queryId", parseInt(e.target.value))} />
+                <label htmlFor={d.tempId}>{d.label}</label>
+              </li>)}
+          </ul>
+        </div>
+        <label className={"btn btn-default query-btn"} disabled={disableSelect}
+               onClick={e => this.updateDisplayOption.bind(this)("type", "query")}>
+          Show Query
+        </label>
+        <label className={"btn btn-default query-btn"} disabled={disableSelect}
+               onClick={e => this.updateDisplayOption.bind(this)("type", "data")}>
+          Show Data
+        </label>
+        <label className={"btn btn-default query-btn"} 
+               disabled={disableSelect || this.state.connected==false}
+               onClick={this.runQueryOnDatabase.bind(this)}>
+          Run on DB
+        </label>
+        <div className='btn-group'>
+          <label className="btn btn-default query-btn"
+                 onClick={e => this.updateDisplayOption.bind(this)("type", "vis")}>
+            Show Chart
+          </label>
+          <label data-toggle='dropdown' className='btn btn-default dropdown-toggle'
+                 data-placeholder="false">
+            <span className='caret'></span>
+          </label>
+          <ul className='dropdown-menu bullet pull-top pull-right'>
+            {visTargetDropDown.map((d, i) =>
+              <li key={i}>
+                <input disabled={d.disabled} type='radio' id={d.tempId} 
+                  name={visTargetChoiceName} value={d.value} checked={d.checked}
+                  onChange={e => this.updateDisplayOption.bind(this)("visDataSrc", e.target.value)}/>
+                <label htmlFor={d.tempId}>{d.label}</label>
+              </li>)}
+            <li className="divider"></li>
+            {chartTypeDropDown.map((d, i) =>
+              <li key={i}>
+                <input disabled={d.disabled} type='radio' id={d.tempId} 
+                       name={chartTypeChoiceName} value={d.value} checked={d.checked}
+                  onChange={e => this.updateDisplayOption.bind(this)("chartType", e.target.value)}/>
+                <label htmlFor={d.tempId}>{d.label}</label>
+              </li>)}
+          </ul>
+        </div>
+      </div>;
   }
   componentDidUpdate(prevProps, prevState) {
     // hightlight code
     $('pre code').each(function(i, block) {
       hljs.highlightBlock(block);
     });
+
+    // call jquery to generate visualization
+    if (prevState.displayOption.type == "vis") {
+        $("#" + prevState.visDivId).empty();
+        var visData = null;
+        if (prevState.visDataSrc == "example data")
+          visData = prevState.outputTable;
+        else if (prevState.visDataSrc == "query result")
+          visData = prevState.synthesisResult[prevState.displayOption.queryId].data;
+
+        if (visData != null) {
+          $("#" + prevState.visDivId).empty();
+          if (prevState.displayOption.chartType.startsWith("hist"))
+            genHistogram(visData, "#" + prevState.visDivId, prevState.displayOption.chartType);
+          else
+            gen2DHistogram(visData, "#" + prevState.visDivId, prevState.displayOption.chartType);
+        }
+    }
   }
   renderDisplayPanel() {
     if (this.state.displayOption.type == "query") {
@@ -531,10 +519,11 @@ class TaskPanel extends React.Component {
         return <div className="pnl display-query" style={{display:"block"}}>
                 <div className="query_output_container">
                   <pre style={{height:"100%", overflow:"auto", margin: "0 0 5px"}}>
-                  <code className="inner-pre sql" style={{fontSize: "12px"}}>
-                    {this.state.synthesisResult[this.state.displayOption.queryId].query}
-                  </code>
-                </pre></div>
+                    <code className="inner-pre sql" style={{fontSize: "12px"}}>
+                      {this.state.synthesisResult[this.state.displayOption.queryId].query}
+                    </code>
+                  </pre>
+                </div>
                </div>;
       } else {
         if (this.state.synthesisResult.length == 0)
@@ -552,8 +541,7 @@ class TaskPanel extends React.Component {
       }
     } else if (this.state.displayOption.type == "vis") {
       //this.state.displayOption = {type: "query", queryId: -1, visDataSrc: "example data"};
-      return <div id={this.state.visDivId} className="pnl display-vis" style={{display:"block"}}>
-              </div>;
+      return <div id={this.state.visDivId} className="pnl display-vis" style={{display:"block"}}></div>;
     } else if (this.state.displayOption.type == "data") {
       let content = null;
       if (this.state.displayOption.queryId != -1 
@@ -625,7 +613,8 @@ class TaskPanel extends React.Component {
     var aggrFuncStr = this.state.aggrFunc;
 
     // default aggregation functions includes only max, min, and count
-    // TODO: thinking whether this can be re designed to utilize default aggregation functions in Scythe
+    // TODO: thinking whether this can be re designed to utilize
+    //   default aggregation functions in Scythe
     if (aggrFuncStr == "") aggrFuncStr = '"max", "min", "count"';
 
     // a special function that parses and formats the string provided by the user
@@ -690,7 +679,8 @@ class TaskPanel extends React.Component {
               </div>
               <div>
                 <div className='input-group input-group-sm input-box constant-panel'>
-                  <span className='input-group-addon' id={'constant-addon' + panelId}>Constants</span>
+                  <span className='input-group-addon' 
+                        id={'constant-addon' + panelId}>Constants</span>
                   <input type='text' className='form-control' placeholder='None' 
                          onChange={this.updateConstants.bind(this)} 
                          aria-describedby={'constant-addon' + panelId} />
@@ -708,7 +698,7 @@ class TaskPanel extends React.Component {
                 <EditableTable key="ot" refs="output-table" table={this.state.outputTable} />
               </div>
             </td>
-            <td style={{width: 43+ "%", verticalAlign:"top"}}>
+            <td style={{width: 43+ "%", verticalAlign:"middle"}}>
               <div className="vis">
                 {this.renderDisplayPanel()}
               </div>
@@ -823,8 +813,9 @@ class EditableTable extends React.Component {
                     deletable={false} />
           </thead>
           <tbody> {this.state.table.content.map((val, i) =>
-              <ETableRow onCellUpdate={this.handleCellUpdate.bind(this)} data={{rowContent: val, rowId: i}} 
-                  deletable={true} key={i} onDelEvent={this.handleRowDel.bind(this)} />)}
+              <ETableRow onCellUpdate={this.handleCellUpdate.bind(this)} 
+                  data={{rowContent: val, rowId: i}} deletable={true} key={i} 
+                  onDelEvent={this.handleRowDel.bind(this)} />)}
           </tbody>
         </table>
         <button type="button" onClick={this.handleRowAdd.bind(this)} 

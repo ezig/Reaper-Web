@@ -1,0 +1,20 @@
+#input:career_span
+
+author, min_year, max_year
+H. Simon, 1974, 1997
+R. Tibshirani, 1995, 2008
+P. Bork, 1998, 2011
+
+#input:career_peak
+
+author, min_year, peak_year
+H. Simon, 1974, 1997
+R. Tibshirani, 1995, 1995
+P. Bork, 1998, 1998
+
+#output
+
+author, min_year, peak_year, max_year
+H. Simon, 1974, 1997, 1997
+R. Tibshirani, 1995, 1995, 2008
+P. Bork, 1998, 1998, 2011

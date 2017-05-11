@@ -69,9 +69,9 @@ function htmlForTextWithEmbeddedNewlines(text) {
   return htmls.join("<br>");
 }
 
-// creating histogram
-// plot a histogram from mpg data in a .csv file
-function genHistogram(table, divId, targetCol) {
+// creating histogram from a table datastructure
+// supported features include histogram on c1, c2, or c2-c1
+function genHistogram(table, divId, chartType) {
 
   // whitespace on either side of the bars in units of MPG
   var binmargin = .5;
@@ -79,15 +79,33 @@ function genHistogram(table, divId, targetCol) {
   var height = $(divId).height() - margin.top - margin.bottom;
   var width = Math.min($(divId).width() - margin.left - margin.right, $(divId).height() + 200 - margin.left - margin.right);
 
+  var xAxisLabel = "";
+  if (chartType == "hist-1") xAxisLabel = table["header"][1];else if (chartType == "hist-2") xAxisLabel = table["header"][2];else if (chartType == "hist-3") xAxisLabel = table["header"][2] + " - " + table["header"][1];
+
   var ymax = 0;
-  var cnt_data = {};
-  for (var i = 0; i < table["content"].length; i++) {
-    if (table["content"][i][targetCol] in cnt_data) {
-      cnt_data[table["content"][i][targetCol]]++;
-      if (cnt_data[table["content"][i][targetCol]] > ymax) ymax = cnt_data[table["content"][i][targetCol]];
-    } else {
-      cnt_data[table["content"][i][targetCol]] = 1;
-      if (cnt_data[table["content"][i][targetCol]] > ymax) ymax = cnt_data[table["content"][i][targetCol]];
+
+  if (chartType == "hist-1" || chartType == "hist-2") {
+    var targetCol = chartType == "hist-1" ? 1 : 2;
+    var cnt_data = {};
+    for (var i = 0; i < table["content"].length; i++) {
+      if (table["content"][i][targetCol] in cnt_data) {
+        cnt_data[table["content"][i][targetCol]]++;
+        if (cnt_data[table["content"][i][targetCol]] > ymax) ymax = cnt_data[table["content"][i][targetCol]];
+      } else {
+        cnt_data[table["content"][i][targetCol]] = 1;
+        if (cnt_data[table["content"][i][targetCol]] > ymax) ymax = cnt_data[table["content"][i][targetCol]];
+      }
+    }
+  } else if (chartType == "hist-3") {
+    var cnt_data = {};
+    for (var i = 0; i < table["content"].length; i++) {
+      if (table["content"][i][2] - table["content"][i][1] in cnt_data) {
+        cnt_data[table["content"][i][2] - table["content"][i][1]]++;
+        if (cnt_data[table["content"][i][2] - table["content"][i][1]] > ymax) ymax = cnt_data[table["content"][i][2] - table["content"][i][1]];
+      } else {
+        cnt_data[table["content"][i][2] - table["content"][i][1]] = 1;
+        if (cnt_data[table["content"][i][2] - table["content"][i][1]] > ymax) ymax = cnt_data[table["content"][i][2] - table["content"][i][1]];
+      }
     }
   }
 
@@ -154,7 +172,7 @@ function genHistogram(table, divId, targetCol) {
   // add the x axis and x-label
   svg.append("g").attr("class", "x axis").attr("transform", "translate(0," + height + ")").call(xAxis);
 
-  svg.append("text").attr("class", "xlabel").attr("text-anchor", "middle").attr("x", width / 2).attr("y", height + margin.bottom - 5).text("c3 - c2"); //.text("c3 - c2");
+  svg.append("text").attr("class", "xlabel").attr("text-anchor", "middle").attr("x", width / 2).attr("y", height + margin.bottom - 5).text(xAxisLabel); //.text("c3 - c2");
 
   // add the y axis and y-label
   svg.append("g").attr("class", "y axis").attr("transform", "translate(0,0)").call(yAxis);
@@ -163,7 +181,7 @@ function genHistogram(table, divId, targetCol) {
   .attr("x", 0 - height / 2).attr("dy", "1em").attr("transform", "rotate(-90)").style("text-anchor", "middle").text("count"); //.text("Count");
 }
 
-function gen2DHistogram(table, divId) {
+function gen2DHistogram(table, divId, chartType) {
 
   // whitespace on either side of the bars in units of MPG
   var binmargin = .2;
@@ -180,20 +198,48 @@ function gen2DHistogram(table, divId) {
 
   if (table["header"].length < 3) return;
 
+  var xAxisLabel = "";
+  var yAxisLabel = "";
+  if (chartType == "2dhist-1") {
+    xAxisLabel = table["header"][1];
+    yAxisLabel = table["header"][2];
+  } else if (chartType == "2dhist-2") {
+    xAxisLabel = table["header"][2] + " - " + table["header"][1];
+    yAxisLabel = table["header"][3] + " - " + table["header"][1];
+  }
+
   var map = {};
-  for (var i = 0; i < table["content"].length; i++) {
-    if (table["content"][i][1] == "" || table["content"][i][2] == "" || isNaN(table["content"][i][1]) || isNaN(table["content"][i][2])) continue;
-    x = Number.parseInt(table["content"][i][1]);
-    y = Number.parseInt(table["content"][i][2]);
-    if (x in map) {
-      if (y in map[x]) {
-        map[x][y] += 1;
+  if (chartType == "2dhist-1") {
+    for (var i = 0; i < table["content"].length; i++) {
+      if (table["content"][i][1] == "" || table["content"][i][2] == "" || isNaN(table["content"][i][1]) || isNaN(table["content"][i][2])) continue;
+      x = Number.parseInt(table["content"][i][1]);
+      y = Number.parseInt(table["content"][i][2]);
+      if (x in map) {
+        if (y in map[x]) {
+          map[x][y] += 1;
+        } else {
+          map[x][y] = 1;
+        }
       } else {
+        map[x] = {};
         map[x][y] = 1;
       }
-    } else {
-      map[x] = {};
-      map[x][y] = 1;
+    }
+  } else if (chartType == "2dhist-2") {
+    for (var i = 0; i < table["content"].length; i++) {
+      if (table["content"][i][1] == "" || table["content"][i][2] == "" || table["content"][i][3] == "" || isNaN(table["content"][i][1]) || isNaN(table["content"][i][2]) || isNaN(table["content"][i][3])) continue;
+      x = Number.parseInt(table["content"][i][2] - table["content"][i][1]);
+      y = Number.parseInt(table["content"][i][3] - table["content"][i][1]);
+      if (x in map) {
+        if (y in map[x]) {
+          map[x][y] += 1;
+        } else {
+          map[x][y] = 1;
+        }
+      } else {
+        map[x] = {};
+        map[x][y] = 1;
+      }
     }
   }
 

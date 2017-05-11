@@ -222,7 +222,8 @@ var ScytheInterface = function (_React$Component) {
       if (this.state.connected) {
         connectedInfo = React.createElement(
           "label",
-          { style: { float: "right", marginRight: "10px", fontWeight: "normal", paddingTop: "5px" } },
+          { style: { float: "right", marginRight: "10px",
+              fontWeight: "normal", paddingTop: "5px" } },
           "Online (Connected to ",
           this.state.dbKey,
           ")"
@@ -269,7 +270,8 @@ var ScytheInterface = function (_React$Component) {
           { className: "btn-group", style: { marginLeft: "5px" } },
           React.createElement(
             "label",
-            { "data-toggle": "dropdown", className: 'btn btn-primary dropdown-toggle' + (this.state.panels.length > 0 ? " disabled" : "") },
+            { "data-toggle": "dropdown", className: 'btn btn-primary dropdown-toggle',
+              disabled: this.state.panels.length > 0 },
             React.createElement(
               "span",
               { "data-label-placement": "" },
@@ -355,7 +357,8 @@ var TaskPanel = function (_React$Component2) {
 
     // stores json objects of form {query: XXX, data: XXX}, data field is null by default
     _this4.state.synthesisResult = [];
-    _this4.state.displayOption = { type: "query", queryId: -1, visDataSrc: "example data" };
+    _this4.state.displayOption = { type: "query", queryId: -1,
+      visDataSrc: "example data", chartType: "hist" };
 
     // a dumb field used to identify stuff...
     _this4.state.visDivId = "vis" + makeid();
@@ -363,54 +366,6 @@ var TaskPanel = function (_React$Component2) {
   }
 
   _createClass(TaskPanel, [{
-    key: "componentDidUpdate",
-    value: function componentDidUpdate(prevProps, prevState) {
-      // very bad implementation here, should fix soon
-      $("#" + prevState.visDivId).empty();
-
-      if (prevState.displayOption.type == "vis") {
-        var visData = null;
-        if (prevState.visDataSrc == "example data") visData = prevState.outputTable;else if (prevState.visDataSrc == "query result") {
-          //visData = prevState.synthesisResult[prevState.displayOption.queryId].data;
-          if (prevState.outputTable["name"].includes("author_career_2d")) {
-            $.ajax({
-              url: '/author_career.csv',
-              method: 'GET',
-              data: {},
-              success: function success(data) {
-                console.log(csvToTable(data, "author_career"));
-                gen2DHistogram(csvToTable(data, "author_career"), "#" + prevState.visDivId);
-              }
-            });
-          } else if (prevState.outputTable["name"].includes("author_career_2")) {
-            $.ajax({
-              url: '/author_career.csv',
-              method: 'GET',
-              data: {},
-              success: function success(data) {
-                genHistogram(csvToTable(data, "author_career"), "#" + prevState.visDivId, 2);
-              }
-            });
-          } else if (prevState.outputTable["name"].includes("author_career")) {
-            $.ajax({
-              url: '/author_career.csv',
-              method: 'GET',
-              data: {},
-              success: function success(data) {
-                genHistogram(csvToTable(data, "author_career"), "#" + prevState.visDivId, 1);
-              }
-            });
-          }
-          return;
-        }
-
-        if (visData != null) {
-          $("#" + prevState.visDivId).empty();
-          if (visData["header"].includes("2D")) gen2DHistogram(visData, "#" + prevState.visDivId);else genHistogram(visData, "#" + prevState.visDivId);
-        }
-      }
-    }
-  }, {
     key: "uploadExample",
     value: function uploadExample(evt) {
       // When the control has changed, there are new files
@@ -443,7 +398,8 @@ var TaskPanel = function (_React$Component2) {
 
                 // This one is not the desired! 
                 // It only updates the state in panel but will not propogate to the subelement, 
-                // since the child is binded to the old value and they no longer points to the same memory object
+                // since the child is binded to the old value,
+                // they no longer points to the same memory object
                 //this.state.outputTable = examples.outputTable;
                 this.state.outputTable.header = examples.outputTable.header;
                 this.state.outputTable.content = examples.outputTable.content;
@@ -544,11 +500,19 @@ var TaskPanel = function (_React$Component2) {
           label: 'Query ' + (i + 1),
           tempId: makeid(),
           checked: this.state.displayOption.queryId == i });
-      }var visTypeChoiceName = makeid();
-      var visTypeDropDown = [{ value: "example data", label: "Output Example", tempId: makeid(), disabled: false,
+      }var visTargetChoiceName = makeid();
+      var visTargetDropDown = [{ value: "example data", label: "Output Example", tempId: makeid(), disabled: false,
         checked: this.state.displayOption.visDataSrc == "example data" }, { value: "query result", label: "Query Result", tempId: makeid(),
         checked: this.state.displayOption.visDataSrc == "query result",
         disabled: disableSelect }];
+
+      var chartTypeChoiceName = makeid();
+      var chartTypeDropDown = [{ value: "hist-1", label: "Histogram (c1)", tempId: makeid(), disabled: false,
+        checked: this.state.displayOption.chartType == "hist-1" }, { value: "hist-2", label: "Histogram (c2)", tempId: makeid(), disabled: false,
+        checked: this.state.displayOption.chartType == "hist-2" }, { value: "hist-3", label: "Histogram (c2-c1)", tempId: makeid(), disabled: false,
+        checked: this.state.displayOption.chartType == "hist-3" }, { value: "2dhist-1", label: "2D Histogram (c1,c2)", tempId: makeid(), disabled: false,
+        checked: this.state.displayOption.visDataSrc == "2dhist-1" }, { value: "2dhist-2", label: "2D Histogram (c2-c1,c3-1)", tempId: makeid(), disabled: false,
+        checked: this.state.displayOption.visDataSrc == "2dhist-2" }];
 
       // Generate the drop down menu in the enhanced drop down fashion
       // When there are multiple note that items in the list should all have the same name
@@ -572,7 +536,8 @@ var TaskPanel = function (_React$Component2) {
               return React.createElement(
                 "li",
                 { key: i },
-                React.createElement("input", { type: "radio", id: d.tempId, name: querySelectorName, value: i, checked: d.checked,
+                React.createElement("input", { type: "radio", id: d.tempId, name: querySelectorName,
+                  value: i, checked: d.checked,
                   onChange: function onChange(e) {
                     return _this6.updateDisplayOption.bind(_this6)("queryId", parseInt(e.target.value));
                   } }),
@@ -603,7 +568,8 @@ var TaskPanel = function (_React$Component2) {
         ),
         React.createElement(
           "label",
-          { className: "btn btn-default query-btn", disabled: disableSelect || this.state.connected == false,
+          { className: "btn btn-default query-btn",
+            disabled: disableSelect || this.state.connected == false,
             onClick: this.runQueryOnDatabase.bind(this) },
           "Run on DB"
         ),
@@ -626,15 +592,32 @@ var TaskPanel = function (_React$Component2) {
           ),
           React.createElement(
             "ul",
-            { className: "dropdown-menu" },
-            visTypeDropDown.map(function (d, i) {
+            { className: "dropdown-menu bullet pull-top pull-right" },
+            visTargetDropDown.map(function (d, i) {
               return React.createElement(
                 "li",
                 { key: i },
-                React.createElement("input", { disabled: d.disabled, type: "radio", id: d.tempId, name: visTypeChoiceName,
-                  value: d.value, checked: d.checked,
+                React.createElement("input", { disabled: d.disabled, type: "radio", id: d.tempId,
+                  name: visTargetChoiceName, value: d.value, checked: d.checked,
                   onChange: function onChange(e) {
                     return _this6.updateDisplayOption.bind(_this6)("visDataSrc", e.target.value);
+                  } }),
+                React.createElement(
+                  "label",
+                  { htmlFor: d.tempId },
+                  d.label
+                )
+              );
+            }),
+            React.createElement("li", { className: "divider" }),
+            chartTypeDropDown.map(function (d, i) {
+              return React.createElement(
+                "li",
+                { key: i },
+                React.createElement("input", { disabled: d.disabled, type: "radio", id: d.tempId,
+                  name: chartTypeChoiceName, value: d.value, checked: d.checked,
+                  onChange: function onChange(e) {
+                    return _this6.updateDisplayOption.bind(_this6)("chartType", e.target.value);
                   } }),
                 React.createElement(
                   "label",
@@ -654,6 +637,18 @@ var TaskPanel = function (_React$Component2) {
       $('pre code').each(function (i, block) {
         hljs.highlightBlock(block);
       });
+
+      // call jquery to generate visualization
+      if (prevState.displayOption.type == "vis") {
+        $("#" + prevState.visDivId).empty();
+        var visData = null;
+        if (prevState.visDataSrc == "example data") visData = prevState.outputTable;else if (prevState.visDataSrc == "query result") visData = prevState.synthesisResult[prevState.displayOption.queryId].data;
+
+        if (visData != null) {
+          $("#" + prevState.visDivId).empty();
+          if (prevState.displayOption.chartType.startsWith("hist")) genHistogram(visData, "#" + prevState.visDivId, prevState.displayOption.chartType);else gen2DHistogram(visData, "#" + prevState.visDivId, prevState.displayOption.chartType);
+        }
+      }
     }
   }, {
     key: "renderDisplayPanel",
@@ -791,7 +786,8 @@ var TaskPanel = function (_React$Component2) {
       var aggrFuncStr = this.state.aggrFunc;
 
       // default aggregation functions includes only max, min, and count
-      // TODO: thinking whether this can be re designed to utilize default aggregation functions in Scythe
+      // TODO: thinking whether this can be re designed to utilize
+      //   default aggregation functions in Scythe
       if (aggrFuncStr == "") aggrFuncStr = '"max", "min", "count"';
 
       // a special function that parses and formats the string provided by the user
@@ -868,7 +864,8 @@ var TaskPanel = function (_React$Component2) {
                   { className: "input-group input-group-sm input-box constant-panel" },
                   React.createElement(
                     "span",
-                    { className: "input-group-addon", id: 'constant-addon' + panelId },
+                    { className: "input-group-addon",
+                      id: 'constant-addon' + panelId },
                     "Constants"
                   ),
                   React.createElement("input", { type: "text", className: "form-control", placeholder: "None",
@@ -900,7 +897,7 @@ var TaskPanel = function (_React$Component2) {
             ),
             React.createElement(
               "td",
-              { style: { width: 43 + "%", verticalAlign: "top" } },
+              { style: { width: 43 + "%", verticalAlign: "middle" } },
               React.createElement(
                 "div",
                 { className: "vis" },
@@ -1086,8 +1083,9 @@ var EditableTable = function (_React$Component3) {
             null,
             " ",
             this.state.table.content.map(function (val, i) {
-              return React.createElement(ETableRow, { onCellUpdate: _this10.handleCellUpdate.bind(_this10), data: { rowContent: val, rowId: i },
-                deletable: true, key: i, onDelEvent: _this10.handleRowDel.bind(_this10) });
+              return React.createElement(ETableRow, { onCellUpdate: _this10.handleCellUpdate.bind(_this10),
+                data: { rowContent: val, rowId: i }, deletable: true, key: i,
+                onDelEvent: _this10.handleRowDel.bind(_this10) });
             })
           )
         ),
