@@ -221,7 +221,7 @@ class ScytheInterface extends React.Component {
             <span className="glyphicon glyphicon-minus" /> Remove Panel</label>
         </div>
         <div className='btn-group' style={{marginLeft: "5px"}}>
-          <label data-toggle='dropdown' className={'btn btn-primary dropdown-toggle' + (this.state.panels.length > 0 ? " disabled" : "")}>
+          <label data-toggle='dropdown' className={'btn btn-primary dropdown-toggle'} disabled={this.state.panels.length > 0}>
             <span data-label-placement="">Select Backend DB</span> <span className='caret'></span>
           </label>
           <ul className='dropdown-menu'>
@@ -265,7 +265,7 @@ class TaskPanel extends React.Component {
 
     // stores json objects of form {query: XXX, data: XXX}, data field is null by default
     this.state.synthesisResult = [];
-    this.state.displayOption = {type: "query", queryId: -1, visDataSrc: "example data"};
+    this.state.displayOption = {type: "query", queryId: -1, visDataSrc: "example data", chartType: "hist"};
 
     // a dumb field used to identify stuff...
     this.state.visDivId = "vis" + makeid();
@@ -442,20 +442,30 @@ class TaskPanel extends React.Component {
     if (this.state.displayOption.queryId != -1)
       displaySelected = "Query " + (this.state.displayOption.queryId + 1);
     var disableSelect = (this.state.synthesisResult.length == 0);
-    
+
     // prepare options in the drop down menu
     for (var i = 0; i <= this.state.synthesisResult.length -1; i ++)
       options.push({value: i, 
                     label: 'Query ' + (i + 1), 
                     tempId: makeid(),
                     checked: (this.state.displayOption.queryId == i)});
-    
+
     var visTypeChoiceName = makeid();
-    var visTypeDropDown = [{value: "example data", label: "Output Example", tempId: makeid(), disabled: false,
+    var visTargetDropDown = [{value: "example data", label: "Output Example", tempId: makeid(), disabled: false,
                             checked: (this.state.displayOption.visDataSrc == "example data")},
                           {value: "query result", label: "Query Result", tempId: makeid(), 
                            checked: (this.state.displayOption.visDataSrc == "query result"), 
                            disabled: disableSelect}];
+
+    var chartTypeChoiceName = makeid();
+    var chartTypeDropDown = [{value: "hist-1", label: "Histogram (c1)", tempId: makeid(), disabled: false,
+                            checked: (this.state.displayOption.chartType == "hist-1")},
+                            {value: "hist-2", label: "Histogram (c1)", tempId: makeid(), disabled: false,
+                            checked: (this.state.displayOption.chartType == "hist-2")},
+                            {value: "hist-3", label: "Histogram (c2-c1)", tempId: makeid(), disabled: false,
+                            checked: (this.state.displayOption.chartType == "hist-3")},
+                          {value: "2dhist", label: "2D Histogram (c1,c2)", tempId: makeid(), disabled: false, 
+                           checked: (this.state.displayOption.visDataSrc == "2dhist")}];
 
     // Generate the drop down menu in the enhanced drop down fashion
     // When there are multiple note that items in the list should all have the same name
@@ -497,7 +507,7 @@ class TaskPanel extends React.Component {
                 <span className='caret'></span>
               </label>
               <ul className='dropdown-menu'>
-                {visTypeDropDown.map((d, i) =>
+                {visTargetDropDown.map((d, i) =>
                   <li key={i}>
                     <input disabled={d.disabled} type='radio' id={d.tempId} name={visTypeChoiceName} 
                       value={d.value} checked={d.checked}
