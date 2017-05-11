@@ -360,12 +360,35 @@ var TaskPanel = function (_React$Component2) {
     _this4.state.displayOption = { type: "query", queryId: -1,
       visDataSrc: "example data", chartType: "hist" };
 
+    _this4.state.exampleList = [];
+    var request = new Request('/examples', { method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    });
+    // handle response from the server
+    fetch(request).then(function (response) {
+      return response.json();
+    }).then(function (responseJson) {
+      _this4.state.exampleList = responseJson.examples;
+      _this4.setState(_this4.state.exampleList);
+      console.log(_this4.state.exampleList);
+    }).catch(function (error) {
+      console.error(error);
+    });
+
     // a dumb field used to identify stuff...
     _this4.state.visDivId = "vis" + makeid();
     return _this4;
   }
 
   _createClass(TaskPanel, [{
+    key: "loadExistingExample",
+    value: function loadExistingExample(file) {
+      console.log(file);
+    }
+  }, {
     key: "uploadExample",
     value: function uploadExample(evt) {
       // When the control has changed, there are new files
@@ -935,18 +958,30 @@ var TaskPanel = function (_React$Component2) {
                     { className: "dropdown-menu bullet pull-middle pull-right" },
                     React.createElement(
                       "li",
-                      { onClick: function onClick(e) {
-                          return _this8.updateDBKey.bind(_this8)(null, false);
-                        } },
+                      null,
                       React.createElement(
                         "label",
                         null,
-                        "Upload .csv or .scythe.txt",
+                        "Upload Example (csv, scythe.txt)",
                         React.createElement("input", { onChange: this.uploadExample.bind(this), className: "fileupload",
                           type: "file", style: { display: "none" }, name: "files[]", multiple: true })
                       )
                     ),
-                    React.createElement("li", { className: "divider" })
+                    React.createElement("li", { className: "divider" }),
+                    this.state.exampleList.map(function (d, i) {
+                      return React.createElement(
+                        "li",
+                        { key: i, onClick: function onClick(e) {
+                            return _this8.loadExistingExample.bind(_this8)(d);
+                          } },
+                        React.createElement("input", { type: "radio", name: "egSelect-" + d, value: d }),
+                        React.createElement(
+                          "label",
+                          { htmlFor: "egSelect-" + d },
+                          d
+                        )
+                      );
+                    })
                   )
                 ),
                 React.createElement(

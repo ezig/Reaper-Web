@@ -272,8 +272,31 @@ class TaskPanel extends React.Component {
     this.state.displayOption = {type: "query", queryId: -1, 
                                 visDataSrc: "example data", chartType: "hist"};
 
+    this.state.exampleList = [];
+    var request = new Request('/examples', 
+      { method: 'GET', 
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        }
+      });
+    // handle response from the server
+    fetch(request)
+    .then((response) => response.json())
+    .then((responseJson) => {
+      this.state.exampleList = responseJson.examples;
+      this.setState(this.state.exampleList);
+      console.log(this.state.exampleList);
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+
     // a dumb field used to identify stuff...
     this.state.visDivId = "vis" + makeid();
+  }
+  loadExistingExample(file) {
+    console.log(file);
   }
   uploadExample(evt) {
     // When the control has changed, there are new files
@@ -712,7 +735,7 @@ class TaskPanel extends React.Component {
                     <span data-label-placement="">Load Example</span> <span className="glyphicons glyphicons-chevron-right"></span>
                   </label>
                   <ul className='dropdown-menu bullet pull-middle pull-right'>
-                    <li onClick={e => this.updateDBKey.bind(this)(null, false)}>
+                    <li>
                       <label>
                         Upload Example (csv, scythe.txt)
                       <input onChange={this.uploadExample.bind(this)} className="fileupload" 
@@ -720,6 +743,11 @@ class TaskPanel extends React.Component {
                       </label>
                     </li>
                     <li className="divider"></li>
+                    {this.state.exampleList.map((d, i) =>
+                      <li key={i} onClick={e => this.loadExistingExample.bind(this)(d)}>
+                        <input type='radio' name={"egSelect-" + d} value={d}/>
+                        <label htmlFor={"egSelect-" + d}>{d}</label>
+                      </li>)}
                   </ul>
                 </div>
                 <div className="btn-group" 

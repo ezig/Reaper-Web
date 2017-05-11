@@ -13,7 +13,7 @@ from flask import Flask, render_template, request, jsonify
 template_dir = os.path.abspath(os.path.join('..', 'frontend'))
 # all databases are stored in this folder
 database_dir = os.path.abspath(os.path.join('..', 'database'))
-database_dir = os.path.abspath(os.path.join('..', 'example'))
+example_dir = os.path.abspath(os.path.join('..', 'example'))
 static_dir = os.path.abspath(os.path.join('..', 'frontend'))
 
 app = Flask(__name__,template_folder=template_dir, static_folder=static_dir)
@@ -104,10 +104,10 @@ def synthesize():
 @app.route('/examples', methods = ['GET'])
 def list_examples():
     examples = []
-    for f in os.listdir(database_dir):
-        if os.path.isfile(os.path.join(database_dir, f)) and f.endswith(".db"):
-            databases.append(f)
-    return jsonify({"databases": databases})
+    for f in os.listdir(example_dir):
+        if os.path.isfile(os.path.join(example_dir, f)) and (f.endswith(".scythe.txt") or f.endswith(".csv")):
+            examples.append(f)
+    return jsonify({"examples": examples})
 
 ################## Database related services ##############
 
