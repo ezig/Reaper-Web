@@ -560,18 +560,18 @@ var TaskPanel = function (_React$Component2) {
         ),
         React.createElement(
           "label",
+          { className: "btn btn-default query-btn",
+            disabled: disableSelect || this.state.connected == false,
+            onClick: this.runQueryOnDatabase.bind(this) },
+          "Run on DB"
+        ),
+        React.createElement(
+          "label",
           { className: "btn btn-default query-btn", disabled: disableSelect,
             onClick: function onClick(e) {
               return _this6.updateDisplayOption.bind(_this6)("type", "data");
             } },
           "Show Data"
-        ),
-        React.createElement(
-          "label",
-          { className: "btn btn-default query-btn",
-            disabled: disableSelect || this.state.connected == false,
-            onClick: this.runQueryOnDatabase.bind(this) },
-          "Run on DB"
         ),
         React.createElement(
           "div",
@@ -834,6 +834,8 @@ var TaskPanel = function (_React$Component2) {
   }, {
     key: "render",
     value: function render() {
+      var _this8 = this;
+
       {/* the id of the panel */}
       var panelId = this.props.value;
       return React.createElement(
@@ -913,31 +915,57 @@ var TaskPanel = function (_React$Component2) {
               { style: { borderRight: 1 + "px dashed gray" } },
               React.createElement(
                 "div",
-                { id: "input-panel-btns" + panelId },
+                { id: "input-panel-btns" + panelId, style: { marginLeft: "10px", marginRight: "10px" } },
                 React.createElement(
                   "div",
-                  { className: "buttons btn-group btn-group-justified",
-                    style: { paddingLeft: 10 + "px", paddingRight: 10 + "px" } },
+                  { className: "btn-group", style: { marginRight: "10px" } },
+                  React.createElement(
+                    "label",
+                    { "data-toggle": "dropdown", className: 'btn btn-primary dropdown-toggle' },
+                    React.createElement(
+                      "span",
+                      { "data-label-placement": "" },
+                      "Load Example"
+                    ),
+                    " ",
+                    React.createElement("span", { className: "glyphicons glyphicons-chevron-right" })
+                  ),
+                  React.createElement(
+                    "ul",
+                    { className: "dropdown-menu bullet pull-middle pull-right" },
+                    React.createElement(
+                      "li",
+                      { onClick: function onClick(e) {
+                          return _this8.updateDBKey.bind(_this8)(null, false);
+                        } },
+                      React.createElement(
+                        "label",
+                        null,
+                        "Upload .csv or .scythe.txt",
+                        React.createElement("input", { onChange: this.uploadExample.bind(this), className: "fileupload",
+                          type: "file", style: { display: "none" }, name: "files[]", multiple: true })
+                      )
+                    ),
+                    React.createElement("li", { className: "divider" })
+                  )
+                ),
+                React.createElement(
+                  "div",
+                  { className: "btn-group",
+                    style: { width: "60%", tableLayout: "fixed", borderCollapse: "separate" } },
                   React.createElement(
                     "label",
                     { onClick: this.addDefaultInputTable.bind(this), className: "btn btn-primary",
-                      style: { paddingLeft: 3 + "px", paddingRight: 3 + "px" } },
+                      style: { paddingLeft: 10 + "px", paddingRight: 10 + "px" } },
                     React.createElement("span", { className: "glyphicon glyphicon-plus" }),
                     " Add Table"
                   ),
                   React.createElement(
                     "label",
                     { onClick: this.removeLastInputTable.bind(this), className: "btn btn-primary",
-                      style: { paddingLeft: 3 + "px", paddingRight: 3 + "px" } },
+                      style: { paddingLeft: 10 + "px", paddingRight: 10 + "px" } },
                     React.createElement("span", { className: "glyphicon glyphicon-minus" }),
                     " Remove Table"
-                  ),
-                  React.createElement(
-                    "label",
-                    { className: "btn btn-primary" },
-                    "Load Example",
-                    React.createElement("input", { onChange: this.uploadExample.bind(this), className: "fileupload",
-                      type: "file", style: { display: "none" }, name: "files[]", multiple: true })
                   )
                 )
               )
@@ -976,11 +1004,11 @@ var EditableTable = function (_React$Component3) {
   function EditableTable(props) {
     _classCallCheck(this, EditableTable);
 
-    var _this8 = _possibleConstructorReturn(this, (EditableTable.__proto__ || Object.getPrototypeOf(EditableTable)).call(this, props));
+    var _this9 = _possibleConstructorReturn(this, (EditableTable.__proto__ || Object.getPrototypeOf(EditableTable)).call(this, props));
 
-    _this8.state = {};
-    _this8.state.table = _this8.props.table;
-    return _this8;
+    _this9.state = {};
+    _this9.state.table = _this9.props.table;
+    return _this9;
   }
 
   _createClass(EditableTable, [{
@@ -1034,12 +1062,12 @@ var EditableTable = function (_React$Component3) {
   }, {
     key: "handleColAdd",
     value: function handleColAdd(evt) {
-      var _this9 = this;
+      var _this10 = this;
 
       var id = (+new Date() + Math.floor(Math.random() * 999999)).toString(36);
       this.state.table.header.splice(this.state.table.content[0].length, 0, "c" + this.state.table.content[0].length);
       this.state.table.content.map(function (row) {
-        return row.splice(_this9.state.table.content[0].length, 0, 0);
+        return row.splice(_this10.state.table.content[0].length, 0, 0);
       });
       this.setState(this.state.table);
     }
@@ -1058,14 +1086,14 @@ var EditableTable = function (_React$Component3) {
   }, {
     key: "render",
     value: function render() {
-      var _this10 = this;
+      var _this11 = this;
 
       return React.createElement(
         "div",
         { style: { border: "dashed 1px #EEE", padding: "2px 2px 2px 2px" } },
         React.createElement("input", { type: "text", value: this.state.table.name, className: "table_name", size: "10",
           onChange: function onChange(e) {
-            _this10.updateTableName.bind(_this10)(e.target.value);
+            _this11.updateTableName.bind(_this11)(e.target.value);
           },
           style: { width: "100%", textAlign: "center", border: "none", marginBottom: "2px" } }),
         React.createElement(
@@ -1083,9 +1111,9 @@ var EditableTable = function (_React$Component3) {
             null,
             " ",
             this.state.table.content.map(function (val, i) {
-              return React.createElement(ETableRow, { onCellUpdate: _this10.handleCellUpdate.bind(_this10),
+              return React.createElement(ETableRow, { onCellUpdate: _this11.handleCellUpdate.bind(_this11),
                 data: { rowContent: val, rowId: i }, deletable: true, key: i,
-                onDelEvent: _this10.handleRowDel.bind(_this10) });
+                onDelEvent: _this11.handleRowDel.bind(_this11) });
             })
           )
         ),
@@ -1126,7 +1154,7 @@ var ETableRow = function (_React$Component4) {
   _createClass(ETableRow, [{
     key: "render",
     value: function render() {
-      var _this12 = this;
+      var _this13 = this;
 
       var delButton = null;
       if (this.props.deletable) {
@@ -1134,7 +1162,7 @@ var ETableRow = function (_React$Component4) {
           "td",
           { className: "del-cell editable-table-cell" },
           React.createElement("input", { type: "button", onClick: function onClick(e) {
-              return _this12.props.onDelEvent(_this12.props.data.rowId);
+              return _this13.props.onDelEvent(_this13.props.data.rowId);
             },
             value: "X", className: "btn btn-default btn-super-sm" })
         );
@@ -1145,11 +1173,11 @@ var ETableRow = function (_React$Component4) {
         "tr",
         null,
         this.props.data.rowContent.map(function (x, i) {
-          return React.createElement(ETableCell, { onCellUpdate: _this12.props.onCellUpdate.bind(_this12),
-            key: _this12.props.data.rowId + "," + i,
+          return React.createElement(ETableCell, { onCellUpdate: _this13.props.onCellUpdate.bind(_this13),
+            key: _this13.props.data.rowId + "," + i,
             cellData: {
               val: x,
-              rowId: _this12.props.data.rowId,
+              rowId: _this13.props.data.rowId,
               colId: i
             } });
         }),
@@ -1173,14 +1201,14 @@ var ETableCell = function (_React$Component5) {
   _createClass(ETableCell, [{
     key: "render",
     value: function render() {
-      var _this14 = this;
+      var _this15 = this;
 
       return React.createElement(
         "td",
         { className: "editable-table-cell" },
         React.createElement("input", { type: "text", value: this.props.cellData.val,
           onChange: function onChange(e) {
-            return _this14.props.onCellUpdate(_this14.props.cellData.rowId, _this14.props.cellData.colId, e.target.value);
+            return _this15.props.onCellUpdate(_this15.props.cellData.rowId, _this15.props.cellData.colId, e.target.value);
           },
           style: { width: "100%", textAlign: "center", border: "none" } })
       );

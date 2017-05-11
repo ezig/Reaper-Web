@@ -391,7 +391,7 @@ function gen2DHistogram(table, divId, chartType) {
     .attr("text-anchor", "middle")
     .attr("x", width / 2)
     .attr("y", height + margin.bottom - 5)
-    .text("c1");
+    .text(xAxisLabel);
 
   // add the y axis and y-label
   svg.append("g")
@@ -405,5 +405,5 @@ function gen2DHistogram(table, divId, chartType) {
     .attr("dy", "1em")
     .attr("transform", "rotate(-90)")
     .style("text-anchor", "middle")
-    .text("c2");
+    .text(yAxisLabel);
 }

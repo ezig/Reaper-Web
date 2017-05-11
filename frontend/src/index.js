@@ -450,14 +450,14 @@ class TaskPanel extends React.Component {
                onClick={e => this.updateDisplayOption.bind(this)("type", "query")}>
           Show Query
         </label>
-        <label className={"btn btn-default query-btn"} disabled={disableSelect}
-               onClick={e => this.updateDisplayOption.bind(this)("type", "data")}>
-          Show Data
-        </label>
         <label className={"btn btn-default query-btn"} 
                disabled={disableSelect || this.state.connected==false}
                onClick={this.runQueryOnDatabase.bind(this)}>
           Run on DB
+        </label>
+        <label className={"btn btn-default query-btn"} disabled={disableSelect}
+               onClick={e => this.updateDisplayOption.bind(this)("type", "data")}>
+          Show Data
         </label>
         <div className='btn-group'>
           <label className="btn btn-default query-btn"
@@ -706,21 +706,31 @@ class TaskPanel extends React.Component {
           </tr>
           <tr style={{height:0+"px"}}>
             <td style={{borderRight:1+"px dashed gray"}}>
-              <div id={"input-panel-btns" + panelId}>
-                <div className="buttons btn-group btn-group-justified" 
-                     style={{paddingLeft:10 + "px", paddingRight:10 + "px"}}>
+              <div id={"input-panel-btns" + panelId}  style={{marginLeft: "10px", marginRight: "10px"}}>
+                <div className="btn-group" style={{marginRight: "10px"}}>
+                  <label data-toggle='dropdown' className={'btn btn-primary dropdown-toggle'}>
+                    <span data-label-placement="">Load Example</span> <span className="glyphicons glyphicons-chevron-right"></span>
+                  </label>
+                  <ul className='dropdown-menu bullet pull-middle pull-right'>
+                    <li onClick={e => this.updateDBKey.bind(this)(null, false)}>
+                      <label>
+                        Upload Example (csv, scythe.txt)
+                      <input onChange={this.uploadExample.bind(this)} className="fileupload" 
+                             type="file" style={{display: "none"}} name="files[]" multiple />
+                      </label>
+                    </li>
+                    <li className="divider"></li>
+                  </ul>
+                </div>
+                <div className="btn-group" 
+                     style={{width:"60%", tableLayout: "fixed", borderCollapse: "separate"}}>
                   <label onClick={this.addDefaultInputTable.bind(this)} className="btn btn-primary" 
-                         style={{paddingLeft:3+"px", paddingRight:3 + "px"}}>
+                         style={{paddingLeft:10+"px", paddingRight:10 + "px"}}>
                     <span className="glyphicon glyphicon-plus" /> Add Table
                   </label>
                   <label onClick={this.removeLastInputTable.bind(this)} className="btn btn-primary" 
-                         style={{paddingLeft:3+"px", paddingRight:3 + "px"}}>
+                         style={{paddingLeft:10+"px", paddingRight:10 + "px"}}>
                     <span className="glyphicon glyphicon-minus" /> Remove Table
-                  </label>
-                  <label className="btn btn-primary">
-                    Load Example
-                    <input onChange={this.uploadExample.bind(this)} className="fileupload" 
-                           type="file" style={{display: "none"}} name="files[]" multiple />
                   </label>
                 </div>
               </div>

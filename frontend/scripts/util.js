@@ -302,10 +302,10 @@ function gen2DHistogram(table, divId, chartType) {
 
   // add the x axis and x-label
   svg.append("g").attr("class", "x axis").attr("transform", "translate(0," + height + ")").call(xAxis);
-  svg.append("text").attr("class", "xlabel").attr("text-anchor", "middle").attr("x", width / 2).attr("y", height + margin.bottom - 5).text("c1");
+  svg.append("text").attr("class", "xlabel").attr("text-anchor", "middle").attr("x", width / 2).attr("y", height + margin.bottom - 5).text(xAxisLabel);
 
   // add the y axis and y-label
   svg.append("g").attr("class", "y axis").attr("transform", "translate(0,0)").call(yAxis);
   svg.append("text").attr("class", "ylabel").attr("y", 0 - margin.left) // x and y switched due to rotation
-  .attr("x", 0 - height / 2).attr("dy", "1em").attr("transform", "rotate(-90)").style("text-anchor", "middle").text("c2");
+  .attr("x", 0 - height / 2).attr("dy", "1em").attr("transform", "rotate(-90)").style("text-anchor", "middle").text(yAxisLabel);
 }
