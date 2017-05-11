@@ -228,6 +228,7 @@ table {
 pre {
   text-align: left;
   border-radius: 0;
+  background-color: inherit;
 }
 
 .query_output_container {
