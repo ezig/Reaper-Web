@@ -1,71 +1,3 @@
-function makeid() {
-    var text = "";
-    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    for( var i=0; i < 10; i++ )
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
-    return text;
-}
-
-function tableToCSV(table) {
-  var csvStr = "";
-  csvStr += table["header"].join(", ") + "\n";
-  for (var i = 0; i < table["content"].length; i ++) {
-    csvStr += table["content"][i].join(", ") + "\n";
-  }
-  return csvStr;
-}
-
-function csvToTable(csvStr, name) {
-  if (csvStr.constructor === Array)
-    csvStr = csvStr.join("\r\n");
-  var csvdata = d3.csvParse(csvStr);
-  var header = [];
-  var content = [];
-  for (var i = 0; i < csvdata.columns.length; i ++) 
-    header.push(csvdata.columns[i]);
-  for (var i = 0; i < csvdata.length; i++) {
-    var row = [];
-    for (var j = 0; j < csvdata.columns.length; j ++) {
-      var cell = csvdata[i][csvdata.columns[j]].trim();
-      row.push(cell);
-    }
-    content.push(row);
-  }
-  return {name: name, content: content, header: header};
-}
-
-function parseScytheExample(str) {
-  var content = str.split(/\r?\n/);
-  var i = 0;
-  var inputTables = [];
-  var outputTable = null;
-  while (i < content.length) {
-    if (content[i].startsWith("#")) {
-      var segName = content[i].substring(1);
-      var segContent = [];
-      i += 1;
-      while (i < content.length && ! content[i].startsWith("#")) {
-        if (! (content[i].trim() == ""))
-           segContent.push(content[i]);
-        i ++;
-      }
-      if (segName.startsWith("input")) {
-        var baseTableName = segName.substring("input".length);
-        if (baseTableName == "") 
-          baseTableName = "input"
-        else
-          baseTableName = baseTableName.substring(1);
-        inputTables.push(csvToTable(segContent, baseTableName));
-      } else if (segName.startsWith("output")) {
-        outputTable = csvToTable(segContent, "output");
-      }
-    } else {
-      i += 1;
-    }
-  }
-  return {inputTables: inputTables, outputTable: outputTable};
-}
-
 class ScytheInterface extends React.Component {
   constructor(props) {
     super(props);
@@ -480,23 +412,10 @@ class TaskPanel extends React.Component {
         checked: (this.state.displayOption.visDataSrc == "query result"), 
         disabled: (disableSelect)}];
 
+
+    // chartTypeDropDown are created from chartOptions
     var chartTypeChoiceName = makeid();
-    var chartTypeDropDown = 
-      [{value: "hist-1", label: "Histogram (c1)", tempId: makeid(), disabled: false,
-        checked: (this.state.displayOption.chartType == "hist-1"), 
-        filter: function (table) { return table["header"].length >= 2; } },
-       {value: "hist-2", label: "Histogram (c2)", tempId: makeid(), disabled: false,
-        checked: (this.state.displayOption.chartType == "hist-2"),
-        filter: function (table) { return table["header"].length >= 3; } },
-       {value: "hist-3", label: "Histogram (c2-c1)", tempId: makeid(), disabled: false,
-        checked: (this.state.displayOption.chartType == "hist-3"),
-        filter: function (table) { return table["header"].length >= 3; } },
-       {value: "2dhist-1", label: "2D Histogram (c1,c2)", tempId: makeid(), disabled: false, 
-        checked: (this.state.displayOption.visDataSrc == "2dhist-1"),
-        filter: function (table) { return table["header"].length >= 3; } },
-       {value: "2dhist-2", label: "2D Histogram (c2-c1,c3-1)", tempId: makeid(), disabled: false, 
-        checked: (this.state.displayOption.visDataSrc == "2dhist-2"),
-        filter: function (table) { return table["header"].length >= 4; } }];
+    var chartTypeDropDown = CHARTS.options.map(d => { var x = d; x.tempId = makeid(); return x;});
 
     // Generate the drop down menu in the enhanced drop down fashion
     // When there are multiple note that items in the list should all have the same name
@@ -511,7 +430,7 @@ class TaskPanel extends React.Component {
             {options.map((d, i) =>
               <li key={i}>
                 <input type='radio' id={d.tempId} name={querySelectorName} 
-                  value={i} checked={d.checked}
+                  value={i} checked={this.state.displayOption.visDataSrc == d.value}
                 onChange={e => 
                   this.updateDisplayOption.bind(this)("queryId", parseInt(e.target.value))} />
                 <label htmlFor={d.tempId}>{d.label}</label>
@@ -551,8 +470,8 @@ class TaskPanel extends React.Component {
             <li className="divider"></li>
             {chartTypeDropDown.filter((d) => d.filter(this.state.outputTable)).map((d, i) =>
               <li key={i}>
-                <input disabled={d.disabled} type='radio' id={d.tempId} 
-                       name={chartTypeChoiceName} value={d.value} checked={d.checked}
+                <input type='radio' id={d.tempId} name={chartTypeChoiceName} value={d.value} 
+                  checked={d.checked}
                   onChange={e => this.updateDisplayOption.bind(this)("chartType", e.target.value)}/>
                 <label htmlFor={d.tempId}>{d.label}</label>
               </li>)}
@@ -577,10 +496,7 @@ class TaskPanel extends React.Component {
 
         if (visData != null) {
           $("#" + prevState.visDivId).empty();
-          if (prevState.displayOption.chartType.startsWith("hist"))
-            genHistogram(visData, "#" + prevState.visDivId, prevState.displayOption.chartType);
-          else
-            gen2DHistogram(visData, "#" + prevState.visDivId, prevState.displayOption.chartType);
+          CHARTS.render("#" + prevState.visDivId, visData, prevState.displayOption.chartType);
         }
     }
   }
@@ -613,7 +529,8 @@ class TaskPanel extends React.Component {
       }
     } else if (this.state.displayOption.type == "vis") {
       //this.state.displayOption = {type: "query", queryId: -1, visDataSrc: "example data"};
-      return <div id={this.state.visDivId} className="pnl display-vis" style={{display:"block"}}></div>;
+      return <div id={this.state.visDivId} className="pnl display-vis" 
+                  style={{display:"block", margin: "10px 5px 5px 5px"}}></div>;
     } else if (this.state.displayOption.type == "data") {
       let content = null;
       if (this.state.displayOption.queryId != -1 
