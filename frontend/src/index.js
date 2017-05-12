@@ -325,7 +325,7 @@ class TaskPanel extends React.Component {
               this.state.inputTables = examples.inputTables;
               this.setState(this.state.inputTables);
 
-              // This one is not the desired! 
+              // This one is not the desired!
               // It only updates the state in panel but will not propogate to the subelement, 
               // since the child is binded to the old value,
               // they no longer points to the same memory object
@@ -483,15 +483,20 @@ class TaskPanel extends React.Component {
     var chartTypeChoiceName = makeid();
     var chartTypeDropDown = 
       [{value: "hist-1", label: "Histogram (c1)", tempId: makeid(), disabled: false,
-        checked: (this.state.displayOption.chartType == "hist-1")},
+        checked: (this.state.displayOption.chartType == "hist-1"), 
+        filter: function (table) { return table["header"].length >= 2; } },
        {value: "hist-2", label: "Histogram (c2)", tempId: makeid(), disabled: false,
-        checked: (this.state.displayOption.chartType == "hist-2")},
+        checked: (this.state.displayOption.chartType == "hist-2"),
+        filter: function (table) { return table["header"].length >= 3; } },
        {value: "hist-3", label: "Histogram (c2-c1)", tempId: makeid(), disabled: false,
-        checked: (this.state.displayOption.chartType == "hist-3")},
+        checked: (this.state.displayOption.chartType == "hist-3"),
+        filter: function (table) { return table["header"].length >= 3; } },
        {value: "2dhist-1", label: "2D Histogram (c1,c2)", tempId: makeid(), disabled: false, 
-        checked: (this.state.displayOption.visDataSrc == "2dhist-1")},
+        checked: (this.state.displayOption.visDataSrc == "2dhist-1"),
+        filter: function (table) { return table["header"].length >= 3; } },
        {value: "2dhist-2", label: "2D Histogram (c2-c1,c3-1)", tempId: makeid(), disabled: false, 
-        checked: (this.state.displayOption.visDataSrc == "2dhist-2")}];
+        checked: (this.state.displayOption.visDataSrc == "2dhist-2"),
+        filter: function (table) { return table["header"].length >= 4; } }];
 
     // Generate the drop down menu in the enhanced drop down fashion
     // When there are multiple note that items in the list should all have the same name
@@ -544,7 +549,7 @@ class TaskPanel extends React.Component {
                 <label htmlFor={d.tempId}>{d.label}</label>
               </li>)}
             <li className="divider"></li>
-            {chartTypeDropDown.map((d, i) =>
+            {chartTypeDropDown.filter((d) => d.filter(this.state.outputTable)).map((d, i) =>
               <li key={i}>
                 <input disabled={d.disabled} type='radio' id={d.tempId} 
                        name={chartTypeChoiceName} value={d.value} checked={d.checked}
