@@ -109,6 +109,15 @@ def list_examples():
             examples.append(f)
     return jsonify({"examples": examples})
 
+@app.route('/get_example', methods=['POST'])
+def get_example():
+    request_data = request.get_json()
+    if not "example_name" in request_data:
+        return jsonify({"status": "error"})
+    example_name = request_data["example_name"]
+    with open(os.path.join(example_dir, example_name), 'r') as f:
+        return jsonify({"status":"success", "content": f.read()})
+
 ################## Database related services ##############
 
 @app.route('/database', methods = ['GET'])

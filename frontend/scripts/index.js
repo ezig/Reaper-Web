@@ -373,7 +373,6 @@ var TaskPanel = function (_React$Component2) {
     }).then(function (responseJson) {
       _this4.state.exampleList = responseJson.examples;
       _this4.setState(_this4.state.exampleList);
-      console.log(_this4.state.exampleList);
     }).catch(function (error) {
       console.error(error);
     });
@@ -386,7 +385,51 @@ var TaskPanel = function (_React$Component2) {
   _createClass(TaskPanel, [{
     key: "loadExistingExample",
     value: function loadExistingExample(file) {
+      var _this5 = this;
+
       console.log(file);
+
+      var req = new Request('/get_example', { method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          example_name: file
+        })
+      });
+
+      // handle response from the server
+      fetch(req).then(function (response) {
+        return response.json();
+      }).then(function (responseJson) {
+        if (responseJson.status == "success") {
+          _this5.state.inputTables = [];
+          _this5.setState(_this5.state.inputTables);
+          var content = responseJson.content;
+          if (file.endsWith(".csv")) {
+            var table = csvToTable(content, file.replace(/\./g, "_"));
+            _this5.state.inputTables.push(table);
+            _this5.setState(_this5.state.inputTables);
+          } else if (file.endsWith(".scythe.txt")) {
+            var examples = parseScytheExample(content);
+            _this5.state.inputTables = examples.inputTables;
+            _this5.setState(_this5.state.inputTables);
+
+            // This one is not the desired! 
+            // It only updates the state in panel but will not propogate to the subelement, 
+            // since the child is binded to the old value,
+            // they no longer points to the same memory object
+            //this.state.outputTable = examples.outputTable;
+            _this5.state.outputTable.header = examples.outputTable.header;
+            _this5.state.outputTable.content = examples.outputTable.content;
+            _this5.state.outputTable.name = examples.outputTable.name;
+            _this5.setState(_this5.state.outputTable);
+          }
+        }
+      }).catch(function (error) {
+        if (_this5.state.connected) alert("Failed to obtain file (" + file + ") from backend.");
+      });
     }
   }, {
     key: "uploadExample",
@@ -467,7 +510,7 @@ var TaskPanel = function (_React$Component2) {
   }, {
     key: "runQueryOnDatabase",
     value: function runQueryOnDatabase() {
-      var _this5 = this;
+      var _this6 = this;
 
       // do nothing if connection is not established
       if (this.state.connected == false || this.state.displayOption.queryId == -1) return;
@@ -497,19 +540,19 @@ var TaskPanel = function (_React$Component2) {
         console.log(responseJson);
         if (responseJson.status == "success") {
           console.log("Successfully executed query.");
-          _this5.setState({ callingDB: false });
-          _this5.state.synthesisResult[_this5.state.displayOption.queryId].data = responseJson.data;
-          _this5.setState(_this5.state.synthesisResult);
+          _this6.setState({ callingDB: false });
+          _this6.state.synthesisResult[_this6.state.displayOption.queryId].data = responseJson.data;
+          _this6.setState(_this6.state.synthesisResult);
         }
       }).catch(function (error) {
-        _this5.setState({ callingDB: false });
-        if (_this5.state.connected) alert("Failed to run query on the database (" + dbKey + ")");
+        _this6.setState({ callingDB: false });
+        if (_this6.state.connected) alert("Failed to run query on the database (" + dbKey + ")");
       });
     }
   }, {
     key: "renderDropDownMenu",
     value: function renderDropDownMenu() {
-      var _this6 = this;
+      var _this7 = this;
 
       var options = [];
       var querySelectorName = makeid();
@@ -562,7 +605,7 @@ var TaskPanel = function (_React$Component2) {
                 React.createElement("input", { type: "radio", id: d.tempId, name: querySelectorName,
                   value: i, checked: d.checked,
                   onChange: function onChange(e) {
-                    return _this6.updateDisplayOption.bind(_this6)("queryId", parseInt(e.target.value));
+                    return _this7.updateDisplayOption.bind(_this7)("queryId", parseInt(e.target.value));
                   } }),
                 React.createElement(
                   "label",
@@ -577,7 +620,7 @@ var TaskPanel = function (_React$Component2) {
           "label",
           { className: "btn btn-default query-btn", disabled: disableSelect,
             onClick: function onClick(e) {
-              return _this6.updateDisplayOption.bind(_this6)("type", "query");
+              return _this7.updateDisplayOption.bind(_this7)("type", "query");
             } },
           "Show Query"
         ),
@@ -592,7 +635,7 @@ var TaskPanel = function (_React$Component2) {
           "label",
           { className: "btn btn-default query-btn", disabled: disableSelect,
             onClick: function onClick(e) {
-              return _this6.updateDisplayOption.bind(_this6)("type", "data");
+              return _this7.updateDisplayOption.bind(_this7)("type", "data");
             } },
           "Show Data"
         ),
@@ -603,7 +646,7 @@ var TaskPanel = function (_React$Component2) {
             "label",
             { className: "btn btn-default query-btn",
               onClick: function onClick(e) {
-                return _this6.updateDisplayOption.bind(_this6)("type", "vis");
+                return _this7.updateDisplayOption.bind(_this7)("type", "vis");
               } },
             "Show Chart"
           ),
@@ -623,7 +666,7 @@ var TaskPanel = function (_React$Component2) {
                 React.createElement("input", { disabled: d.disabled, type: "radio", id: d.tempId,
                   name: visTargetChoiceName, value: d.value, checked: d.checked,
                   onChange: function onChange(e) {
-                    return _this6.updateDisplayOption.bind(_this6)("visDataSrc", e.target.value);
+                    return _this7.updateDisplayOption.bind(_this7)("visDataSrc", e.target.value);
                   } }),
                 React.createElement(
                   "label",
@@ -640,7 +683,7 @@ var TaskPanel = function (_React$Component2) {
                 React.createElement("input", { disabled: d.disabled, type: "radio", id: d.tempId,
                   name: chartTypeChoiceName, value: d.value, checked: d.checked,
                   onChange: function onChange(e) {
-                    return _this6.updateDisplayOption.bind(_this6)("chartType", e.target.value);
+                    return _this7.updateDisplayOption.bind(_this7)("chartType", e.target.value);
                   } }),
                 React.createElement(
                   "label",
@@ -781,7 +824,7 @@ var TaskPanel = function (_React$Component2) {
   }, {
     key: "invokeScythe",
     value: function invokeScythe() {
-      var _this7 = this;
+      var _this8 = this;
 
       this.state.synthesisResult = [];
       this.state.displayOption.queryId = -1;
@@ -842,14 +885,14 @@ var TaskPanel = function (_React$Component2) {
       }).then(function (responseJson) {
         if (responseJson.status == "error") console.log(responseJson.status.message);
         for (var i in responseJson.queries) {
-          _this7.state.synthesisResult.push({ "query": responseJson.queries[i], "data": null });
+          _this8.state.synthesisResult.push({ "query": responseJson.queries[i], "data": null });
         }
-        _this7.state.synthesisResult = _this7.state.synthesisResult.reverse();
+        _this8.state.synthesisResult = _this8.state.synthesisResult.reverse();
         // automatically switching to displaying the first query synthesized
-        _this7.setState({ callingScythe: false });
-        _this7.state.displayOption.queryId = 0;
-        _this7.setState(_this7.state.displayOption);
-        _this7.setState(_this7.state.synthesisResult);
+        _this8.setState({ callingScythe: false });
+        _this8.state.displayOption.queryId = 0;
+        _this8.setState(_this8.state.displayOption);
+        _this8.setState(_this8.state.synthesisResult);
       }).catch(function (error) {
         console.error(error);
       });
@@ -857,7 +900,7 @@ var TaskPanel = function (_React$Component2) {
   }, {
     key: "render",
     value: function render() {
-      var _this8 = this;
+      var _this9 = this;
 
       {/* the id of the panel */}
       var panelId = this.props.value;
@@ -972,7 +1015,7 @@ var TaskPanel = function (_React$Component2) {
                       return React.createElement(
                         "li",
                         { key: i, onClick: function onClick(e) {
-                            return _this8.loadExistingExample.bind(_this8)(d);
+                            return _this9.loadExistingExample.bind(_this9)(d);
                           } },
                         React.createElement("input", { type: "radio", name: "egSelect-" + d, value: d }),
                         React.createElement(
@@ -1039,11 +1082,11 @@ var EditableTable = function (_React$Component3) {
   function EditableTable(props) {
     _classCallCheck(this, EditableTable);
 
-    var _this9 = _possibleConstructorReturn(this, (EditableTable.__proto__ || Object.getPrototypeOf(EditableTable)).call(this, props));
+    var _this10 = _possibleConstructorReturn(this, (EditableTable.__proto__ || Object.getPrototypeOf(EditableTable)).call(this, props));
 
-    _this9.state = {};
-    _this9.state.table = _this9.props.table;
-    return _this9;
+    _this10.state = {};
+    _this10.state.table = _this10.props.table;
+    return _this10;
   }
 
   _createClass(EditableTable, [{
@@ -1097,12 +1140,12 @@ var EditableTable = function (_React$Component3) {
   }, {
     key: "handleColAdd",
     value: function handleColAdd(evt) {
-      var _this10 = this;
+      var _this11 = this;
 
       var id = (+new Date() + Math.floor(Math.random() * 999999)).toString(36);
       this.state.table.header.splice(this.state.table.content[0].length, 0, "c" + this.state.table.content[0].length);
       this.state.table.content.map(function (row) {
-        return row.splice(_this10.state.table.content[0].length, 0, 0);
+        return row.splice(_this11.state.table.content[0].length, 0, 0);
       });
       this.setState(this.state.table);
     }
@@ -1121,14 +1164,14 @@ var EditableTable = function (_React$Component3) {
   }, {
     key: "render",
     value: function render() {
-      var _this11 = this;
+      var _this12 = this;
 
       return React.createElement(
         "div",
         { style: { border: "dashed 1px #EEE", padding: "2px 2px 2px 2px" } },
         React.createElement("input", { type: "text", value: this.state.table.name, className: "table_name", size: "10",
           onChange: function onChange(e) {
-            _this11.updateTableName.bind(_this11)(e.target.value);
+            _this12.updateTableName.bind(_this12)(e.target.value);
           },
           style: { width: "100%", textAlign: "center", border: "none", marginBottom: "2px" } }),
         React.createElement(
@@ -1146,9 +1189,9 @@ var EditableTable = function (_React$Component3) {
             null,
             " ",
             this.state.table.content.map(function (val, i) {
-              return React.createElement(ETableRow, { onCellUpdate: _this11.handleCellUpdate.bind(_this11),
+              return React.createElement(ETableRow, { onCellUpdate: _this12.handleCellUpdate.bind(_this12),
                 data: { rowContent: val, rowId: i }, deletable: true, key: i,
-                onDelEvent: _this11.handleRowDel.bind(_this11) });
+                onDelEvent: _this12.handleRowDel.bind(_this12) });
             })
           )
         ),
@@ -1189,7 +1232,7 @@ var ETableRow = function (_React$Component4) {
   _createClass(ETableRow, [{
     key: "render",
     value: function render() {
-      var _this13 = this;
+      var _this14 = this;
 
       var delButton = null;
       if (this.props.deletable) {
@@ -1197,7 +1240,7 @@ var ETableRow = function (_React$Component4) {
           "td",
           { className: "del-cell editable-table-cell" },
           React.createElement("input", { type: "button", onClick: function onClick(e) {
-              return _this13.props.onDelEvent(_this13.props.data.rowId);
+              return _this14.props.onDelEvent(_this14.props.data.rowId);
             },
             value: "X", className: "btn btn-default btn-super-sm" })
         );
@@ -1208,11 +1251,11 @@ var ETableRow = function (_React$Component4) {
         "tr",
         null,
         this.props.data.rowContent.map(function (x, i) {
-          return React.createElement(ETableCell, { onCellUpdate: _this13.props.onCellUpdate.bind(_this13),
-            key: _this13.props.data.rowId + "," + i,
+          return React.createElement(ETableCell, { onCellUpdate: _this14.props.onCellUpdate.bind(_this14),
+            key: _this14.props.data.rowId + "," + i,
             cellData: {
               val: x,
-              rowId: _this13.props.data.rowId,
+              rowId: _this14.props.data.rowId,
               colId: i
             } });
         }),
@@ -1236,14 +1279,14 @@ var ETableCell = function (_React$Component5) {
   _createClass(ETableCell, [{
     key: "render",
     value: function render() {
-      var _this15 = this;
+      var _this16 = this;
 
       return React.createElement(
         "td",
         { className: "editable-table-cell" },
         React.createElement("input", { type: "text", value: this.props.cellData.val,
           onChange: function onChange(e) {
-            return _this15.props.onCellUpdate(_this15.props.cellData.rowId, _this15.props.cellData.colId, e.target.value);
+            return _this16.props.onCellUpdate(_this16.props.cellData.rowId, _this16.props.cellData.colId, e.target.value);
           },
           style: { width: "100%", textAlign: "center", border: "none" } })
       );

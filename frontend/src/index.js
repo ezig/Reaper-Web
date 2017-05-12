@@ -286,7 +286,6 @@ class TaskPanel extends React.Component {
     .then((responseJson) => {
       this.state.exampleList = responseJson.examples;
       this.setState(this.state.exampleList);
-      console.log(this.state.exampleList);
     })
     .catch((error) => {
       console.error(error);
@@ -297,6 +296,51 @@ class TaskPanel extends React.Component {
   }
   loadExistingExample(file) {
     console.log(file);
+
+    var req = new Request('/get_example', 
+      { method: 'POST', 
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          example_name: file
+        })
+      });
+
+      // handle response from the server
+      fetch(req)
+        .then((response) => response.json())
+        .then((responseJson) => { 
+          if (responseJson.status == "success") {
+            this.state.inputTables = [];
+            this.setState(this.state.inputTables);
+            var content = responseJson.content;
+            if (file.endsWith(".csv")) {
+              var table = csvToTable(content, file.replace(/\./g,"_"));
+              this.state.inputTables.push(table);
+              this.setState(this.state.inputTables);
+            } else if (file.endsWith(".scythe.txt")) {
+              var examples = parseScytheExample(content);
+              this.state.inputTables = examples.inputTables;
+              this.setState(this.state.inputTables);
+
+              // This one is not the desired! 
+              // It only updates the state in panel but will not propogate to the subelement, 
+              // since the child is binded to the old value,
+              // they no longer points to the same memory object
+              //this.state.outputTable = examples.outputTable;
+              this.state.outputTable.header = examples.outputTable.header;
+              this.state.outputTable.content = examples.outputTable.content;
+              this.state.outputTable.name = examples.outputTable.name;
+              this.setState(this.state.outputTable);
+            }
+          }
+        })
+        .catch((error) => { 
+          if (this.state.connected)
+            alert("Failed to obtain file (" + file + ") from backend.");
+        });
   }
   uploadExample(evt) {
     // When the control has changed, there are new files
@@ -735,12 +779,11 @@ class TaskPanel extends React.Component {
                     <span data-label-placement="">Load Example</span> <span className="glyphicons glyphicons-chevron-right"></span>
                   </label>
                   <ul className='dropdown-menu bullet pull-middle pull-right'>
-                    <li>
-                      <label>
+                    <li><label>
                         Upload Example (csv, scythe.txt)
-                      <input onChange={this.uploadExample.bind(this)} className="fileupload" 
+                        <input onChange={this.uploadExample.bind(this)} className="fileupload" 
                              type="file" style={{display: "none"}} name="files[]" multiple />
-                      </label>
+                        </label>
                     </li>
                     <li className="divider"></li>
                     {this.state.exampleList.map((d, i) =>
