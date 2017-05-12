@@ -1,6 +1,28 @@
-"use strict";
+'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactDom = require('react-dom');
+
+var _reactDom2 = _interopRequireDefault(_reactDom);
+
+var _util = require('./util.js');
+
+var _util2 = _interopRequireDefault(_util);
+
+var _charts = require('./charts.js');
+
+var _charts2 = _interopRequireDefault(_charts);
+
+var _editableTable = require('./editable-table.js');
+
+var _editableTable2 = _interopRequireDefault(_editableTable);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -48,20 +70,20 @@ var ScytheInterface = function (_React$Component) {
   }
 
   _createClass(ScytheInterface, [{
-    key: "addPanel",
+    key: 'addPanel',
     value: function addPanel() {
-      this.state.panels.push(React.createElement(TaskPanel, { key: this.state.panels.length, dbKey: this.state.dbKey }));
+      this.state.panels.push(_react2.default.createElement(TaskPanel, { key: this.state.panels.length, dbKey: this.state.dbKey }));
       this.setState(this.state.panels);
     }
   }, {
-    key: "removePanel",
+    key: 'removePanel',
     value: function removePanel() {
       if (this.state.panels.length == 0) return;
       this.state.panels.splice(-1, 1);
       this.setState(this.state.panels);
     }
   }, {
-    key: "createTempDB",
+    key: 'createTempDB',
     value: function createTempDB() {
       var _this2 = this;
 
@@ -85,7 +107,7 @@ var ScytheInterface = function (_React$Component) {
       });
     }
   }, {
-    key: "loadCSVAndTransfer",
+    key: 'loadCSVAndTransfer',
     value: function loadCSVAndTransfer(evt) {
       // When the control has changed, there are new files
       if (!window.FileReader) {
@@ -107,7 +129,7 @@ var ScytheInterface = function (_React$Component) {
             // bind the function to "this" to update the react state
             reader.onload = function () {
               var tableName = file.name.replace(/\./g, "_");
-              this.transmitDataTable.bind(this)(csvToTable(reader.result, tableName));
+              this.transmitDataTable.bind(this)(_util2.default.csvToTable(reader.result, tableName));
             }.bind(this);
             reader.readAsText(file, "UTF-8");
           }).bind(this)(files[i]);
@@ -115,14 +137,14 @@ var ScytheInterface = function (_React$Component) {
       }
     }
   }, {
-    key: "updateDBKey",
+    key: 'updateDBKey',
     value: function updateDBKey(val, connected) {
       this.setState({ dbKey: val });
       this.setState({ connected: connected });
       console.log(val, connected);
     }
   }, {
-    key: "transmitDataTable",
+    key: 'transmitDataTable',
     value: function transmitDataTable(table) {
       var dbKey = this.state.dbKey;
       if (dbKey == null) {
@@ -150,112 +172,112 @@ var ScytheInterface = function (_React$Component) {
       });
     }
   }, {
-    key: "render",
+    key: 'render',
     value: function render() {
       var _this3 = this;
 
       var connectedInfo = null;
       var uploadDataBtn = null;
       if (this.state.connected) {
-        connectedInfo = React.createElement(
-          "label",
+        connectedInfo = _react2.default.createElement(
+          'label',
           { style: { float: "right", marginRight: "10px",
               fontWeight: "normal", paddingTop: "5px" } },
-          "Online (Connected to ",
+          'Online (Connected to ',
           this.state.dbKey,
-          ")"
+          ')'
         );
       } else {
-        connectedInfo = React.createElement(
-          "label",
+        connectedInfo = _react2.default.createElement(
+          'label',
           { style: { float: "right", marginRight: "10px", fontWeight: "normal" } },
-          "Offline Mode (No backend DB connected)"
+          'Offline Mode (No backend DB connected)'
         );
       }
 
       if (this.state.connected && this.state.dbKey.startsWith("tempDB")) {
-        uploadDataBtn = React.createElement(
-          "label",
-          { className: "btn btn-primary", style: { marginLeft: "5px" } },
-          " Upload Data",
-          React.createElement("input", { onChange: this.loadCSVAndTransfer.bind(this), className: "fileupload",
-            type: "file", style: { display: "none" }, name: "files[]", multiple: true })
+        uploadDataBtn = _react2.default.createElement(
+          'label',
+          { className: 'btn btn-primary', style: { marginLeft: "5px" } },
+          ' Upload Data',
+          _react2.default.createElement('input', { onChange: this.loadCSVAndTransfer.bind(this), className: 'fileupload',
+            type: 'file', style: { display: "none" }, name: 'files[]', multiple: true })
         );
       }
 
-      return React.createElement(
-        "div",
-        { id: "interactive-panels" },
-        React.createElement(
-          "div",
-          { className: "btn-group" },
-          React.createElement(
-            "label",
-            { className: "btn btn-primary", onClick: this.addPanel.bind(this) },
-            React.createElement("span", { className: "glyphicon glyphicon-plus" }),
-            " New Panel"
+      return _react2.default.createElement(
+        'div',
+        { id: 'interactive-panels' },
+        _react2.default.createElement(
+          'div',
+          { className: 'btn-group' },
+          _react2.default.createElement(
+            'label',
+            { className: 'btn btn-primary', onClick: this.addPanel.bind(this) },
+            _react2.default.createElement('span', { className: 'glyphicon glyphicon-plus' }),
+            ' New Panel'
           ),
-          React.createElement(
-            "label",
-            { className: "btn btn-primary", onClick: this.removePanel.bind(this) },
-            React.createElement("span", { className: "glyphicon glyphicon-minus" }),
-            " Remove Panel"
+          _react2.default.createElement(
+            'label',
+            { className: 'btn btn-primary', onClick: this.removePanel.bind(this) },
+            _react2.default.createElement('span', { className: 'glyphicon glyphicon-minus' }),
+            ' Remove Panel'
           )
         ),
-        React.createElement(
-          "div",
-          { className: "btn-group", style: { marginLeft: "5px" } },
-          React.createElement(
-            "label",
-            { "data-toggle": "dropdown", className: 'btn btn-primary dropdown-toggle',
+        _react2.default.createElement(
+          'div',
+          { className: 'btn-group', style: { marginLeft: "5px" } },
+          _react2.default.createElement(
+            'label',
+            { 'data-toggle': 'dropdown', className: 'btn btn-primary dropdown-toggle',
               disabled: this.state.panels.length > 0 },
-            React.createElement(
-              "span",
-              { "data-label-placement": "" },
-              "Select Backend DB"
+            _react2.default.createElement(
+              'span',
+              { 'data-label-placement': '' },
+              'Select Backend DB'
             ),
-            " ",
-            React.createElement("span", { className: "caret" })
+            ' ',
+            _react2.default.createElement('span', { className: 'caret' })
           ),
-          React.createElement(
-            "ul",
-            { className: "dropdown-menu" },
-            React.createElement(
-              "li",
+          _react2.default.createElement(
+            'ul',
+            { className: 'dropdown-menu' },
+            _react2.default.createElement(
+              'li',
               { onClick: function onClick(e) {
                   return _this3.updateDBKey.bind(_this3)(null, false);
                 } },
-              React.createElement("input", { type: "radio", name: "dbSelect-offline", value: "offline" }),
-              React.createElement(
-                "label",
+              _react2.default.createElement('input', { type: 'radio', name: "dbSelect-offline", value: "offline" }),
+              _react2.default.createElement(
+                'label',
                 { htmlFor: "dbSelect-offline" },
-                "Offline Mode"
+                'Offline Mode'
               )
             ),
-            React.createElement("li", { className: "divider" }),
+            _react2.default.createElement('li', { className: 'divider' }),
             this.state.databaseList.map(function (d, i) {
-              return React.createElement(
-                "li",
+              return _react2.default.createElement(
+                'li',
                 { key: i, onClick: function onClick(e) {
                     return _this3.updateDBKey.bind(_this3)(_this3.state.databaseList[i], true);
                   } },
-                React.createElement("input", { type: "radio", name: "dbSelect-" + d, value: d }),
-                React.createElement(
-                  "label",
+                _react2.default.createElement('input', { type: 'radio', name: "dbSelect-" + d, value: d }),
+                _react2.default.createElement(
+                  'label',
                   { htmlFor: "dbSelect-" + d },
                   d
                 )
               );
             }),
-            React.createElement("li", { className: "divider" }),
-            React.createElement(
-              "li",
+            _react2.default.createElement('li', { className: 'divider' }),
+            _react2.default.createElement(
+              'li',
               { onClick: this.createTempDB.bind(this) },
-              React.createElement("input", { type: "radio", name: "dbSelect-new", value: "newDB" }),
-              React.createElement(
-                "label",
+              _react2.default.createElement('input', { type: 'radio', name: "dbSelect-new", value: "newDB" }),
+              _react2.default.createElement(
+                'label',
                 { htmlFor: "dbSelect-new" },
-                "Create New Database"
+                'Create New Database'
               )
             )
           )
@@ -263,14 +285,14 @@ var ScytheInterface = function (_React$Component) {
         uploadDataBtn,
         connectedInfo,
         this.state.panels.map(function (x) {
-          return [React.createElement("br", null), x];
+          return [_react2.default.createElement('br', null), x];
         })
       );
     }
   }]);
 
   return ScytheInterface;
-}(React.Component);
+}(_react2.default.Component);
 
 var TaskPanel = function (_React$Component2) {
   _inherits(TaskPanel, _React$Component2);
@@ -315,12 +337,12 @@ var TaskPanel = function (_React$Component2) {
     });
 
     // a dumb field used to identify stuff...
-    _this4.state.visDivId = "vis" + makeid();
+    _this4.state.visDivId = "vis" + _util2.default.makeid();
     return _this4;
   }
 
   _createClass(TaskPanel, [{
-    key: "loadExistingExample",
+    key: 'loadExistingExample',
     value: function loadExistingExample(file) {
       var _this5 = this;
 
@@ -345,11 +367,11 @@ var TaskPanel = function (_React$Component2) {
           _this5.setState(_this5.state.inputTables);
           var content = responseJson.content;
           if (file.endsWith(".csv")) {
-            var table = csvToTable(content, file.replace(/\./g, "_"));
+            var table = _util2.default.csvToTable(content, file.replace(/\./g, "_"));
             _this5.state.inputTables.push(table);
             _this5.setState(_this5.state.inputTables);
           } else if (file.endsWith(".scythe.txt")) {
-            var examples = parseScytheExample(content);
+            var examples = _util2.default.parseScytheExample(content);
             _this5.state.inputTables = examples.inputTables;
             _this5.setState(_this5.state.inputTables);
 
@@ -369,7 +391,7 @@ var TaskPanel = function (_React$Component2) {
       });
     }
   }, {
-    key: "uploadExample",
+    key: 'uploadExample',
     value: function uploadExample(evt) {
       // When the control has changed, there are new files
       if (!window.FileReader) {
@@ -391,11 +413,11 @@ var TaskPanel = function (_React$Component2) {
             // bind the function to "this" to update the react state
             reader.onload = function () {
               if (file.name.endsWith(".csv")) {
-                var table = csvToTable(reader.result, file.name.replace(/\./g, "_"));
+                var table = _util2.default.csvToTable(reader.result, file.name.replace(/\./g, "_"));
                 this.state.inputTables.push(table);
                 this.setState(this.state.inputTables);
               } else if (file.name.endsWith(".scythe.txt")) {
-                var examples = parseScytheExample(reader.result);
+                var examples = _util2.default.parseScytheExample(reader.result);
                 this.state.inputTables = examples.inputTables;
                 this.setState(this.state.inputTables);
 
@@ -416,7 +438,7 @@ var TaskPanel = function (_React$Component2) {
       }
     }
   }, {
-    key: "genDefaultTable",
+    key: 'genDefaultTable',
     value: function genDefaultTable(tableName) {
       /* generate a default 3x3 table*/
 
@@ -437,7 +459,7 @@ var TaskPanel = function (_React$Component2) {
       }return { name: tableName, content: tableContent, header: tableHeader };
     }
   }, {
-    key: "updateDisplayOption",
+    key: 'updateDisplayOption',
     value: function updateDisplayOption(attr, val) {
       this.state.displayOption[attr] = val;
       this.setState(this.state.displayOption);
@@ -445,7 +467,7 @@ var TaskPanel = function (_React$Component2) {
     // execute the currently selected query on the database to acquire the result 
 
   }, {
-    key: "runQueryOnDatabase",
+    key: 'runQueryOnDatabase',
     value: function runQueryOnDatabase() {
       var _this6 = this;
 
@@ -487,12 +509,12 @@ var TaskPanel = function (_React$Component2) {
       });
     }
   }, {
-    key: "renderDropDownMenu",
+    key: 'renderDropDownMenu',
     value: function renderDropDownMenu() {
       var _this7 = this;
 
       var options = [];
-      var querySelectorName = makeid();
+      var querySelectorName = _util2.default.makeid();
       var displaySelected = "Select Query";
       if (this.state.displayOption.queryId != -1) displaySelected = "Query " + (this.state.displayOption.queryId + 1);
       var disableSelect = this.state.synthesisResult.length == 0;
@@ -501,49 +523,49 @@ var TaskPanel = function (_React$Component2) {
       for (var i = 0; i <= this.state.synthesisResult.length - 1; i++) {
         options.push({ value: i,
           label: 'Query ' + (i + 1),
-          tempId: makeid(),
+          tempId: _util2.default.makeid(),
           checked: this.state.displayOption.queryId == i });
-      }var visTargetChoiceName = makeid();
-      var visTargetDropDown = [{ value: "example data", label: "Output Example", tempId: makeid(), disabled: false,
-        checked: this.state.displayOption.visDataSrc == "example data" }, { value: "query result", label: "Query Result", tempId: makeid(),
+      }var visTargetChoiceName = _util2.default.makeid();
+      var visTargetDropDown = [{ value: "example data", label: "Output Example", tempId: _util2.default.makeid(), disabled: false,
+        checked: this.state.displayOption.visDataSrc == "example data" }, { value: "query result", label: "Query Result", tempId: _util2.default.makeid(),
         checked: this.state.displayOption.visDataSrc == "query result",
         disabled: disableSelect }];
 
       // chartTypeDropDown are created from chartOptions
-      var chartTypeChoiceName = makeid();
-      var chartTypeDropDown = CHARTS.options.map(function (d) {
-        var x = d;x.tempId = makeid();return x;
+      var chartTypeChoiceName = _util2.default.makeid();
+      var chartTypeDropDown = _charts2.default.getOptions().map(function (d) {
+        var x = d;x.tempId = _util2.default.makeid();return x;
       });
 
       // Generate the drop down menu in the enhanced drop down fashion
       // When there are multiple note that items in the list should all have the same name
-      return React.createElement(
-        "div",
-        { className: "btn-group" },
-        React.createElement(
-          "div",
-          { className: "btn-group" },
-          React.createElement(
-            "label",
-            { "data-toggle": "dropdown", "data-placeholder": "false",
+      return _react2.default.createElement(
+        'div',
+        { className: 'btn-group' },
+        _react2.default.createElement(
+          'div',
+          { className: 'btn-group' },
+          _react2.default.createElement(
+            'label',
+            { 'data-toggle': 'dropdown', 'data-placeholder': 'false',
               className: 'btn btn-default dropdown-toggle', disabled: disableSelect },
             displaySelected + " ",
-            React.createElement("span", { className: "caret" })
+            _react2.default.createElement('span', { className: 'caret' })
           ),
-          React.createElement(
-            "ul",
-            { className: "dropdown-menu" },
+          _react2.default.createElement(
+            'ul',
+            { className: 'dropdown-menu' },
             options.map(function (d, i) {
-              return React.createElement(
-                "li",
+              return _react2.default.createElement(
+                'li',
                 { key: i },
-                React.createElement("input", { type: "radio", id: d.tempId, name: querySelectorName,
+                _react2.default.createElement('input', { type: 'radio', id: d.tempId, name: querySelectorName,
                   value: i, checked: _this7.state.displayOption.visDataSrc == d.value,
                   onChange: function onChange(e) {
                     return _this7.updateDisplayOption.bind(_this7)("queryId", parseInt(e.target.value));
                   } }),
-                React.createElement(
-                  "label",
+                _react2.default.createElement(
+                  'label',
                   { htmlFor: d.tempId },
                   d.label
                 )
@@ -551,79 +573,79 @@ var TaskPanel = function (_React$Component2) {
             })
           )
         ),
-        React.createElement(
-          "label",
+        _react2.default.createElement(
+          'label',
           { className: "btn btn-default query-btn", disabled: disableSelect,
             onClick: function onClick(e) {
               return _this7.updateDisplayOption.bind(_this7)("type", "query");
             } },
-          "Show Query"
+          'Show Query'
         ),
-        React.createElement(
-          "label",
+        _react2.default.createElement(
+          'label',
           { className: "btn btn-default query-btn",
             disabled: disableSelect || this.state.connected == false,
             onClick: this.runQueryOnDatabase.bind(this) },
-          "Run on DB"
+          'Run on DB'
         ),
-        React.createElement(
-          "label",
+        _react2.default.createElement(
+          'label',
           { className: "btn btn-default query-btn", disabled: disableSelect,
             onClick: function onClick(e) {
               return _this7.updateDisplayOption.bind(_this7)("type", "data");
             } },
-          "Show Data"
+          'Show Data'
         ),
-        React.createElement(
-          "div",
-          { className: "btn-group" },
-          React.createElement(
-            "label",
-            { className: "btn btn-default query-btn",
+        _react2.default.createElement(
+          'div',
+          { className: 'btn-group' },
+          _react2.default.createElement(
+            'label',
+            { className: 'btn btn-default query-btn',
               onClick: function onClick(e) {
                 return _this7.updateDisplayOption.bind(_this7)("type", "vis");
               } },
-            "Show Chart"
+            'Show Chart'
           ),
-          React.createElement(
-            "label",
-            { "data-toggle": "dropdown", className: "btn btn-default dropdown-toggle",
-              "data-placeholder": "false" },
-            React.createElement("span", { className: "caret" })
+          _react2.default.createElement(
+            'label',
+            { 'data-toggle': 'dropdown', className: 'btn btn-default dropdown-toggle',
+              'data-placeholder': 'false' },
+            _react2.default.createElement('span', { className: 'caret' })
           ),
-          React.createElement(
-            "ul",
-            { className: "dropdown-menu bullet pull-top pull-right" },
+          _react2.default.createElement(
+            'ul',
+            { className: 'dropdown-menu bullet pull-top pull-right' },
             visTargetDropDown.map(function (d, i) {
-              return React.createElement(
-                "li",
+              return _react2.default.createElement(
+                'li',
                 { key: i },
-                React.createElement("input", { disabled: d.disabled, type: "radio", id: d.tempId,
+                _react2.default.createElement('input', { disabled: d.disabled, type: 'radio', id: d.tempId,
                   name: visTargetChoiceName, value: d.value, checked: d.checked,
                   onChange: function onChange(e) {
                     return _this7.updateDisplayOption.bind(_this7)("visDataSrc", e.target.value);
                   } }),
-                React.createElement(
-                  "label",
+                _react2.default.createElement(
+                  'label',
                   { htmlFor: d.tempId },
                   d.label
                 )
               );
             }),
-            React.createElement("li", { className: "divider" }),
+            _react2.default.createElement('li', { className: 'divider' }),
             chartTypeDropDown.filter(function (d) {
               return d.filter(_this7.state.outputTable);
             }).map(function (d, i) {
-              return React.createElement(
-                "li",
+              return _react2.default.createElement(
+                'li',
                 { key: i },
-                React.createElement("input", { type: "radio", id: d.tempId, name: chartTypeChoiceName, value: d.value,
+                _react2.default.createElement('input', { type: 'radio', id: d.tempId, name: chartTypeChoiceName, value: d.value,
                   checked: d.checked,
                   onChange: function onChange(e) {
                     return _this7.updateDisplayOption.bind(_this7)("chartType", e.target.value);
                   } }),
-                React.createElement(
-                  "label",
+                _react2.default.createElement(
+                  'label',
                   { htmlFor: d.tempId },
                   d.label
                 )
@@ -634,7 +656,7 @@ var TaskPanel = function (_React$Component2) {
       );
     }
   }, {
-    key: "componentDidUpdate",
+    key: 'componentDidUpdate',
     value: function componentDidUpdate(prevProps, prevState) {
       // hightlight code
       $('pre code').each(function (i, block) {
@@ -649,28 +671,28 @@ var TaskPanel = function (_React$Component2) {
 
         if (visData != null) {
           $("#" + prevState.visDivId).empty();
-          CHARTS.render("#" + prevState.visDivId, visData, prevState.displayOption.chartType);
+          _charts2.default.render("#" + prevState.visDivId, visData, prevState.displayOption.chartType);
         }
       }
     }
   }, {
-    key: "renderDisplayPanel",
+    key: 'renderDisplayPanel',
     value: function renderDisplayPanel() {
       if (this.state.displayOption.type == "query") {
         var content = null;
         if (this.state.displayOption.queryId != -1) {
-          return React.createElement(
-            "div",
-            { className: "pnl display-query", style: { display: "block" } },
-            React.createElement(
-              "div",
-              { className: "query_output_container" },
-              React.createElement(
-                "pre",
+          return _react2.default.createElement(
+            'div',
+            { className: 'pnl display-query', style: { display: "block" } },
+            _react2.default.createElement(
+              'div',
+              { className: 'query_output_container' },
+              _react2.default.createElement(
+                'pre',
                 { style: { height: "100%", overflow: "auto", margin: "0 0 5px" } },
-                React.createElement(
-                  "code",
-                  { className: "inner-pre sql", style: { fontSize: "12px" } },
+                _react2.default.createElement(
+                  'code',
+                  { className: 'inner-pre sql', style: { fontSize: "12px" } },
                   this.state.synthesisResult[this.state.displayOption.queryId].query
                 )
               )
@@ -678,89 +700,89 @@ var TaskPanel = function (_React$Component2) {
           );
         } else {
           if (this.state.synthesisResult.length == 0) if (this.state.callingScythe == false) {
-            return React.createElement(
-              "div",
-              { className: "pnl display-query",
+            return _react2.default.createElement(
+              'div',
+              { className: 'pnl display-query',
                 style: { display: "flex", alignItems: "center", justifyContent: "center" } },
-              "No query to display yet."
+              'No query to display yet.'
             );
           } else {
-            return React.createElement(
-              "div",
-              { className: "pnl display-query",
+            return _react2.default.createElement(
+              'div',
+              { className: 'pnl display-query',
                 style: { display: "flex", alignItems: "center", justifyContent: "center" } },
-              React.createElement("img", { src: "./media/gears.gif", style: { width: "50px", height: "50px" } })
+              _react2.default.createElement('img', { src: './media/gears.gif', style: { width: "50px", height: "50px" } })
             );
           }
         }
       } else if (this.state.displayOption.type == "vis") {
         //this.state.displayOption = {type: "query", queryId: -1, visDataSrc: "example data"};
-        return React.createElement("div", { id: this.state.visDivId, className: "pnl display-vis",
+        return _react2.default.createElement('div', { id: this.state.visDivId, className: 'pnl display-vis',
           style: { display: "block", margin: "10px 5px 5px 5px" } });
       } else if (this.state.displayOption.type == "data") {
         var _content = null;
         if (this.state.displayOption.queryId != -1 && this.state.synthesisResult[this.state.displayOption.queryId].data != null) {
-          return React.createElement(
-            "div",
-            { className: "pnl display-query", style: { display: "block" } },
-            React.createElement(
-              "div",
-              { className: "query_output_container" },
-              React.createElement(
-                "pre",
+          return _react2.default.createElement(
+            'div',
+            { className: 'pnl display-query', style: { display: "block" } },
+            _react2.default.createElement(
+              'div',
+              { className: 'query_output_container' },
+              _react2.default.createElement(
+                'pre',
                 { style: { maxHeight: "500px", overflow: "scroll", margin: "0 0 5px" } },
-                React.createElement(
-                  "span",
-                  { className: "inner-pre", style: { fontSize: "10px" } },
-                  tableToCSV(this.state.synthesisResult[this.state.displayOption.queryId].data)
+                _react2.default.createElement(
+                  'span',
+                  { className: 'inner-pre', style: { fontSize: "10px" } },
+                  _util2.default.tableToCSV(this.state.synthesisResult[this.state.displayOption.queryId].data)
                 )
               )
             )
           );
         } else {
           if (this.state.callingDB) {
-            return React.createElement(
-              "div",
-              { className: "pnl display-vis",
+            return _react2.default.createElement(
+              'div',
+              { className: 'pnl display-vis',
                 style: { display: "flex", alignItems: "center", justifyContent: "center" } },
-              React.createElement("img", { src: "./media/gears.gif", style: { width: "50px", height: "50px" } })
+              _react2.default.createElement('img', { src: './media/gears.gif', style: { width: "50px", height: "50px" } })
             );
           }
-          return React.createElement(
-            "div",
-            { className: "pnl display-vis",
+          return _react2.default.createElement(
+            'div',
+            { className: 'pnl display-vis',
               style: { display: "flex", alignItems: "center", justifyContent: "center" } },
-            "The data is not yet available, please run the query on database."
+            'The data is not yet available, please run the query on database.'
           );
         }
       }
     }
   }, {
-    key: "updateConstants",
+    key: 'updateConstants',
     value: function updateConstants(evt) {
       this.setState({ constants: evt.target.value });
     }
   }, {
-    key: "updateAggrFunc",
+    key: 'updateAggrFunc',
     value: function updateAggrFunc(evt) {
       this.setState({ aggrFunc: evt.target.value });
     }
   }, {
-    key: "addDefaultInputTable",
+    key: 'addDefaultInputTable',
     value: function addDefaultInputTable() {
       var newId = this.state.inputTables.length;
       this.state.inputTables.push(this.genDefaultTable("input_table_" + newId));
       this.setState(this.state.inputTables);
     }
   }, {
-    key: "removeLastInputTable",
+    key: 'removeLastInputTable',
     value: function removeLastInputTable() {
       this.state.inputTables.splice(-1, 1);
       this.setState(this.state.inputTables);
       if (this.state.inputTables.length == 0) this.addDefaultInputTable();
     }
   }, {
-    key: "invokeScythe",
+    key: 'invokeScythe',
     value: function invokeScythe() {
       var _this8 = this;
 
@@ -836,128 +858,128 @@ var TaskPanel = function (_React$Component2) {
       });
     }
   }, {
-    key: "render",
+    key: 'render',
     value: function render() {
       var _this9 = this;
 
       {/* the id of the panel */}
       var panelId = this.props.value;
-      return React.createElement(
-        "table",
-        { id: "panel" + panelId, className: "ipanel dash-box",
+      return _react2.default.createElement(
+        'table',
+        { id: "panel" + panelId, className: 'ipanel dash-box',
           style: { width: 100 + "%", tableLayout: "fixed", marginTop: "5px" } },
-        React.createElement(
-          "tbody",
+        _react2.default.createElement(
+          'tbody',
           null,
-          React.createElement(
-            "tr",
+          _react2.default.createElement(
+            'tr',
             null,
-            React.createElement(
-              "td",
+            _react2.default.createElement(
+              'td',
               { style: { width: 35 + "%", verticalAlign: "top", borderRight: 1 + "px dashed gray" } },
-              React.createElement(
-                "div",
-                { className: "input-example", id: "input-example" + panelId },
+              _react2.default.createElement(
+                'div',
+                { className: 'input-example', id: "input-example" + panelId },
                 this.state.inputTables.map(function (t, i) {
-                  return React.createElement(EditableTable, { refs: "input-table-" + i, key: i, table: t });
+                  return _react2.default.createElement(_editableTable2.default, { refs: "input-table-" + i, key: i, table: t });
                 })
               ),
-              React.createElement(
-                "div",
+              _react2.default.createElement(
+                'div',
                 null,
-                React.createElement(
-                  "div",
-                  { className: "input-group input-group-sm input-box constant-panel" },
-                  React.createElement(
-                    "span",
-                    { className: "input-group-addon",
+                _react2.default.createElement(
+                  'div',
+                  { className: 'input-group input-group-sm input-box constant-panel' },
+                  _react2.default.createElement(
+                    'span',
+                    { className: 'input-group-addon',
                       id: 'constant-addon' + panelId },
-                    "Constants"
+                    'Constants'
                   ),
-                  React.createElement("input", { type: "text", className: "form-control", placeholder: "None",
+                  _react2.default.createElement('input', { type: 'text', className: 'form-control', placeholder: 'None',
                     onChange: this.updateConstants.bind(this),
-                    "aria-describedby": 'constant-addon' + panelId })
+                    'aria-describedby': 'constant-addon' + panelId })
                 ),
-                React.createElement(
-                  "div",
-                  { className: "input-group input-group-sm input-box aggr-func-panel" },
-                  React.createElement(
-                    "span",
-                    { className: "input-group-addon", id: 'aggr-addon' + panelId },
-                    "Aggregators"
+                _react2.default.createElement(
+                  'div',
+                  { className: 'input-group input-group-sm input-box aggr-func-panel' },
+                  _react2.default.createElement(
+                    'span',
+                    { className: 'input-group-addon', id: 'aggr-addon' + panelId },
+                    'Aggregators'
                   ),
-                  React.createElement("input", { type: "text", className: "form-control", placeholder: "(Optional)",
+                  _react2.default.createElement('input', { type: 'text', className: 'form-control', placeholder: '(Optional)',
                     onChange: this.updateAggrFunc.bind(this),
-                    "aria-describedby": 'aggr-addon' + panelId })
+                    'aria-describedby': 'aggr-addon' + panelId })
                 )
               )
             ),
-            React.createElement(
-              "td",
+            _react2.default.createElement(
+              'td',
               { style: { width: 20 + "%", verticalAlign: "top" } },
-              React.createElement(
-                "div",
-                { className: "output-example" },
-                React.createElement(EditableTable, { key: "ot", refs: "output-table", table: this.state.outputTable })
+              _react2.default.createElement(
+                'div',
+                { className: 'output-example' },
+                _react2.default.createElement(_editableTable2.default, { key: 'ot', refs: 'output-table', table: this.state.outputTable })
               )
             ),
-            React.createElement(
-              "td",
+            _react2.default.createElement(
+              'td',
               { style: { width: 43 + "%", verticalAlign: "middle" } },
-              React.createElement(
-                "div",
-                { className: "vis" },
+              _react2.default.createElement(
+                'div',
+                { className: 'vis' },
                 this.renderDisplayPanel()
               )
             )
           ),
-          React.createElement(
-            "tr",
+          _react2.default.createElement(
+            'tr',
             { style: { height: 0 + "px" } },
-            React.createElement(
-              "td",
+            _react2.default.createElement(
+              'td',
               { style: { borderRight: 1 + "px dashed gray" } },
-              React.createElement(
-                "div",
+              _react2.default.createElement(
+                'div',
                 { id: "input-panel-btns" + panelId, style: { marginLeft: "10px", marginRight: "10px" } },
-                React.createElement(
-                  "div",
-                  { className: "btn-group", style: { marginRight: "10px" } },
-                  React.createElement(
-                    "label",
-                    { "data-toggle": "dropdown", className: 'btn btn-primary dropdown-toggle' },
-                    React.createElement(
-                      "span",
-                      { "data-label-placement": "" },
-                      "Load Example"
+                _react2.default.createElement(
+                  'div',
+                  { className: 'btn-group', style: { marginRight: "10px" } },
+                  _react2.default.createElement(
+                    'label',
+                    { 'data-toggle': 'dropdown', className: 'btn btn-primary dropdown-toggle' },
+                    _react2.default.createElement(
+                      'span',
+                      { 'data-label-placement': '' },
+                      'Load Example'
                     ),
-                    " ",
-                    React.createElement("span", { className: "glyphicons glyphicons-chevron-right" })
+                    ' ',
+                    _react2.default.createElement('span', { className: 'glyphicons glyphicons-chevron-right' })
                   ),
-                  React.createElement(
-                    "ul",
-                    { className: "dropdown-menu bullet pull-middle pull-right" },
-                    React.createElement(
-                      "li",
+                  _react2.default.createElement(
+                    'ul',
+                    { className: 'dropdown-menu bullet pull-middle pull-right' },
+                    _react2.default.createElement(
+                      'li',
                       null,
-                      React.createElement(
-                        "label",
+                      _react2.default.createElement(
+                        'label',
                         null,
-                        "Upload Example (csv, scythe.txt)",
-                        React.createElement("input", { onChange: this.uploadExample.bind(this), className: "fileupload",
-                          type: "file", style: { display: "none" }, name: "files[]", multiple: true })
+                        'Upload Example (csv, scythe.txt)',
+                        _react2.default.createElement('input', { onChange: this.uploadExample.bind(this), className: 'fileupload',
+                          type: 'file', style: { display: "none" }, name: 'files[]', multiple: true })
                       )
                     ),
-                    React.createElement("li", { className: "divider" }),
+                    _react2.default.createElement('li', { className: 'divider' }),
                     this.state.exampleList.map(function (d, i) {
-                      return React.createElement(
-                        "li",
+                      return _react2.default.createElement(
+                        'li',
                         { key: i, onClick: function onClick(e) {
                             return _this9.loadExistingExample.bind(_this9)(d);
                           } },
-                        React.createElement("input", { type: "radio", name: "egSelect-" + d, value: d }),
-                        React.createElement(
-                          "label",
+                        _react2.default.createElement('input', { type: 'radio', name: "egSelect-" + d, value: d }),
+                        _react2.default.createElement(
+                          'label',
                           { htmlFor: "egSelect-" + d },
                           d
                         )
@@ -965,43 +987,43 @@ var TaskPanel = function (_React$Component2) {
                     })
                   )
                 ),
-                React.createElement(
-                  "div",
-                  { className: "btn-group",
+                _react2.default.createElement(
+                  'div',
+                  { className: 'btn-group',
                     style: { width: "60%", tableLayout: "fixed", borderCollapse: "separate" } },
-                  React.createElement(
-                    "label",
-                    { onClick: this.addDefaultInputTable.bind(this), className: "btn btn-primary",
+                  _react2.default.createElement(
+                    'label',
+                    { onClick: this.addDefaultInputTable.bind(this), className: 'btn btn-primary',
                       style: { paddingLeft: 10 + "px", paddingRight: 10 + "px" } },
-                    React.createElement("span", { className: "glyphicon glyphicon-plus" }),
-                    " Add Table"
+                    _react2.default.createElement('span', { className: 'glyphicon glyphicon-plus' }),
+                    ' Add Table'
                   ),
-                  React.createElement(
-                    "label",
-                    { onClick: this.removeLastInputTable.bind(this), className: "btn btn-primary",
+                  _react2.default.createElement(
+                    'label',
+                    { onClick: this.removeLastInputTable.bind(this), className: 'btn btn-primary',
                       style: { paddingLeft: 10 + "px", paddingRight: 10 + "px" } },
-                    React.createElement("span", { className: "glyphicon glyphicon-minus" }),
-                    " Remove Table"
+                    _react2.default.createElement('span', { className: 'glyphicon glyphicon-minus' }),
+                    ' Remove Table'
                   )
                 )
               )
             ),
-            React.createElement(
-              "td",
+            _react2.default.createElement(
+              'td',
               null,
-              React.createElement(
-                "div",
-                { className: "buttons", style: { paddingLeft: "10px", paddingRight: "10px" } },
-                React.createElement(
-                  "button",
-                  { className: "btn btn-primary btn-block",
+              _react2.default.createElement(
+                'div',
+                { className: 'buttons', style: { paddingLeft: "10px", paddingRight: "10px" } },
+                _react2.default.createElement(
+                  'button',
+                  { className: 'btn btn-primary btn-block',
                     onClick: this.invokeScythe.bind(this) },
-                  "Synthesize"
+                  'Synthesize'
                 )
               )
             ),
-            React.createElement(
-              "td",
+            _react2.default.createElement(
+              'td',
               { style: { textAlign: "center" } },
               this.renderDropDownMenu()
             )
@@ -1012,226 +1034,6 @@ var TaskPanel = function (_React$Component2) {
   }]);
 
   return TaskPanel;
-}(React.Component);
+}(_react2.default.Component);
 
-var EditableTable = function (_React$Component3) {
-  _inherits(EditableTable, _React$Component3);
-
-  function EditableTable(props) {
-    _classCallCheck(this, EditableTable);
-
-    var _this10 = _possibleConstructorReturn(this, (EditableTable.__proto__ || Object.getPrototypeOf(EditableTable)).call(this, props));
-
-    _this10.state = {};
-    _this10.state.table = _this10.props.table;
-    return _this10;
-  }
-
-  _createClass(EditableTable, [{
-    key: "getCSVTable",
-    value: function getCSVTable() {
-      var tableClone = this.state.table.content.slice();
-      tableClone.splice(0, 0, this.state.table.header);
-      var csvString = "";
-      for (var i = 0; i < tableClone.length; i++) {
-        var s = "";
-        for (var j = 0; j < tableClone[i].length; j++) {
-          s += tableClone[i][j] + ", ";
-        }csvString += s.substring(0, s.length - 2) + "\n";
-      }
-      return { "name": this.state.table.name, "content": csvString };
-    }
-  }, {
-    key: "updateTableName",
-    value: function updateTableName(name) {
-      this.state.table.name = name;
-      this.setState(this.state.table);
-    }
-  }, {
-    key: "handleRowDel",
-    value: function handleRowDel(rowId) {
-      if (this.state.table.content.length == 1) return;
-      this.state.table.content.splice(rowId, 1);
-      this.setState(this.state.table);
-    }
-  }, {
-    key: "handleColDel",
-    value: function handleColDel() {
-      if (this.state.table.content[0].length == 1) return;
-      this.state.table.content.map(function (row) {
-        return row.splice(-1, 1);
-      });
-      this.state.table.header.splice(-1, 1);
-      this.setState(this.state.table.header);
-      this.setState(this.state.table.content);
-    }
-  }, {
-    key: "handleRowAdd",
-    value: function handleRowAdd(evt) {
-      var id = (+new Date() + Math.floor(Math.random() * 999999)).toString(36);
-      var row = [];
-      for (var i = 0; i < this.state.table.content[0].length; i++) {
-        row.push(0);
-      }this.state.table.content.push(row);
-      this.setState(this.state.table);
-    }
-  }, {
-    key: "handleColAdd",
-    value: function handleColAdd(evt) {
-      var _this11 = this;
-
-      var id = (+new Date() + Math.floor(Math.random() * 999999)).toString(36);
-      this.state.table.header.splice(this.state.table.content[0].length, 0, "c" + this.state.table.content[0].length);
-      this.state.table.content.map(function (row) {
-        return row.splice(_this11.state.table.content[0].length, 0, 0);
-      });
-      this.setState(this.state.table);
-    }
-  }, {
-    key: "handleCellUpdate",
-    value: function handleCellUpdate(r, c, val) {
-      this.state.table.content[r][c] = val;
-      this.setState(this.state.table);
-    }
-  }, {
-    key: "handleHeaderUpdate",
-    value: function handleHeaderUpdate(r, c, val) {
-      this.state.table.header.splice(c, 1, val);
-      this.setState(this.state.table.header);
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      var _this12 = this;
-
-      return React.createElement(
-        "div",
-        { style: { border: "dashed 1px #EEE", padding: "2px 2px 2px 2px" } },
-        React.createElement("input", { type: "text", value: this.state.table.name, className: "table_name", size: "10",
-          onChange: function onChange(e) {
-            _this12.updateTableName.bind(_this12)(e.target.value);
-          },
-          style: { width: "100%", textAlign: "center", border: "none", marginBottom: "2px" } }),
-        React.createElement(
-          "table",
-          { className: "table dataTable cell-border" },
-          React.createElement(
-            "thead",
-            null,
-            React.createElement(ETableRow, { onCellUpdate: this.handleHeaderUpdate.bind(this),
-              data: { rowContent: this.state.table.header, rowId: "H" },
-              deletable: false })
-          ),
-          React.createElement(
-            "tbody",
-            null,
-            " ",
-            this.state.table.content.map(function (val, i) {
-              return React.createElement(ETableRow, { onCellUpdate: _this12.handleCellUpdate.bind(_this12),
-                data: { rowContent: val, rowId: i }, deletable: true, key: i,
-                onDelEvent: _this12.handleRowDel.bind(_this12) });
-            })
-          )
-        ),
-        React.createElement(
-          "button",
-          { type: "button", onClick: this.handleRowAdd.bind(this),
-            className: "btn btn-super-sm btn-default" },
-          "Add Row"
-        ),
-        React.createElement(
-          "button",
-          { type: "button", onClick: this.handleColAdd.bind(this),
-            className: "btn btn-super-sm btn-default" },
-          "Add Col"
-        ),
-        React.createElement(
-          "button",
-          { type: "button", onClick: this.handleColDel.bind(this),
-            className: "btn btn-super-sm btn-default" },
-          "Del Col"
-        )
-      );
-    }
-  }]);
-
-  return EditableTable;
-}(React.Component);
-
-var ETableRow = function (_React$Component4) {
-  _inherits(ETableRow, _React$Component4);
-
-  function ETableRow() {
-    _classCallCheck(this, ETableRow);
-
-    return _possibleConstructorReturn(this, (ETableRow.__proto__ || Object.getPrototypeOf(ETableRow)).apply(this, arguments));
-  }
-
-  _createClass(ETableRow, [{
-    key: "render",
-    value: function render() {
-      var _this14 = this;
-
-      var delButton = null;
-      if (this.props.deletable) {
-        delButton = React.createElement(
-          "td",
-          { className: "del-cell editable-table-cell" },
-          React.createElement("input", { type: "button", onClick: function onClick(e) {
-              return _this14.props.onDelEvent(_this14.props.data.rowId);
-            },
-            value: "X", className: "btn btn-default btn-super-sm" })
-        );
-      } else {
-        delButton = React.createElement("td", null);
-      }
-      return React.createElement(
-        "tr",
-        null,
-        this.props.data.rowContent.map(function (x, i) {
-          return React.createElement(ETableCell, { onCellUpdate: _this14.props.onCellUpdate.bind(_this14),
-            key: _this14.props.data.rowId + "," + i,
-            cellData: {
-              val: x,
-              rowId: _this14.props.data.rowId,
-              colId: i
-            } });
-        }),
-        delButton
-      );
-    }
-  }]);
-
-  return ETableRow;
-}(React.Component);
-
-var ETableCell = function (_React$Component5) {
-  _inherits(ETableCell, _React$Component5);
-
-  function ETableCell() {
-    _classCallCheck(this, ETableCell);
-
-    return _possibleConstructorReturn(this, (ETableCell.__proto__ || Object.getPrototypeOf(ETableCell)).apply(this, arguments));
-  }
-
-  _createClass(ETableCell, [{
-    key: "render",
-    value: function render() {
-      var _this16 = this;
-
-      return React.createElement(
-        "td",
-        { className: "editable-table-cell" },
-        React.createElement("input", { type: "text", value: this.props.cellData.val,
-          onChange: function onChange(e) {
-            return _this16.props.onCellUpdate(_this16.props.cellData.rowId, _this16.props.cellData.colId, e.target.value);
-          },
-          style: { width: "100%", textAlign: "center", border: "none" } })
-      );
-    }
-  }]);
-
-  return ETableCell;
-}(React.Component);
-
-ReactDOM.render(React.createElement(ScytheInterface, null), document.getElementById('wrapper'));
+_reactDom2.default.render(_react2.default.createElement(ScytheInterface, null), document.getElementById('wrapper'));

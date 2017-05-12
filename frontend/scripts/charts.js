@@ -1,74 +1,104 @@
 "use strict";
 
-var CHARTS = {
-  options: null,
-  render: function render(el, data, chartType) {
-    for (var i = 0; i < CHARTS.options.length; i++) {
-      if (CHARTS.options[i].value == chartType) CHARTS.options[i].render(el, data);
-    }
-  }
-};
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 
-CHARTS.options = [{
-  value: "hist-1", label: "Histogram (c1)",
-  filter: function filter(table) {
-    return table["header"].length >= 2;
-  },
-  render: function render(el, data) {
-    genHistogram(data, el, "hist-1");
-  } }, {
-  value: "hist-2", label: "Histogram (c2)",
-  filter: function filter(table) {
-    return table["header"].length >= 3;
-  },
-  render: function render(el, data) {
-    genHistogram(data, el, "hist-2");
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _util = require("./util.js");
+
+var _util2 = _interopRequireDefault(_util);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Charts = function () {
+  function Charts() {
+    _classCallCheck(this, Charts);
   }
-}, {
-  value: "hist-3", label: "Histogram (c2-c1)",
-  filter: function filter(table) {
-    return table["header"].length >= 3;
-  },
-  render: function render(el, data) {
-    genHistogram(data, el, "hist-3");
-  }
-}, {
-  value: "2dhist-1", label: "2D Histogram (c1,c2)",
-  filter: function filter(table) {
-    return table["header"].length >= 3;
-  },
-  render: function render(el, data) {
-    gen2DHistogram(data, el, "2dhist-1");
-  }
-}, {
-  value: "2dhist-2", label: "2D Histogram (c2-c1,c3-1)",
-  filter: function filter(table) {
-    return table["header"].length >= 4;
-  },
-  render: function render(el, data) {
-    gen2DHistogram(data, el, "2dhist-2");
-  }
-}, {
-  value: "vega-test", label: "Vega Test",
-  filter: function filter(table) {
-    return true;
-  },
-  render: function render(el, data) {
-    var spec = "https://raw.githubusercontent.com/vega/vega/master/test/specs-valid/bar.vg.json";
-    vega.embed(el, spec, { "actions": false });
-  }
-}, { value: "vega-test-2", label: "Compassql Test",
-  filter: function filter(table) {
-    return true;
-  },
-  render: function render(el, data) {
-    var spec = "https://raw.githubusercontent.com/vega/vega/master/test/specs-valid/bar.vg.json";
-    vega.embed(el, spec, { "actions": false });
-  }
-}];
+
+  _createClass(Charts, null, [{
+    key: "getOptions",
+    value: function getOptions() {
+      return [{
+        value: "hist-1", label: "Histogram (c1)",
+        filter: function filter(table) {
+          return table["header"].length >= 2;
+        },
+        render: function render(el, data) {
+          genHistogram(data, el, "hist-1");
+        } }, {
+        value: "hist-2", label: "Histogram (c2)",
+        filter: function filter(table) {
+          return table["header"].length >= 3;
+        },
+        render: function render(el, data) {
+          genHistogram(data, el, "hist-2");
+        }
+      }, {
+        value: "hist-3", label: "Histogram (c2-c1)",
+        filter: function filter(table) {
+          return table["header"].length >= 3;
+        },
+        render: function render(el, data) {
+          genHistogram(data, el, "hist-3");
+        }
+      }, {
+        value: "2dhist-1", label: "2D Histogram (c1,c2)",
+        filter: function filter(table) {
+          return table["header"].length >= 3;
+        },
+        render: function render(el, data) {
+          gen2DHistogram(data, el, "2dhist-1");
+        }
+      }, {
+        value: "2dhist-2", label: "2D Histogram (c2-c1,c3-1)",
+        filter: function filter(table) {
+          return table["header"].length >= 4;
+        },
+        render: function render(el, data) {
+          gen2DHistogram(data, el, "2dhist-2");
+        }
+      }, {
+        value: "vega-test", label: "Vega Test",
+        filter: function filter(table) {
+          return true;
+        },
+        render: function render(el, data) {
+          var spec = "https://raw.githubusercontent.com/vega/vega/master/test/specs-valid/bar.vg.json";
+          vega.embed(el, spec, { "actions": false });
+        }
+      }, { value: "vega-test-2", label: "Compassql Test",
+        filter: function filter(table) {
+          return true;
+        },
+        render: function render(el, data) {
+          var spec = "https://raw.githubusercontent.com/vega/vega/master/test/specs-valid/bar.vg.json";
+          vega.embed(el, spec, { "actions": false });
+        }
+      }];
+    }
+  }, {
+    key: "render",
+    value: function render(el, data, chartType) {
+      console.log("- - ", el, data, chartType);
+      for (var i = 0; i < Charts.getOptions().length; i++) {
+        if (Charts.getOptions()[i].value == chartType) {
+          Charts.getOptions()[i].render(el, data);
+        }
+      }
+    }
+  }]);
+
+  return Charts;
+}();
 
 // creating histogram from a table datastructure
 // supported features include histogram on c1, c2, or c2-c1
+
+
 function genHistogram(table, divId, chartType) {
 
   // whitespace on either side of the bars in units of MPG
@@ -307,3 +337,5 @@ function gen2DHistogram(table, divId, chartType) {
   svg.append("text").attr("class", "ylabel").attr("y", 0 - margin.left) // x and y switched due to rotation
   .attr("x", 0 - height / 2).attr("dy", "1em").attr("transform", "rotate(-90)").style("text-anchor", "middle").text(yAxisLabel);
 }
+
+exports.default = Charts;

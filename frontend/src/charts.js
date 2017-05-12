@@ -1,53 +1,57 @@
-var CHARTS = {
-  options: null,
-  render: function (el, data, chartType) {
-    for (var i = 0; i < CHARTS.options.length; i ++) {
-    if (CHARTS.options[i].value == chartType)
-      CHARTS.options[i].render(el, data);
+import Util from "./util.js";
+
+class Charts {
+  static getOptions() {
+   return [{
+      value: "hist-1", label: "Histogram (c1)",
+      filter: function (table) { return table["header"].length >= 2; }, 
+      render: function (el, data) { genHistogram(data, el, "hist-1"); }},
+    {
+      value: "hist-2", label: "Histogram (c2)",
+      filter: function (table) { return table["header"].length >= 3; },
+      render: function (el, data) { genHistogram(data, el, "hist-2"); }
+    },
+    {
+      value: "hist-3", label: "Histogram (c2-c1)",
+      filter: function (table) { return table["header"].length >= 3; },
+      render: function (el, data) { genHistogram(data, el, "hist-3"); }
+    },
+    {
+      value: "2dhist-1", label: "2D Histogram (c1,c2)", 
+      filter: function (table) { return table["header"].length >= 3; },
+      render: function (el, data) { gen2DHistogram(data, el, "2dhist-1"); }
+    },
+    {
+      value: "2dhist-2", label: "2D Histogram (c2-c1,c3-1)",
+      filter: function (table) { return table["header"].length >= 4; },
+      render: function (el, data) { gen2DHistogram(data, el, "2dhist-2"); }
+    },
+    {
+      value: "vega-test", label: "Vega Test",
+      filter: function (table) { return true; },
+      render: function (el, data) { 
+        var spec = "https://raw.githubusercontent.com/vega/vega/master/test/specs-valid/bar.vg.json";
+        vega.embed(el, spec, {"actions" : false});
+      }
+    },
+    {value: "vega-test-2", label: "Compassql Test",
+      filter: function (table) {return true; },
+      render: function (el, data) { 
+        var spec = "https://raw.githubusercontent.com/vega/vega/master/test/specs-valid/bar.vg.json";
+        vega.embed(el, spec, {"actions" : false});
+      }
+    }]
+  }
+
+  static render (el, data, chartType) {
+    console.log("- - ", el, data, chartType);
+    for (var i = 0; i < Charts.getOptions().length; i ++) {
+      if (Charts.getOptions()[i].value == chartType) {
+        Charts.getOptions()[i].render(el, data);
+      }
     }
   }
 }
-
-CHARTS.options = 
-  [{
-    value: "hist-1", label: "Histogram (c1)",
-    filter: function (table) { return table["header"].length >= 2; }, 
-    render: function (el, data) { genHistogram(data, el, "hist-1"); }},
-  {
-    value: "hist-2", label: "Histogram (c2)",
-    filter: function (table) { return table["header"].length >= 3; },
-    render: function (el, data) { genHistogram(data, el, "hist-2"); }
-  },
-  {
-    value: "hist-3", label: "Histogram (c2-c1)",
-    filter: function (table) { return table["header"].length >= 3; },
-    render: function (el, data) { genHistogram(data, el, "hist-3"); }
-  },
-  {
-    value: "2dhist-1", label: "2D Histogram (c1,c2)", 
-    filter: function (table) { return table["header"].length >= 3; },
-    render: function (el, data) { gen2DHistogram(data, el, "2dhist-1"); }
-  },
-  {
-    value: "2dhist-2", label: "2D Histogram (c2-c1,c3-1)",
-    filter: function (table) { return table["header"].length >= 4; },
-    render: function (el, data) { gen2DHistogram(data, el, "2dhist-2"); }
-  },
-  {
-    value: "vega-test", label: "Vega Test",
-    filter: function (table) { return true; },
-    render: function (el, data) { 
-      var spec = "https://raw.githubusercontent.com/vega/vega/master/test/specs-valid/bar.vg.json";
-      vega.embed(el, spec, {"actions" : false});
-    }
-  },
-  {value: "vega-test-2", label: "Compassql Test",
-    filter: function (table) {return true; },
-    render: function (el, data) { 
-      var spec = "https://raw.githubusercontent.com/vega/vega/master/test/specs-valid/bar.vg.json";
-      vega.embed(el, spec, {"actions" : false});
-    }
-  }];
 
 // creating histogram from a table datastructure
 // supported features include histogram on c1, c2, or c2-c1
@@ -374,3 +378,5 @@ function gen2DHistogram(table, divId, chartType) {
     .style("text-anchor", "middle")
     .text(yAxisLabel);
 }
+
+export default Charts;

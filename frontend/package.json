@@ -4,7 +4,7 @@
   "description": "The web interface for the Scythe project.",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "babel src --out-dir scripts"
+    "build": "babel src --out-dir scripts; ./node_modules/.bin/webpack --config webpack.config.js"
   },
   "author": "",
   "license": "ISC",
@@ -19,6 +19,10 @@
     "vega-lite": "^2.0.0-beta.1"
   },
   "devDependencies": {
-    "babel-cli": "^6.24.0"
+    "babel-cli": "^6.24.0",
+    "babel-core": "^6.24.1",
+    "babel-loader": "^7.0.0",
+    "babel-preset-env": "^1.4.0",
+    "webpack": "^2.5.1"
   }
 }

@@ -1,3 +1,9 @@
+import React from 'react';
+import ReactDOM from 'react-dom';
+import Util from "./util.js";
+import Charts from "./charts.js";
+import EditableTable from "./editable-table.js";
+
 class ScytheInterface extends React.Component {
   constructor(props) {
     super(props);
@@ -86,7 +92,7 @@ class ScytheInterface extends React.Component {
           // bind the function to "this" to update the react state
           reader.onload = function () {
             var tableName = file.name.replace(/\./g,"_");
-            this.transmitDataTable.bind(this)(csvToTable(reader.result, tableName));
+            this.transmitDataTable.bind(this)(Util.csvToTable(reader.result, tableName));
           }.bind(this);
           reader.readAsText(file, "UTF-8");
         }).bind(this)(files[i]);
@@ -224,7 +230,7 @@ class TaskPanel extends React.Component {
     });
 
     // a dumb field used to identify stuff...
-    this.state.visDivId = "vis" + makeid();
+    this.state.visDivId = "vis" + Util.makeid();
   }
   loadExistingExample(file) {
     console.log(file);
@@ -249,11 +255,11 @@ class TaskPanel extends React.Component {
             this.setState(this.state.inputTables);
             var content = responseJson.content;
             if (file.endsWith(".csv")) {
-              var table = csvToTable(content, file.replace(/\./g,"_"));
+              var table = Util.csvToTable(content, file.replace(/\./g,"_"));
               this.state.inputTables.push(table);
               this.setState(this.state.inputTables);
             } else if (file.endsWith(".scythe.txt")) {
-              var examples = parseScytheExample(content);
+              var examples = Util.parseScytheExample(content);
               this.state.inputTables = examples.inputTables;
               this.setState(this.state.inputTables);
 
@@ -296,11 +302,11 @@ class TaskPanel extends React.Component {
           // bind the function to "this" to update the react state
           reader.onload = function () {
             if (file.name.endsWith(".csv")) {
-              var table = csvToTable(reader.result, file.name.replace(/\./g,"_"));
+              var table = Util.csvToTable(reader.result, file.name.replace(/\./g,"_"));
               this.state.inputTables.push(table);
               this.setState(this.state.inputTables);
             } else if (file.name.endsWith(".scythe.txt")) {
-              var examples = parseScytheExample(reader.result);
+              var examples = Util.parseScytheExample(reader.result);
               this.state.inputTables = examples.inputTables;
               this.setState(this.state.inputTables);
 
@@ -391,7 +397,7 @@ class TaskPanel extends React.Component {
   }
   renderDropDownMenu() {
     var options = [];
-    var querySelectorName = makeid();
+    var querySelectorName = Util.makeid();
     var displaySelected = "Select Query";
     if (this.state.displayOption.queryId != -1)
       displaySelected = "Query " + (this.state.displayOption.queryId + 1);
@@ -401,21 +407,20 @@ class TaskPanel extends React.Component {
     for (var i = 0; i <= this.state.synthesisResult.length -1; i ++)
       options.push({value: i, 
                     label: 'Query ' + (i + 1), 
-                    tempId: makeid(),
+                    tempId: Util.makeid(),
                     checked: (this.state.displayOption.queryId == i)});
 
-    var visTargetChoiceName = makeid();
+    var visTargetChoiceName = Util.makeid();
     var visTargetDropDown = 
-      [{value: "example data", label: "Output Example", tempId: makeid(), disabled: false,
+      [{value: "example data", label: "Output Example", tempId: Util.makeid(), disabled: false,
         checked: (this.state.displayOption.visDataSrc == "example data")},
-       {value: "query result", label: "Query Result", tempId: makeid(), 
+       {value: "query result", label: "Query Result", tempId: Util.makeid(), 
         checked: (this.state.displayOption.visDataSrc == "query result"), 
         disabled: (disableSelect)}];
 
-
     // chartTypeDropDown are created from chartOptions
-    var chartTypeChoiceName = makeid();
-    var chartTypeDropDown = CHARTS.options.map(d => { var x = d; x.tempId = makeid(); return x;});
+    var chartTypeChoiceName = Util.makeid();
+    var chartTypeDropDown = Charts.getOptions().map(d => { var x = d; x.tempId = Util.makeid(); return x;});
 
     // Generate the drop down menu in the enhanced drop down fashion
     // When there are multiple note that items in the list should all have the same name
@@ -496,7 +501,7 @@ class TaskPanel extends React.Component {
 
         if (visData != null) {
           $("#" + prevState.visDivId).empty();
-          CHARTS.render("#" + prevState.visDivId, visData, prevState.displayOption.chartType);
+          Charts.render("#" + prevState.visDivId, visData, prevState.displayOption.chartType);
         }
     }
   }
@@ -539,7 +544,7 @@ class TaskPanel extends React.Component {
                 <div className="query_output_container">
                   <pre style={{maxHeight:"500px", overflow:"scroll", margin: "0 0 5px"}}>
                     <span className="inner-pre" style={{fontSize: "10px"}}>
-                    {tableToCSV(this.state.synthesisResult[this.state.displayOption.queryId].data)}
+                    {Util.tableToCSV(this.state.synthesisResult[this.state.displayOption.queryId].data)}
                     </span>
                   </pre>
                </div></div>;
@@ -741,133 +746,6 @@ class TaskPanel extends React.Component {
         </tbody>
       </table>
     );
-  }
-}
-
-class EditableTable extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {};
-    this.state.table = this.props.table;
-  }
-  getCSVTable() {
-    var tableClone = this.state.table.content.slice();
-    tableClone.splice(0, 0, this.state.table.header);
-    var csvString = "";
-    for (var i = 0; i < tableClone.length; i++) {
-      var s = "";
-      for (var j = 0; j < tableClone[i].length; j ++)
-        s += tableClone[i][j] + ", ";
-      csvString += s.substring(0, s.length-2) + "\n";
-    }
-    return {"name": this.state.table.name, "content": csvString};
-  }
-  updateTableName(name) {
-    this.state.table.name = name;
-    this.setState(this.state.table);
-  }
-  handleRowDel(rowId) {
-    if (this.state.table.content.length == 1)
-      return;
-    this.state.table.content.splice(rowId, 1);
-    this.setState(this.state.table);
-  }
-  handleColDel() {
-    if (this.state.table.content[0].length == 1)
-      return;
-    this.state.table.content.map(row => row.splice(-1, 1));
-    this.state.table.header.splice(-1, 1);
-    this.setState(this.state.table.header);
-    this.setState(this.state.table.content);
-  }
-  handleRowAdd(evt) {
-    var id = (+ new Date() + Math.floor(Math.random() * 999999)).toString(36);
-    var row = [];
-    for (var i = 0; i < this.state.table.content[0].length; i ++)
-      row.push(0);
-    this.state.table.content.push(row);
-    this.setState(this.state.table);
-  }
-  handleColAdd(evt) {
-    var id = (+ new Date() + Math.floor(Math.random() * 999999)).toString(36);
-    this.state.table.header.splice(this.state.table.content[0].length, 
-            0, "c" + this.state.table.content[0].length);
-    this.state.table.content.map(row => row.splice(this.state.table.content[0].length, 0, 0));
-    this.setState(this.state.table);
-  }
-  handleCellUpdate(r, c, val) {
-    this.state.table.content[r][c] = val;
-    this.setState(this.state.table);
-  }
-  handleHeaderUpdate(r, c, val) {
-    this.state.table.header.splice(c, 1, val);
-    this.setState(this.state.table.header);
-  }
-  render() {
-    return (
-      <div style={{border: "dashed 1px #EEE", padding: "2px 2px 2px 2px"}}>
-        <input type='text' value= {this.state.table.name} className="table_name" size="10"
-              onChange={e => {this.updateTableName.bind(this)(e.target.value)}}
-              style={{ width: "100%", textAlign: "center", border: "none", marginBottom: "2px"}} />
-        <table className="table dataTable cell-border">
-          <thead> 
-            <ETableRow onCellUpdate={this.handleHeaderUpdate.bind(this)} 
-                    data={{rowContent: this.state.table.header, rowId: "H"}}
-                    deletable={false} />
-          </thead>
-          <tbody> {this.state.table.content.map((val, i) =>
-              <ETableRow onCellUpdate={this.handleCellUpdate.bind(this)} 
-                  data={{rowContent: val, rowId: i}} deletable={true} key={i} 
-                  onDelEvent={this.handleRowDel.bind(this)} />)}
-          </tbody>
-        </table>
-        <button type="button" onClick={this.handleRowAdd.bind(this)} 
-              className="btn btn-super-sm btn-default">Add Row</button>
-        <button type="button" onClick={this.handleColAdd.bind(this)} 
-                className="btn btn-super-sm btn-default">Add Col</button>
-        <button type="button" onClick={this.handleColDel.bind(this)} 
-                className="btn btn-super-sm btn-default">Del Col</button>
-      </div>);
-  }
-}
-
-class ETableRow extends React.Component {
-  render() {
-    let delButton = null;
-    if (this.props.deletable) {
-      delButton = (<td className="del-cell editable-table-cell">
-              <input type="button" onClick={e => this.props.onDelEvent(this.props.data.rowId)} 
-                    value="X" className="btn btn-default btn-super-sm" />
-            </td>);
-    } else {
-      delButton = (<td></td>);
-    }
-    return (
-      <tr>
-        {this.props.data.rowContent.map((x, i) => { 
-          return <ETableCell onCellUpdate={this.props.onCellUpdate.bind(this)}
-            key={this.props.data.rowId + "," + i}
-            cellData={{
-              val: x,
-              rowId: this.props.data.rowId,
-              colId: i
-            }} />
-        })}
-        {delButton}
-      </tr>
-    );
-  }
-}
-
-class ETableCell extends React.Component {
-  render() {
-    return (
-      <td className="editable-table-cell"> 
-        <input type='text' value= {this.props.cellData.val}
-            onChange={e => this.props.onCellUpdate(this.props.cellData.rowId, 
-                              this.props.cellData.colId, e.target.value)}
-            style={{ width: "100%", textAlign: "center", border: "none"}} />
-      </td>);
   }
 }
 
