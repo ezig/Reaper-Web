@@ -105,7 +105,8 @@ def synthesize():
 def list_examples():
     examples = []
     for f in os.listdir(example_dir):
-        if os.path.isfile(os.path.join(example_dir, f)) and (f.endswith(".scythe.txt") or f.endswith(".csv")):
+        if (os.path.isfile(os.path.join(example_dir, f)) 
+            and (f.endswith(".scythe.txt") or f.endswith(".csv"))):
             examples.append(f)
     return jsonify({"examples": examples})
 
