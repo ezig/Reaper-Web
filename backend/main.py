@@ -23,7 +23,7 @@ synthesizer_time_limit = 30
 # Index page for GET
 @app.route('/')
 def index():
-    return render_template('ae_index.html') 
+    return render_template('index.html') 
 
 # Index page for GET
 @app.route('/demo')
