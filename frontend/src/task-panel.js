@@ -8,9 +8,23 @@ class TaskPanel extends React.Component {
     super(props);
     this.state = {};
     this.state.inputTables = [];
-    
-    this.state.inputTables.push(this.genDefaultTable("input_table_0"));
-    this.state.outputTable = this.genDefaultTable("output_table");
+
+    if (! ("inputTables" in this.props)) {
+      this.state.inputTables.push(this.genDefaultTable("input_table_0"));
+    } else {
+      this.state.inputTables = this.props.inputTables;
+    }
+
+    if (! ("outputTable" in this.props)) {
+      this.state.outputTable = this.genDefaultTable("output_table");
+    } else { 
+      this.state.outputTable = this.props.outputTable;
+    }
+
+    this.state.taskDescription = null;
+    if ("taskDescription" in this.props) {
+      this.state.taskDescription = this.props.taskDescription;
+    }
     
     this.state.constants = "";
     this.state.aggrFunc = "";
@@ -25,123 +39,8 @@ class TaskPanel extends React.Component {
     this.state.displayOption = {type: "query", queryId: -1, 
                                 visDataSrc: "example data", chartType: "hist"};
 
-    this.state.exampleList = [];
-    var request = new Request('/examples', 
-      { method: 'GET', 
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        }
-      });
-    // handle response from the server
-    fetch(request)
-    .then((response) => response.json())
-    .then((responseJson) => {
-      this.state.exampleList = responseJson.examples;
-      this.setState(this.state.exampleList);
-    })
-    .catch((error) => {
-      console.error(error);
-    });
-
     // a dumb field used to identify stuff...
     this.state.visDivId = "vis" + Util.makeid();
-  }
-  loadExistingExample(file) {
-    console.log(file);
-
-    var req = new Request('/get_example', 
-      { method: 'POST', 
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          example_name: file
-        })
-      });
-
-      // handle response from the server
-      fetch(req)
-        .then((response) => response.json())
-        .then((responseJson) => { 
-          if (responseJson.status == "success") {
-            this.state.inputTables = [];
-            this.setState(this.state.inputTables);
-            var content = responseJson.content;
-            if (file.endsWith(".csv")) {
-              var table = Util.csvToTable(content, file.replace(/\./g,"_"));
-              this.state.inputTables.push(table);
-              this.setState(this.state.inputTables);
-            } else if (file.endsWith(".scythe.txt")) {
-              var examples = Util.parseScytheExample(content);
-              this.state.inputTables = examples.inputTables;
-              this.setState(this.state.inputTables);
-
-              console.log(examples);
-
-              // This one is not the desired!
-              // It only updates the state in panel but will not propogate to the subelement, 
-              // since the child is binded to the old value,
-              // they no longer points to the same memory object
-              //this.state.outputTable = examples.outputTable;
-              this.state.outputTable.header = examples.outputTable.header;
-              this.state.outputTable.content = examples.outputTable.content;
-              this.state.outputTable.name = examples.outputTable.name;
-              this.setState(this.state.outputTable);
-            }
-          }
-        })
-        .catch((error) => { 
-          if (this.state.connected)
-            alert("Failed to obtain file (" + file + ") from backend.");
-        });
-  }
-  uploadExample(evt) {
-    // When the control has changed, there are new files
-    if (!window.FileReader) {
-      return alert('FileReader API is not supported by your browser.');
-    }
-    var files = evt.target.files;
-    this.state.inputTables = [];
-    this.setState(this.state.inputTables);
-    if (files) {
-      //this.state.inputTables = [];
-      for (var i = 0; i < files.length; i++) {
-        // bind the function to "this" to update the react state
-        (function (file, t) {
-          var reader = new FileReader();
-          if (file.size > 50000) {
-            alert("[Error] Input example file " + file.name 
-                + "(" + (file.size / 1000) + "kB) exceeds the tool size limit (50kB).");
-            return;
-          }
-          // bind the function to "this" to update the react state
-          reader.onload = function () {
-            if (file.name.endsWith(".csv")) {
-              var table = Util.csvToTable(reader.result, file.name.replace(/\./g,"_"));
-              this.state.inputTables.push(table);
-              this.setState(this.state.inputTables);
-            } else if (file.name.endsWith(".scythe.txt")) {
-              var examples = Util.parseScytheExample(reader.result);
-              this.state.inputTables = examples.inputTables;
-              this.setState(this.state.inputTables);
-
-              // This one is not the desired! 
-              // It only updates the state in panel but will not propogate to the subelement, 
-              // since the child is binded to the old value,
-              // they no longer points to the same memory object
-              //this.state.outputTable = examples.outputTable;
-              this.state.outputTable.header = examples.outputTable.header;
-              this.state.outputTable.content = examples.outputTable.content;
-              this.state.outputTable.name = examples.outputTable.name;
-              this.setState(this.state.outputTable);
-            }
-          }.bind(this);
-          reader.readAsText(file, "UTF-8");
-        }).bind(this)(files[i]);
-      }
-    }
   }
   genDefaultTable(tableName) {
     /* generate a default 3x3 table*/
@@ -229,9 +128,9 @@ class TaskPanel extends React.Component {
 
     var visTargetChoiceName = Util.makeid();
     var visTargetDropDown = 
-      [{value: "example data", label: "Output Example", tempId: Util.makeid(), disabled: false,
+      [{value: "example data", label: "Visualize Output Example", tempId: Util.makeid(), disabled: false,
         checked: (this.state.displayOption.visDataSrc == "example data")},
-       {value: "query result", label: "Query Result", tempId: Util.makeid(), 
+       {value: "query result", label: "Visualize Query Result", tempId: Util.makeid(), 
         checked: (this.state.displayOption.visDataSrc == "query result"), 
         disabled: (disableSelect)}];
 
@@ -290,7 +189,7 @@ class TaskPanel extends React.Component {
         <div className='btn-group'>
           <label className={"btn btn-default query-btn" + (disableSelect ? " disabled" : "")}
               onClick={e => (disableSelect ? (0) : this.updateDisplayOption.bind(this)("type", "vis"))}>
-            Show Chart
+            Visualize Result
           </label>
           <label data-toggle='dropdown' className='btn btn-default dropdown-toggle'
                  data-placeholder="false">
@@ -418,7 +317,6 @@ class TaskPanel extends React.Component {
     this.setState({callingScythe: true});
     this.setState(this.state.synthesisResult);
 
-
     //generates the input to be used by the backend synthesizer
     function tableToScytheStr(table, type) {
       var s = "#" + type + ":" + table.name + "\n\n";
@@ -492,11 +390,22 @@ class TaskPanel extends React.Component {
   }
   render() {
     {/* the id of the panel */}
-    var panelId = this.props.value;
+    var panelId = Util.makeid();
+
+    var taskDescriptionBanner = null;
+    if (this.state.taskDescription != null) {
+      var  taskDescriptionBanner = 
+        <div style={{fontWeight: "normal", padding: "5px 5px 5px 5px"}}>
+            <span className="glyphicon glyphicon-pushpin"></span> <span style={{fontWeight:"bold"}}>Example Task:</span> {this.state.taskDescription}
+        </div>;
+    }
+
     return (
-      <table id={"panel"  + panelId} className="ipanel dash-box" 
+      <div style={{margin: "5px 5px 5px 5px"}}>
+      {taskDescriptionBanner}
+      <table id={"panel"  + panelId} className="ipanel" 
              style={{width: 100+ "%", tableLayout: "fixed", marginTop: "5px"}}>
-        <tbody>
+        <tbody className="dash-box">
           <tr>
             <td style={{width: 35+ "%", verticalAlign:"top", borderRight:1+"px dashed gray"}}>
               <div className="input-example" id={"input-example" + panelId}>
@@ -533,28 +442,7 @@ class TaskPanel extends React.Component {
           <tr style={{height:0+"px"}}>
             <td style={{borderRight:1+"px dashed gray"}}>
               <div id={"input-panel-btns" + panelId}  style={{marginLeft: "10px", marginRight: "10px"}}>
-                <div className="btn-group" style={{marginRight: "10px"}}>
-                  <label data-toggle='dropdown' className={'btn btn-primary dropdown-toggle'}>
-                    <span data-label-placement="">Load Example</span> 
-                    <span className="glyphicons glyphicons-chevron-right"></span>
-                  </label>
-                  <ul className='dropdown-menu bullet pull-middle pull-right'>
-                    <li><label>
-                        Upload Example (csv, scythe.txt)
-                        <input onChange={this.uploadExample.bind(this)} className="fileupload" 
-                             type="file" style={{display: "none"}} name="files[]" multiple />
-                        </label>
-                    </li>
-                    <li className="divider"></li>
-                    {this.state.exampleList.map((d, i) =>
-                      <li key={i} onClick={e => this.loadExistingExample.bind(this)(d)}>
-                        <input type='radio' name={"egSelect-" + d} value={d}/>
-                        <label htmlFor={"egSelect-" + d}>{d}</label>
-                      </li>)}
-                  </ul>
-                </div>
-                <div className="btn-group" 
-                     style={{width:"60%", tableLayout: "fixed", borderCollapse: "separate"}}>
+                <div className="btn-group btn-group-justified">
                   <label onClick={this.addDefaultInputTable.bind(this)} className="btn btn-primary" 
                          style={{paddingLeft:10+"px", paddingRight:10 + "px"}}>
                     <span className="glyphicon glyphicon-plus" /> Add Table
@@ -578,6 +466,7 @@ class TaskPanel extends React.Component {
           </tr>
         </tbody>
       </table>
+      </div>
     );
   }
 }

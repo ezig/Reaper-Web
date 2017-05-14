@@ -4709,6 +4709,7 @@ var Util = function () {
       var i = 0;
       var inputTables = [];
       var outputTable = null;
+      var description = null;
       while (i < content.length) {
         if (content[i].startsWith("#")) {
           var segName = content[i].substring(1);
@@ -4724,12 +4725,14 @@ var Util = function () {
             inputTables.push(Util.csvToTable(segContent, baseTableName));
           } else if (segName.startsWith("output")) {
             outputTable = Util.csvToTable(segContent, "output");
+          } else if (segName.startsWith("description")) {
+            description = segContent;
           }
         } else {
           i += 1;
         }
       }
-      return { inputTables: inputTables, outputTable: outputTable };
+      return { inputTables: inputTables, outputTable: outputTable, description: description };
     }
   }]);
 
@@ -26358,8 +26361,24 @@ var TaskPanel = function (_React$Component) {
 
     _this.state = {};
     _this.state.inputTables = [];
-    _this.state.inputTables.push(_this.genDefaultTable("input_table_0"));
-    _this.state.outputTable = _this.genDefaultTable("output_table");
+
+    if (!("inputTables" in _this.props)) {
+      _this.state.inputTables.push(_this.genDefaultTable("input_table_0"));
+    } else {
+      _this.state.inputTables = _this.props.inputTables;
+    }
+
+    if (!("outputTable" in _this.props)) {
+      _this.state.outputTable = _this.genDefaultTable("output_table");
+    } else {
+      _this.state.outputTable = _this.props.outputTable;
+    }
+
+    _this.state.taskDescription = null;
+    if ("taskDescription" in _this.props) {
+      _this.state.taskDescription = _this.props.taskDescription;
+    }
+
     _this.state.constants = "";
     _this.state.aggrFunc = "";
     _this.state.dbKey = _this.props.dbKey; // get DB key from the parent
@@ -26373,127 +26392,12 @@ var TaskPanel = function (_React$Component) {
     _this.state.displayOption = { type: "query", queryId: -1,
       visDataSrc: "example data", chartType: "hist" };
 
-    _this.state.exampleList = [];
-    var request = new Request('/examples', { method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
-    });
-    // handle response from the server
-    fetch(request).then(function (response) {
-      return response.json();
-    }).then(function (responseJson) {
-      _this.state.exampleList = responseJson.examples;
-      _this.setState(_this.state.exampleList);
-    }).catch(function (error) {
-      console.error(error);
-    });
-
     // a dumb field used to identify stuff...
     _this.state.visDivId = "vis" + _util2.default.makeid();
     return _this;
   }
 
   _createClass(TaskPanel, [{
-    key: "loadExistingExample",
-    value: function loadExistingExample(file) {
-      var _this2 = this;
-
-      console.log(file);
-
-      var req = new Request('/get_example', { method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          example_name: file
-        })
-      });
-
-      // handle response from the server
-      fetch(req).then(function (response) {
-        return response.json();
-      }).then(function (responseJson) {
-        if (responseJson.status == "success") {
-          _this2.state.inputTables = [];
-          _this2.setState(_this2.state.inputTables);
-          var content = responseJson.content;
-          if (file.endsWith(".csv")) {
-            var table = _util2.default.csvToTable(content, file.replace(/\./g, "_"));
-            _this2.state.inputTables.push(table);
-            _this2.setState(_this2.state.inputTables);
-          } else if (file.endsWith(".scythe.txt")) {
-            var examples = _util2.default.parseScytheExample(content);
-            _this2.state.inputTables = examples.inputTables;
-            _this2.setState(_this2.state.inputTables);
-
-            console.log(examples);
-
-            // This one is not the desired!
-            // It only updates the state in panel but will not propogate to the subelement, 
-            // since the child is binded to the old value,
-            // they no longer points to the same memory object
-            //this.state.outputTable = examples.outputTable;
-            _this2.state.outputTable.header = examples.outputTable.header;
-            _this2.state.outputTable.content = examples.outputTable.content;
-            _this2.state.outputTable.name = examples.outputTable.name;
-            _this2.setState(_this2.state.outputTable);
-          }
-        }
-      }).catch(function (error) {
-        if (_this2.state.connected) alert("Failed to obtain file (" + file + ") from backend.");
-      });
-    }
-  }, {
-    key: "uploadExample",
-    value: function uploadExample(evt) {
-      // When the control has changed, there are new files
-      if (!window.FileReader) {
-        return alert('FileReader API is not supported by your browser.');
-      }
-      var files = evt.target.files;
-      this.state.inputTables = [];
-      this.setState(this.state.inputTables);
-      if (files) {
-        //this.state.inputTables = [];
-        for (var i = 0; i < files.length; i++) {
-          // bind the function to "this" to update the react state
-          (function (file, t) {
-            var reader = new FileReader();
-            if (file.size > 50000) {
-              alert("[Error] Input example file " + file.name + "(" + file.size / 1000 + "kB) exceeds the tool size limit (50kB).");
-              return;
-            }
-            // bind the function to "this" to update the react state
-            reader.onload = function () {
-              if (file.name.endsWith(".csv")) {
-                var table = _util2.default.csvToTable(reader.result, file.name.replace(/\./g, "_"));
-                this.state.inputTables.push(table);
-                this.setState(this.state.inputTables);
-              } else if (file.name.endsWith(".scythe.txt")) {
-                var examples = _util2.default.parseScytheExample(reader.result);
-                this.state.inputTables = examples.inputTables;
-                this.setState(this.state.inputTables);
-
-                // This one is not the desired! 
-                // It only updates the state in panel but will not propogate to the subelement, 
-                // since the child is binded to the old value,
-                // they no longer points to the same memory object
-                //this.state.outputTable = examples.outputTable;
-                this.state.outputTable.header = examples.outputTable.header;
-                this.state.outputTable.content = examples.outputTable.content;
-                this.state.outputTable.name = examples.outputTable.name;
-                this.setState(this.state.outputTable);
-              }
-            }.bind(this);
-            reader.readAsText(file, "UTF-8");
-          }).bind(this)(files[i]);
-        }
-      }
-    }
-  }, {
     key: "genDefaultTable",
     value: function genDefaultTable(tableName) {
       /* generate a default 3x3 table*/
@@ -26525,7 +26429,7 @@ var TaskPanel = function (_React$Component) {
   }, {
     key: "runQueryOnDatabase",
     value: function runQueryOnDatabase() {
-      var _this3 = this;
+      var _this2 = this;
 
       // do nothing if connection is not established
       if (this.state.connected == false || this.state.displayOption.queryId == -1) return;
@@ -26555,19 +26459,19 @@ var TaskPanel = function (_React$Component) {
         console.log(responseJson);
         if (responseJson.status == "success") {
           console.log("Successfully executed query.");
-          _this3.setState({ callingDB: false });
-          _this3.state.synthesisResult[_this3.state.displayOption.queryId].data = responseJson.data;
-          _this3.setState(_this3.state.synthesisResult);
+          _this2.setState({ callingDB: false });
+          _this2.state.synthesisResult[_this2.state.displayOption.queryId].data = responseJson.data;
+          _this2.setState(_this2.state.synthesisResult);
         }
       }).catch(function (error) {
-        _this3.setState({ callingDB: false });
-        if (_this3.state.connected) alert("Failed to run query on the database (" + dbKey + ")");
+        _this2.setState({ callingDB: false });
+        if (_this2.state.connected) alert("Failed to run query on the database (" + dbKey + ")");
       });
     }
   }, {
     key: "renderDropDownMenu",
     value: function renderDropDownMenu() {
-      var _this4 = this;
+      var _this3 = this;
 
       var options = [];
       var querySelectorName = _util2.default.makeid();
@@ -26582,8 +26486,8 @@ var TaskPanel = function (_React$Component) {
           tempId: _util2.default.makeid(),
           checked: this.state.displayOption.queryId == i });
       }var visTargetChoiceName = _util2.default.makeid();
-      var visTargetDropDown = [{ value: "example data", label: "Output Example", tempId: _util2.default.makeid(), disabled: false,
-        checked: this.state.displayOption.visDataSrc == "example data" }, { value: "query result", label: "Query Result", tempId: _util2.default.makeid(),
+      var visTargetDropDown = [{ value: "example data", label: "Visualize Output Example", tempId: _util2.default.makeid(), disabled: false,
+        checked: this.state.displayOption.visDataSrc == "example data" }, { value: "query result", label: "Visualize Query Result", tempId: _util2.default.makeid(),
         checked: this.state.displayOption.visDataSrc == "query result",
         disabled: disableSelect }];
 
@@ -26601,7 +26505,7 @@ var TaskPanel = function (_React$Component) {
           "label",
           { className: "btn btn-default query-btn" + (disableSelect ? " disabled" : ""),
             onClick: function onClick(e) {
-              return disableSelect ? 0 : _this4.updateDisplayOption.bind(_this4)("type", "data");
+              return disableSelect ? 0 : _this3.updateDisplayOption.bind(_this3)("type", "data");
             } },
           "Show Query Result"
         );
@@ -26612,7 +26516,7 @@ var TaskPanel = function (_React$Component) {
           "label",
           { className: "btn btn-default query-btn" + (disableSelect ? " disabled" : ""),
             onClick: function onClick(e) {
-              return disableSelect ? 0 : _this4.updateDisplayOption.bind(_this4)("type", "query");
+              return disableSelect ? 0 : _this3.updateDisplayOption.bind(_this3)("type", "query");
             } },
           "Show Query"
         );
@@ -26641,9 +26545,9 @@ var TaskPanel = function (_React$Component) {
                 "li",
                 { key: i },
                 _react2.default.createElement("input", { type: "radio", id: d.tempId, name: querySelectorName,
-                  value: i, checked: _this4.state.displayOption.visDataSrc == d.value,
+                  value: i, checked: _this3.state.displayOption.visDataSrc == d.value,
                   onChange: function onChange(e) {
-                    return _this4.updateDisplayOption.bind(_this4)("queryId", parseInt(e.target.value));
+                    return _this3.updateDisplayOption.bind(_this3)("queryId", parseInt(e.target.value));
                   } }),
                 _react2.default.createElement(
                   "label",
@@ -26669,9 +26573,9 @@ var TaskPanel = function (_React$Component) {
             "label",
             { className: "btn btn-default query-btn" + (disableSelect ? " disabled" : ""),
               onClick: function onClick(e) {
-                return disableSelect ? 0 : _this4.updateDisplayOption.bind(_this4)("type", "vis");
+                return disableSelect ? 0 : _this3.updateDisplayOption.bind(_this3)("type", "vis");
               } },
-            "Show Chart"
+            "Visualize Result"
           ),
           _react2.default.createElement(
             "label",
@@ -26689,7 +26593,7 @@ var TaskPanel = function (_React$Component) {
                 _react2.default.createElement("input", { className: d.disabled ? "disabled" : "", type: "radio", id: d.tempId,
                   name: visTargetChoiceName, value: d.value, checked: d.checked,
                   onChange: function onChange(e) {
-                    return _this4.updateDisplayOption.bind(_this4)("visDataSrc", e.target.value);
+                    return _this3.updateDisplayOption.bind(_this3)("visDataSrc", e.target.value);
                   } }),
                 _react2.default.createElement(
                   "label",
@@ -26700,7 +26604,7 @@ var TaskPanel = function (_React$Component) {
             }),
             _react2.default.createElement("li", { className: "divider" }),
             chartTypeDropDown.filter(function (d) {
-              return d.filter(_this4.state.outputTable);
+              return d.filter(_this3.state.outputTable);
             }).map(function (d, i) {
               return _react2.default.createElement(
                 "li",
@@ -26708,7 +26612,7 @@ var TaskPanel = function (_React$Component) {
                 _react2.default.createElement("input", { type: "radio", id: d.tempId, name: chartTypeChoiceName, value: d.value,
                   checked: d.checked,
                   onChange: function onChange(e) {
-                    return _this4.updateDisplayOption.bind(_this4)("chartType", e.target.value);
+                    return _this3.updateDisplayOption.bind(_this3)("chartType", e.target.value);
                   } }),
                 _react2.default.createElement(
                   "label",
@@ -26850,7 +26754,7 @@ var TaskPanel = function (_React$Component) {
   }, {
     key: "invokeScythe",
     value: function invokeScythe() {
-      var _this5 = this;
+      var _this4 = this;
 
       this.state.synthesisResult = [];
       this.state.displayOption.queryId = -1;
@@ -26911,14 +26815,14 @@ var TaskPanel = function (_React$Component) {
       }).then(function (responseJson) {
         if (responseJson.status == "error") console.log(responseJson.status.message);
         for (var i in responseJson.queries) {
-          _this5.state.synthesisResult.push({ "query": responseJson.queries[i], "data": null });
+          _this4.state.synthesisResult.push({ "query": responseJson.queries[i], "data": null });
         }
-        _this5.state.synthesisResult = _this5.state.synthesisResult.reverse();
+        _this4.state.synthesisResult = _this4.state.synthesisResult.reverse();
         // automatically switching to displaying the first query synthesized
-        _this5.setState({ callingScythe: false });
-        _this5.state.displayOption.queryId = 0;
-        _this5.setState(_this5.state.displayOption);
-        _this5.setState(_this5.state.synthesisResult);
+        _this4.setState({ callingScythe: false });
+        _this4.state.displayOption.queryId = 0;
+        _this4.setState(_this4.state.displayOption);
+        _this4.setState(_this4.state.synthesisResult);
       }).catch(function (error) {
         console.error(error);
       });
@@ -26926,171 +26830,147 @@ var TaskPanel = function (_React$Component) {
   }, {
     key: "render",
     value: function render() {
-      var _this6 = this;
-
       {/* the id of the panel */}
-      var panelId = this.props.value;
-      return _react2.default.createElement(
-        "table",
-        { id: "panel" + panelId, className: "ipanel dash-box",
-          style: { width: 100 + "%", tableLayout: "fixed", marginTop: "5px" } },
-        _react2.default.createElement(
-          "tbody",
-          null,
+      var panelId = _util2.default.makeid();
+
+      var taskDescriptionBanner = null;
+      if (this.state.taskDescription != null) {
+        var taskDescriptionBanner = _react2.default.createElement(
+          "div",
+          { style: { fontWeight: "normal", padding: "5px 5px 5px 5px" } },
+          _react2.default.createElement("span", { className: "glyphicon glyphicon-pushpin" }),
+          " ",
           _react2.default.createElement(
-            "tr",
-            null,
+            "span",
+            { style: { fontWeight: "bold" } },
+            "Example Task:"
+          ),
+          " ",
+          this.state.taskDescription
+        );
+      }
+
+      return _react2.default.createElement(
+        "div",
+        { style: { margin: "5px 5px 5px 5px" } },
+        taskDescriptionBanner,
+        _react2.default.createElement(
+          "table",
+          { id: "panel" + panelId, className: "ipanel",
+            style: { width: 100 + "%", tableLayout: "fixed", marginTop: "5px" } },
+          _react2.default.createElement(
+            "tbody",
+            { className: "dash-box" },
             _react2.default.createElement(
-              "td",
-              { style: { width: 35 + "%", verticalAlign: "top", borderRight: 1 + "px dashed gray" } },
+              "tr",
+              null,
               _react2.default.createElement(
-                "div",
-                { className: "input-example", id: "input-example" + panelId },
-                this.state.inputTables.map(function (t, i) {
-                  return _react2.default.createElement(_editableTable2.default, { refs: "input-table-" + i, key: i, table: t });
-                })
+                "td",
+                { style: { width: 35 + "%", verticalAlign: "top", borderRight: 1 + "px dashed gray" } },
+                _react2.default.createElement(
+                  "div",
+                  { className: "input-example", id: "input-example" + panelId },
+                  this.state.inputTables.map(function (t, i) {
+                    return _react2.default.createElement(_editableTable2.default, { refs: "input-table-" + i, key: i, table: t });
+                  })
+                ),
+                _react2.default.createElement(
+                  "div",
+                  null,
+                  _react2.default.createElement(
+                    "div",
+                    { className: "input-group input-group-sm input-box constant-panel" },
+                    _react2.default.createElement(
+                      "span",
+                      { className: "input-group-addon",
+                        id: 'constant-addon' + panelId },
+                      "Constants"
+                    ),
+                    _react2.default.createElement("input", { type: "text", className: "form-control", placeholder: "None",
+                      onChange: this.updateConstants.bind(this),
+                      "aria-describedby": 'constant-addon' + panelId })
+                  ),
+                  _react2.default.createElement(
+                    "div",
+                    { className: "input-group input-group-sm input-box aggr-func-panel" },
+                    _react2.default.createElement(
+                      "span",
+                      { className: "input-group-addon", id: 'aggr-addon' + panelId },
+                      "Aggregators"
+                    ),
+                    _react2.default.createElement("input", { type: "text", className: "form-control", placeholder: "(Optional)",
+                      onChange: this.updateAggrFunc.bind(this),
+                      "aria-describedby": 'aggr-addon' + panelId })
+                  )
+                )
               ),
               _react2.default.createElement(
-                "div",
+                "td",
+                { style: { width: 20 + "%", verticalAlign: "top" } },
+                _react2.default.createElement(
+                  "div",
+                  { className: "output-example" },
+                  _react2.default.createElement(_editableTable2.default, { key: "ot", refs: "output-table", table: this.state.outputTable })
+                )
+              ),
+              _react2.default.createElement(
+                "td",
+                { style: { width: 43 + "%", verticalAlign: "middle" } },
+                _react2.default.createElement(
+                  "div",
+                  { className: "vis" },
+                  this.renderDisplayPanel()
+                )
+              )
+            ),
+            _react2.default.createElement(
+              "tr",
+              { style: { height: 0 + "px" } },
+              _react2.default.createElement(
+                "td",
+                { style: { borderRight: 1 + "px dashed gray" } },
+                _react2.default.createElement(
+                  "div",
+                  { id: "input-panel-btns" + panelId, style: { marginLeft: "10px", marginRight: "10px" } },
+                  _react2.default.createElement(
+                    "div",
+                    { className: "btn-group btn-group-justified" },
+                    _react2.default.createElement(
+                      "label",
+                      { onClick: this.addDefaultInputTable.bind(this), className: "btn btn-primary",
+                        style: { paddingLeft: 10 + "px", paddingRight: 10 + "px" } },
+                      _react2.default.createElement("span", { className: "glyphicon glyphicon-plus" }),
+                      " Add Table"
+                    ),
+                    _react2.default.createElement(
+                      "label",
+                      { onClick: this.removeLastInputTable.bind(this), className: "btn btn-primary",
+                        style: { paddingLeft: 10 + "px", paddingRight: 10 + "px" } },
+                      _react2.default.createElement("span", { className: "glyphicon glyphicon-minus" }),
+                      " Remove Table"
+                    )
+                  )
+                )
+              ),
+              _react2.default.createElement(
+                "td",
                 null,
                 _react2.default.createElement(
                   "div",
-                  { className: "input-group input-group-sm input-box constant-panel" },
+                  { className: "buttons", style: { paddingLeft: "10px", paddingRight: "10px" } },
                   _react2.default.createElement(
-                    "span",
-                    { className: "input-group-addon",
-                      id: 'constant-addon' + panelId },
-                    "Constants"
-                  ),
-                  _react2.default.createElement("input", { type: "text", className: "form-control", placeholder: "None",
-                    onChange: this.updateConstants.bind(this),
-                    "aria-describedby": 'constant-addon' + panelId })
-                ),
-                _react2.default.createElement(
-                  "div",
-                  { className: "input-group input-group-sm input-box aggr-func-panel" },
-                  _react2.default.createElement(
-                    "span",
-                    { className: "input-group-addon", id: 'aggr-addon' + panelId },
-                    "Aggregators"
-                  ),
-                  _react2.default.createElement("input", { type: "text", className: "form-control", placeholder: "(Optional)",
-                    onChange: this.updateAggrFunc.bind(this),
-                    "aria-describedby": 'aggr-addon' + panelId })
-                )
-              )
-            ),
-            _react2.default.createElement(
-              "td",
-              { style: { width: 20 + "%", verticalAlign: "top" } },
-              _react2.default.createElement(
-                "div",
-                { className: "output-example" },
-                _react2.default.createElement(_editableTable2.default, { key: "ot", refs: "output-table", table: this.state.outputTable })
-              )
-            ),
-            _react2.default.createElement(
-              "td",
-              { style: { width: 43 + "%", verticalAlign: "middle" } },
-              _react2.default.createElement(
-                "div",
-                { className: "vis" },
-                this.renderDisplayPanel()
-              )
-            )
-          ),
-          _react2.default.createElement(
-            "tr",
-            { style: { height: 0 + "px" } },
-            _react2.default.createElement(
-              "td",
-              { style: { borderRight: 1 + "px dashed gray" } },
-              _react2.default.createElement(
-                "div",
-                { id: "input-panel-btns" + panelId, style: { marginLeft: "10px", marginRight: "10px" } },
-                _react2.default.createElement(
-                  "div",
-                  { className: "btn-group", style: { marginRight: "10px" } },
-                  _react2.default.createElement(
-                    "label",
-                    { "data-toggle": "dropdown", className: 'btn btn-primary dropdown-toggle' },
-                    _react2.default.createElement(
-                      "span",
-                      { "data-label-placement": "" },
-                      "Load Example"
-                    ),
-                    _react2.default.createElement("span", { className: "glyphicons glyphicons-chevron-right" })
-                  ),
-                  _react2.default.createElement(
-                    "ul",
-                    { className: "dropdown-menu bullet pull-middle pull-right" },
-                    _react2.default.createElement(
-                      "li",
-                      null,
-                      _react2.default.createElement(
-                        "label",
-                        null,
-                        "Upload Example (csv, scythe.txt)",
-                        _react2.default.createElement("input", { onChange: this.uploadExample.bind(this), className: "fileupload",
-                          type: "file", style: { display: "none" }, name: "files[]", multiple: true })
-                      )
-                    ),
-                    _react2.default.createElement("li", { className: "divider" }),
-                    this.state.exampleList.map(function (d, i) {
-                      return _react2.default.createElement(
-                        "li",
-                        { key: i, onClick: function onClick(e) {
-                            return _this6.loadExistingExample.bind(_this6)(d);
-                          } },
-                        _react2.default.createElement("input", { type: "radio", name: "egSelect-" + d, value: d }),
-                        _react2.default.createElement(
-                          "label",
-                          { htmlFor: "egSelect-" + d },
-                          d
-                        )
-                      );
-                    })
-                  )
-                ),
-                _react2.default.createElement(
-                  "div",
-                  { className: "btn-group",
-                    style: { width: "60%", tableLayout: "fixed", borderCollapse: "separate" } },
-                  _react2.default.createElement(
-                    "label",
-                    { onClick: this.addDefaultInputTable.bind(this), className: "btn btn-primary",
-                      style: { paddingLeft: 10 + "px", paddingRight: 10 + "px" } },
-                    _react2.default.createElement("span", { className: "glyphicon glyphicon-plus" }),
-                    " Add Table"
-                  ),
-                  _react2.default.createElement(
-                    "label",
-                    { onClick: this.removeLastInputTable.bind(this), className: "btn btn-primary",
-                      style: { paddingLeft: 10 + "px", paddingRight: 10 + "px" } },
-                    _react2.default.createElement("span", { className: "glyphicon glyphicon-minus" }),
-                    " Remove Table"
+                    "button",
+                    { className: "btn btn-primary btn-block",
+                      onClick: this.invokeScythe.bind(this) },
+                    "Synthesize"
                   )
                 )
-              )
-            ),
-            _react2.default.createElement(
-              "td",
-              null,
+              ),
               _react2.default.createElement(
-                "div",
-                { className: "buttons", style: { paddingLeft: "10px", paddingRight: "10px" } },
-                _react2.default.createElement(
-                  "button",
-                  { className: "btn btn-primary btn-block",
-                    onClick: this.invokeScythe.bind(this) },
-                  "Synthesize"
-                )
+                "td",
+                { style: { textAlign: "center" } },
+                this.renderDropDownMenu()
               )
-            ),
-            _react2.default.createElement(
-              "td",
-              { style: { textAlign: "center" } },
-              this.renderDropDownMenu()
             )
           )
         )
@@ -27193,24 +27073,22 @@ var Charts = function () {
         render: function render(el, data) {
           gen2DHistogram(data, el, "2dhist-2");
         }
-      }, {
-        value: "vega-test", label: "Vega Test",
-        filter: function filter(table) {
-          return true;
+      } /*,
+        {
+         value: "vega-test", label: "Vega Test",
+         filter: function (table) { return true; },
+         render: function (el, data) { 
+           var spec = "https://raw.githubusercontent.com/vega/vega/master/test/specs-valid/bar.vg.json";
+           vega.embed(el, spec, {"actions" : false});
+         }
         },
-        render: function render(el, data) {
-          var spec = "https://raw.githubusercontent.com/vega/vega/master/test/specs-valid/bar.vg.json";
-          vega.embed(el, spec, { "actions": false });
-        }
-      }, { value: "vega-test-2", label: "Compassql Test",
-        filter: function filter(table) {
-          return true;
-        },
-        render: function render(el, data) {
-          var spec = "https://raw.githubusercontent.com/vega/vega/master/test/specs-valid/bar.vg.json";
-          vega.embed(el, spec, { "actions": false });
-        }
-      }];
+        {value: "vega-test-2", label: "Compassql Test",
+         filter: function (table) {return true; },
+         render: function (el, data) { 
+           var spec = "https://raw.githubusercontent.com/vega/vega/master/test/specs-valid/bar.vg.json";
+           vega.embed(el, spec, {"actions" : false});
+         }
+        }*/];
     }
   }, {
     key: "render",
@@ -27779,8 +27657,27 @@ var ScytheInterface = function (_React$Component) {
     fetch(request).then(function (response) {
       return response.json();
     }).then(function (responseJson) {
-      _this.state.databaseList = responseJson.databases;
+      _this.state.databaseList = responseJson.databases.filter(function (x) {
+        return !x.startsWith("temp");
+      });
       _this.setState(_this.state.databaseList);
+    }).catch(function (error) {
+      console.error(error);
+    });
+
+    _this.state.exampleList = [];
+    var request = new Request('/examples', { method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    });
+    // handle response from the server
+    fetch(request).then(function (response) {
+      return response.json();
+    }).then(function (responseJson) {
+      _this.state.exampleList = responseJson.examples;
+      _this.setState(_this.state.exampleList);
     }).catch(function (error) {
       console.error(error);
     });
@@ -27797,6 +27694,102 @@ var ScytheInterface = function (_React$Component) {
       this.setState(this.state.panels);
     }
   }, {
+    key: 'loadExistingExample',
+    value: function loadExistingExample(file) {
+      var _this2 = this;
+
+      console.log(file);
+
+      var req = new Request('/get_example', { method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          example_name: file
+        })
+      });
+
+      // handle response from the server
+      fetch(req).then(function (response) {
+        return response.json();
+      }).then(function (responseJson) {
+        if (responseJson.status == "success") {
+
+          var content = responseJson.content;
+          if (file.endsWith(".csv")) {
+            console.log(file);
+            var table = _util2.default.csvToTable(content, file.replace(/\./g, "_"));
+            console.log(table);
+            var inputTables = [];
+            inputTables.push(table);
+            var newPanel = _react2.default.createElement(_taskPanel2.default, { key: _this2.state.panels.length,
+              dbKey: _this2.state.dbKey, inputTables: inputTables });
+            _this2.state.panels.push(newPanel);
+            _this2.setState(_this2.state.panels);
+          } else if (file.endsWith(".scythe.txt")) {
+            var examples = _util2.default.parseScytheExample(content);
+            var newPanel = null;
+            if (examples.description == null) newPanel = _react2.default.createElement(_taskPanel2.default, { key: _this2.state.panels.length, dbKey: _this2.state.dbKey,
+              inputTables: examples.inputTables, outputTable: examples.outputTable });else newPanel = _react2.default.createElement(_taskPanel2.default, { key: _this2.state.panels.length, dbKey: _this2.state.dbKey,
+              inputTables: examples.inputTables, outputTable: examples.outputTable,
+              taskDescription: examples.description });
+            _this2.state.panels.push(newPanel);
+            _this2.setState(_this2.state.panels);
+          }
+        }
+      }).catch(function (error) {
+        if (_this2.state.connected) alert("Failed to obtain file (" + file + ") from backend.");
+      });
+    }
+    /*uploadExample(evt) {
+      // When the control has changed, there are new files
+      if (!window.FileReader) {
+        return alert('FileReader API is not supported by your browser.');
+      }
+      var files = evt.target.files;
+      this.state.inputTables = [];
+      this.setState(this.state.inputTables);
+      if (files) {
+        //this.state.inputTables = [];
+        for (var i = 0; i < files.length; i++) {
+          // bind the function to "this" to update the react state
+          (function (file, t) {
+            var reader = new FileReader();
+            if (file.size > 50000) {
+              alert("[Error] Input example file " + file.name 
+                  + "(" + (file.size / 1000) + "kB) exceeds the tool size limit (50kB).");
+              return;
+            }
+            // bind the function to "this" to update the react state
+            reader.onload = function () {
+              if (file.name.endsWith(".csv")) {
+                var table = Util.csvToTable(reader.result, file.replace(/\./g,"_"));
+                var newPanel = <TaskPanel key={this.state.panels.length} 
+                                          dbKey={this.state.dbKey} inputTables={[table]}/>;
+                this.state.panels.push(newPanel);
+                this.setState(this.state.panels);
+              } else if (file.name.endsWith(".scythe.txt")) {
+                var examples = Util.parseScytheExample(reader.result);
+                var newPanel = null;
+                if (examples.description == null)
+                  newPanel = <TaskPanel key={this.state.panels.length} dbKey={this.state.dbKey} 
+                                inputTables={examples.inputTables} outputTable={examples.outputTable}/>;
+                else 
+                  newPanel = <TaskPanel key={this.state.panels.length} dbKey={this.state.dbKey} 
+                                inputTables={examples.inputTables} outputTable={examples.outputTable}
+                                taskDescription={examples.description}/>;
+                this.state.panels.push(newPanel);
+                this.setState(this.state.panels);
+              }
+            }.bind(this);
+            reader.readAsText(file, "UTF-8");
+          }).bind(this)(files[i]);
+        }
+      }
+    }*/
+
+  }, {
     key: 'removePanel',
     value: function removePanel() {
       if (this.state.panels.length == 0) return;
@@ -27806,7 +27799,7 @@ var ScytheInterface = function (_React$Component) {
   }, {
     key: 'createTempDB',
     value: function createTempDB() {
-      var _this2 = this;
+      var _this3 = this;
 
       // make a request to the server
       var request = new Request('/create_temp_db', { method: 'POST',
@@ -27822,7 +27815,7 @@ var ScytheInterface = function (_React$Component) {
         return response.json();
       }).then(function (responseJson) {
         console.log("Databased successfully created on server: " + responseJson.dbKey);
-        _this2.setState({ connected: true });
+        _this3.setState({ connected: true });
       }).catch(function (error) {
         console.error(error);
       });
@@ -27862,7 +27855,6 @@ var ScytheInterface = function (_React$Component) {
     value: function updateDBKey(val, connected) {
       this.setState({ dbKey: val });
       this.setState({ connected: connected });
-      console.log(val, connected);
     }
   }, {
     key: 'transmitDataTable',
@@ -27895,34 +27887,52 @@ var ScytheInterface = function (_React$Component) {
   }, {
     key: 'render',
     value: function render() {
-      var _this3 = this;
+      var _this4 = this;
+
+      var dbName = this.state.dbKey;
+      if (this.state.dbKey != null && this.state.dbKey.startsWith("temp")) dbName = "temp database";
 
       var connectedInfo = null;
       var uploadDataBtn = null;
       if (this.state.connected) {
         connectedInfo = _react2.default.createElement(
           'label',
-          { style: { float: "right", marginRight: "10px",
-              fontWeight: "normal", paddingTop: "5px" } },
+          { style: { float: "right",
+              marginRight: "10px",
+              fontWeight: "normal",
+              paddingTop: "5px" } },
           'Online (Connected to ',
-          this.state.dbKey,
+          dbName,
           ')'
         );
       } else {
         connectedInfo = _react2.default.createElement(
           'label',
-          { style: { float: "right", marginRight: "10px", fontWeight: "normal" } },
-          'Offline Mode (No backend DB connected)'
+          { style: { float: "right",
+              marginRight: "10px",
+              fontWeight: "normal",
+              paddingTop: "5px" } },
+          'Offline (No backend DB connected)'
         );
       }
 
       if (this.state.connected && this.state.dbKey.startsWith("tempDB")) {
         uploadDataBtn = _react2.default.createElement(
           'label',
-          { className: 'btn btn-primary', style: { marginLeft: "5px" } },
-          ' Upload Data',
+          { className: 'btn btn-secondary btn-default', style: { marginLeft: "5px" } },
+          ' Upload data to tempDB (.csv)',
           _react2.default.createElement('input', { onChange: this.loadCSVAndTransfer.bind(this), className: 'fileupload',
             type: 'file', style: { display: "none" }, name: 'files[]', multiple: true })
+        );
+      }
+
+      var removePanelBtn = null;
+      if (this.state.panels.length > 0) {
+        removePanelBtn = _react2.default.createElement(
+          'label',
+          { className: 'btn btn-primary', onClick: this.removePanel.bind(this) },
+          _react2.default.createElement('span', { className: 'glyphicon glyphicon-minus' }),
+          ' Remove Panel'
         );
       }
 
@@ -27936,13 +27946,37 @@ var ScytheInterface = function (_React$Component) {
             'label',
             { className: 'btn btn-primary', onClick: this.addPanel.bind(this) },
             _react2.default.createElement('span', { className: 'glyphicon glyphicon-plus' }),
-            ' New Panel'
+            ' Empty Panel'
           ),
+          removePanelBtn,
           _react2.default.createElement(
             'label',
-            { className: 'btn btn-primary', onClick: this.removePanel.bind(this) },
-            _react2.default.createElement('span', { className: 'glyphicon glyphicon-minus' }),
-            ' Remove Panel'
+            { 'data-toggle': 'dropdown', className: 'btn btn-primary dropdown-toggle' },
+            _react2.default.createElement(
+              'span',
+              { 'data-label-placement': '' },
+              'Load An Example Panel'
+            ),
+            ' ',
+            _react2.default.createElement('span', { className: 'caret' })
+          ),
+          _react2.default.createElement(
+            'ul',
+            { className: 'dropdown-menu bullet pull-right' },
+            this.state.exampleList.map(function (d, i) {
+              return _react2.default.createElement(
+                'li',
+                { key: i, onClick: function onClick(e) {
+                    return _this4.loadExistingExample.bind(_this4)(d);
+                  } },
+                _react2.default.createElement('input', { type: 'radio', name: "egSelect-" + d, value: d }),
+                _react2.default.createElement(
+                  'label',
+                  { htmlFor: "egSelect-" + d },
+                  d
+                )
+              );
+            })
           )
         ),
         _react2.default.createElement(
@@ -27950,7 +27984,7 @@ var ScytheInterface = function (_React$Component) {
           { className: 'btn-group', style: { marginLeft: "5px" } },
           _react2.default.createElement(
             'label',
-            { 'data-toggle': 'dropdown', className: 'btn btn-primary dropdown-toggle' + (this.state.panels.length > 0 ? " disabled" : "") },
+            { 'data-toggle': 'dropdown', className: 'btn btn-primary dropdown-toggle ' + (this.state.panels.length > 0 ? " disabled" : "") },
             _react2.default.createElement(
               'span',
               { 'data-label-placement': '' },
@@ -27966,7 +28000,7 @@ var ScytheInterface = function (_React$Component) {
               return _react2.default.createElement(
                 'li',
                 { key: i, onClick: function onClick(e) {
-                    return _this3.updateDBKey.bind(_this3)(_this3.state.databaseList[i], true);
+                    return _this4.updateDBKey.bind(_this4)(_this4.state.databaseList[i], true);
                   } },
                 _react2.default.createElement('input', { type: 'radio', name: "dbSelect-" + d, value: d }),
                 _react2.default.createElement(
@@ -27984,14 +28018,14 @@ var ScytheInterface = function (_React$Component) {
               _react2.default.createElement(
                 'label',
                 { htmlFor: "dbSelect-new" },
-                'Create Temp Database'
+                'Create Temp DB'
               )
             ),
             _react2.default.createElement('li', { className: 'divider' }),
             _react2.default.createElement(
               'li',
               { onClick: function onClick(e) {
-                  return _this3.updateDBKey.bind(_this3)(null, false);
+                  return _this4.updateDBKey.bind(_this4)(null, false);
                 } },
               _react2.default.createElement('input', { type: 'radio', name: "dbSelect-offline", value: "offline" }),
               _react2.default.createElement(
@@ -28005,7 +28039,7 @@ var ScytheInterface = function (_React$Component) {
         uploadDataBtn,
         connectedInfo,
         this.state.panels.map(function (x) {
-          return [_react2.default.createElement('br', null), x];
+          return x;
         })
       );
     }

@@ -1,52 +1,51 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <title>Scythe</title>
-  <meta name="viewport" content="width=device-width" />
-  <script src="./lib/jquery-3.1.1.js" type="text/javascript" charset="utf-8"></script>
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Scythe</title>
 
-  <link href="./lib/bootstrap/css/bootstrap.css" rel="stylesheet" />
-  <script src="./lib/bootstrap/js/bootstrap.js" type="text/javascript" charset="utf-8"></script>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/github-light.css">
+    <meta name="viewport" content="width=device-width">
+    <link href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css" rel="stylesheet">
 
-  <link rel="stylesheet" type="text/css" href="./css/main.css" />
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Synthesizing Highly Expressive SQL Queries</h1>
+        <p class="view" id="linktogithub"><a href="https://github.com/Mestway/Scythe/tree/pldi-snapshot">View the Project on GitHub (Mestway/Scythe)</a></p>
+      </header>
 
-  <!-- deal with the favicon error -->
-  <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon"> 
-  
-  <script src="./lib/jquery-ui-1.12.1.custom/jquery-ui.js" type="text/javascript" charset="utf-8"></script>
-  <script src="./lib/jquery.fileupload.js" type="text/javascript" charset="utf-8"></script>
-  <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/lodash.js/0.10.0/lodash.min.js"></script>
+      <section>
+        <p>Scythe is a programming by example system that aims to help end-users with database querying tasks. Given a pair of input-output table examples, Scythe synthesizes queries that can turn input examples into provided output examples. </p>
+ 
+        <h3 style="text-decoration: underline;">When a user want to query a database but don't know how ...</h3>
+        ... the user would go to Stack Overflow and write a post and wait for experts...
+        <img src="./media/intro-so.png" style="width:800px; text-align:center;"/>
 
-  <!-- enahnced dropdown -->
-  <script type="text/javascript" charset="utf8" src="./lib/dropdowns-enhancement/dropdowns-enhancement.js"></script>
-  <link rel="stylesheet" type="text/css" href="./lib/dropdowns-enhancement/dropdowns-enhancement.css" />
-  
-  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/ju/dt-1.10.13/datatables.min.css"/>
+        <h3 style="text-decoration: underline;">  <span class="glyphicon glyphicon-star"></span> Now, use Scythe! </h3>
+        and the query can be obtained in ease!
+        <img src="./media/intro-scythe.png" style="width:800px; text-align:center;"/>
 
-  <!-- sql syntax highlighter -->
-  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/styles/idea.min.css">
-  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js"></script>
+        <p style="margin-top: 15px; text-align:center;text-decoration: underline;font-size:28px"><span><a href="/demo">Try Scythe Demo!</a></span></p>
+      </section>
 
-  <!-- Import Vega 3 & Vega-Lite 2 js (does not have to be from cdn)-->
-  <script src="./node_modules/vega/build/vega.js"></script>
-  <script src="./node_modules/vega-lite/build/vega-lite.js"></script>
-  <script src="./node_modules/compassql/build/compassql.js"></script>
-  <script src="./node_modules/vega-embed/vega-embed.js"></script>
-</head>
+      <section>
+        <a id="support-or-contact" class="anchor" href="#support-or-contact" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Contact</h2>
+        <p>We would like to receive suggestions from you about making the system practical. Feel free to drop us a line: <a href="https://github.com/Mestway">https://github.com/Mestway</a>.</p>
+      </section>
 
-<body>
-  <nav class="navbar navbar-inverse navbar-static-top navbar-full">
-    <div class="container-fluid">
-      <div class="navbar-header"><div class="navbar-brand">Scythe</div></div>
-      <ul class="nav navbar-nav"><li class="active"><a href="#">Home</a></li></ul>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/Mestway">Chenglong Wang</a></p>
+        <!--<p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>-->
+      </footer>
     </div>
-  </nav>
-  <div id="wrapper">
-  </div>
-</body>
-
-<script type="text/javascript">
-  hljs.initHighlightingOnLoad();
-</script>
-<script type="text/javascript" src="./scripts/bundle.js"></script>
+    <script src="scripts/scale.fix.js"></script>
+    
+  </body>
 </html>

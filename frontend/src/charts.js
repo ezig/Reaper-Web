@@ -28,7 +28,7 @@ class Charts {
       value: "2dhist-2", label: "2D Histogram (c2-c1,c3-1)",
       filter: function (table) { return table["header"].length >= 4; },
       render: function (el, data) { gen2DHistogram(data, el, "2dhist-2"); }
-    },
+    }/*,
     {
       value: "vega-test", label: "Vega Test",
       filter: function (table) { return true; },
@@ -43,7 +43,7 @@ class Charts {
         var spec = "https://raw.githubusercontent.com/vega/vega/master/test/specs-valid/bar.vg.json";
         vega.embed(el, spec, {"actions" : false});
       }
-    }]
+    }*/]
   }
 
   static render (el, data, chartType) {

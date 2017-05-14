@@ -1,3 +1,7 @@
+#description
+
+Compuare the career span and career peak of computer scientists.
+
 #input:career_span
 
 author, min_year, max_year

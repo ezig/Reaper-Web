@@ -1,3 +1,7 @@
+#description
+
+Find the span of career peak (the year when the first paper and most cited papers are published) of computer scientists given the list of their pushlished papers.
+
 #input:papers
 
 author,title,year,citation

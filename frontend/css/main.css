@@ -15,10 +15,6 @@ body {
   padding: 0px !important;
 }
 
-thead > tr, thead > tr > td {
-  border: none !important;
-}
-
 h1 {
   color:#222;
   margin:0 0 20px;
@@ -62,7 +58,6 @@ label {
 	float: left;
 	height: 100%;
   padding-left: 5px;
-  margin-left: -1px;
 }
 
 .output-example {
@@ -153,7 +148,7 @@ label {
 /* skin.css Style*/
 .dash-box {
   border-style: dashed;
-  border-color: #ccc;
+  border-color: #e0e0e0;
 }
 .dash-box-w-text {
   color: #ccc;

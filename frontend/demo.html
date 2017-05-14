@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Scythe</title>
+  <meta name="viewport" content="width=device-width" />
+  <script src="./lib/jquery-3.1.1.js" type="text/javascript" charset="utf-8"></script>
+
+  <link href="./lib/bootstrap/css/bootstrap.css" rel="stylesheet" />
+  <script src="./lib/bootstrap/js/bootstrap.js" type="text/javascript" charset="utf-8"></script>
+
+  <link rel="stylesheet" type="text/css" href="./css/main.css" />
+
+  <!-- deal with the favicon error -->
+  <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon"> 
+  
+  <script src="./lib/jquery-ui-1.12.1.custom/jquery-ui.js" type="text/javascript" charset="utf-8"></script>
+  <script src="./lib/jquery.fileupload.js" type="text/javascript" charset="utf-8"></script>
+  <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/lodash.js/0.10.0/lodash.min.js"></script>
+
+  <!-- enahnced dropdown -->
+  <script type="text/javascript" charset="utf8" src="./lib/dropdowns-enhancement/dropdowns-enhancement.js"></script>
+  <link rel="stylesheet" type="text/css" href="./lib/dropdowns-enhancement/dropdowns-enhancement.css" />
+  
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/ju/dt-1.10.13/datatables.min.css"/>
+
+  <!-- sql syntax highlighter -->
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/styles/idea.min.css">
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js"></script>
+
+  <!-- Import Vega 3 & Vega-Lite 2 js (does not have to be from cdn)-->
+  <script src="./node_modules/vega/build/vega.js"></script>
+  <script src="./node_modules/vega-lite/build/vega-lite.js"></script>
+  <script src="./node_modules/compassql/build/compassql.js"></script>
+  <script src="./node_modules/vega-embed/vega-embed.js"></script>
+</head>
+
+<body>
+  <nav class="navbar navbar-inverse navbar-static-top navbar-full">
+    <div class="container-fluid">
+      <div class="navbar-header"><div class="navbar-brand">Scythe</div></div>
+      <ul class="nav navbar-nav"><li class="active"><a href="#">Home</a></li></ul>
+    </div>
+  </nav>
+  <div id="wrapper">
+  </div>
+</body>
+
+<script type="text/javascript">
+  hljs.initHighlightingOnLoad();
+</script>
+<script type="text/javascript" src="./scripts/bundle.js"></script>
+</html>

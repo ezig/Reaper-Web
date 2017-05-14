@@ -28,7 +28,7 @@ def index():
 # Index page for GET
 @app.route('/demo')
 def demo():
-    return render_template('index.html')
+    return render_template('demo.html')
 
 @app.route('/<path:path>')
 def static_proxy(path):

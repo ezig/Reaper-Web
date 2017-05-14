@@ -61,6 +61,7 @@ class Util {
     var i = 0;
     var inputTables = [];
     var outputTable = null;
+    var description = null;
     while (i < content.length) {
       if (content[i].startsWith("#")) {
         var segName = content[i].substring(1);
@@ -80,12 +81,14 @@ class Util {
           inputTables.push(Util.csvToTable(segContent, baseTableName));
         } else if (segName.startsWith("output")) {
           outputTable = Util.csvToTable(segContent, "output");
+        } else if (segName.startsWith("description")) {
+          description = segContent;
         }
       } else {
         i += 1;
       }
     }
-    return {inputTables: inputTables, outputTable: outputTable};
+    return {inputTables: inputTables, outputTable: outputTable, description: description};
   }
 }
 

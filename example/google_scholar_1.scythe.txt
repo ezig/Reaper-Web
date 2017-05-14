@@ -1,3 +1,7 @@
+#description
+
+Find the career span (the year when first/last paper is published) of computer scientists given the list of their pushlished papers.
+
 #input:papers
 
 author,title,year,citation
