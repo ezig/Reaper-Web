@@ -1,4 +1,7 @@
 import Util from "./util.js";
+import * as d3 from "d3";
+import d3Tip from "d3-tip";
+d3.tip = d3Tip;
 
 class Charts {
   static getOptions() {
@@ -44,7 +47,6 @@ class Charts {
   }
 
   static render (el, data, chartType) {
-    console.log("- - ", el, data, chartType);
     for (var i = 0; i < Charts.getOptions().length; i ++) {
       if (Charts.getOptions()[i].value == chartType) {
         Charts.getOptions()[i].render(el, data);
