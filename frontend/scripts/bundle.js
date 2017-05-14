@@ -26626,6 +26626,11 @@ var TaskPanel = function (_React$Component) {
       );
     }
   }, {
+    key: "componentWillUpdate",
+    value: function componentWillUpdate(prevProps, prevState) {
+      $("#" + prevState.visDivId).empty();
+    }
+  }, {
     key: "componentDidUpdate",
     value: function componentDidUpdate(prevProps, prevState) {
       // hightlight code
@@ -27939,6 +27944,12 @@ var ScytheInterface = function (_React$Component) {
       return _react2.default.createElement(
         'div',
         { id: 'interactive-panels' },
+        _react2.default.createElement(
+          'div',
+          { style: { textDecoration: "underline", marginBottom: "5px", marginLeft: "5px" } },
+          _react2.default.createElement('span', { className: 'glyphicon glyphicon-info-sign' }),
+          ' Create a panel and provide an input-output example to start your task!'
+        ),
         _react2.default.createElement(
           'div',
           { className: 'btn-group' },

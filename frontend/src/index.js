@@ -283,6 +283,8 @@ class ScytheInterface extends React.Component {
 
     return (
       <div id="interactive-panels">
+        <div style={{textDecoration: "underline", marginBottom: "5px", marginLeft: "5px"}}>
+          <span className="glyphicon glyphicon-info-sign"/> Create a panel and provide an input-output example to start your task!</div>
         <div className="btn-group">
           <label className="btn btn-primary" onClick={this.addPanel.bind(this)}>
             <span className="glyphicon glyphicon-plus" /> Empty Panel</label>

@@ -215,6 +215,9 @@ class TaskPanel extends React.Component {
         </div>
       </div>;
   }
+  componentWillUpdate(prevProps, prevState) {
+    $("#" + prevState.visDivId).empty();
+  }
   componentDidUpdate(prevProps, prevState) {
     // hightlight code
     $('pre code').each(function(i, block) {
