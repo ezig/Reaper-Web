@@ -293,10 +293,18 @@ class ScytheInterface extends React.Component {
                         <br />(Not necessary for query synthesis)">
             <span data-label-placement="">Connect to Database</span> <span className='caret'></span>
           </label>;
+
+    var hint = null;
+    if (this.state.panels.length == 0) 
+      hint = <div className="blink_el" style={{textDecoration: "underline", marginBottom: "5px", marginLeft: "5px"}}>
+          <span className="glyphicon glyphicon-info-sign"/> Create a panel and provide an input-output example to start your task!</div>;
+    else
+      hint = <div className="blink_el" style={{textDecoration: "underline", marginBottom: "5px", marginLeft: "5px"}}>
+          <span className="glyphicon glyphicon-info-sign"/> Click the Synthesis button to synthesize Queries from the example!</div>;
+
     return (
       <div id="interactive-panels">
-        <div style={{textDecoration: "underline", marginBottom: "5px", marginLeft: "5px"}}>
-          <span className="glyphicon glyphicon-info-sign"/> Create a panel and provide an input-output example to start your task!</div>
+        {hint}
         <div className="btn-group">
           <label className="btn btn-primary" onClick={this.addPanel.bind(this)}>
             <span className="glyphicon glyphicon-plus" /> Empty Panel</label>

@@ -29113,15 +29113,24 @@ var ScytheInterface = function (_React$Component) {
         ' ',
         _react2.default.createElement('span', { className: 'caret' })
       );
+
+      var hint = null;
+      if (this.state.panels.length == 0) hint = _react2.default.createElement(
+        'div',
+        { className: 'blink_el', style: { textDecoration: "underline", marginBottom: "5px", marginLeft: "5px" } },
+        _react2.default.createElement('span', { className: 'glyphicon glyphicon-info-sign' }),
+        ' Create a panel and provide an input-output example to start your task!'
+      );else hint = _react2.default.createElement(
+        'div',
+        { className: 'blink_el', style: { textDecoration: "underline", marginBottom: "5px", marginLeft: "5px" } },
+        _react2.default.createElement('span', { className: 'glyphicon glyphicon-info-sign' }),
+        ' Click the Synthesis button to synthesize Queries from the example!'
+      );
+
       return _react2.default.createElement(
         'div',
         { id: 'interactive-panels' },
-        _react2.default.createElement(
-          'div',
-          { style: { textDecoration: "underline", marginBottom: "5px", marginLeft: "5px" } },
-          _react2.default.createElement('span', { className: 'glyphicon glyphicon-info-sign' }),
-          ' Create a panel and provide an input-output example to start your task!'
-        ),
+        hint,
         _react2.default.createElement(
           'div',
           { className: 'btn-group' },
