@@ -1,0 +1,20 @@
+#description
+
+Select rows whose b column are the maximum of the table. (Src: http://stackoverflow.com/questions/33027549)
+
+#input
+
+
+      a  , b 
+     ALA , 2 
+     ASP , 1 
+     SER , 1 
+     VAL , 2 
+
+
+#output
+
+
+      a  , maxb 
+     ALA ,   2   
+     VAL ,   2   

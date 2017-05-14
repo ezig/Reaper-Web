@@ -1,0 +1,20 @@
+#description
+
+Find records from one table which dont exist in another. (Src: http://stackoverflow.com/questions/367863)
+
+#input:t1
+
+ id , name , phone_number 
+ 1a  , John , 1-11111111111 
+ 2a  ,Jane , 2-22222222222 
+
+#input:t2
+ id ,date ,phone_number 
+ 1a  ,09 45 ,1-11111111111 
+ 2a  ,09 50 ,2-22222222222 
+ 3a  ,10 45 ,3-33333333333 
+
+#output
+
+ id ,date ,phone_number 
+ 3a  ,10 45 ,3-33333333333 
