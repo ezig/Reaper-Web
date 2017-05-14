@@ -1,7 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import Util from "./util.js";
-import TaskPanel from "./task-panel.js"
+import TaskPanel from "./task-panel.js";
+import ReactTooltip from 'react-tooltip';
 
 class ScytheInterface extends React.Component {
 
@@ -281,6 +282,17 @@ class ScytheInterface extends React.Component {
             <span className="glyphicon glyphicon-minus" /> Remove Panel</label>
     }
 
+    var connectToDBBtn = null;
+    if (this.state.panels.length > 0)
+      connectToDBBtn = <label data-toggle='dropdown' className='btn btn-primary dropdown-toggle disabled'>
+            <span data-label-placement="">Connect to Database</span> <span className='caret'></span>
+          </label>;
+    else 
+      connectToDBBtn = <label data-toggle='dropdown' className='btn btn-primary dropdown-toggle'
+              data-tip="Connect to a database to enable executing synthesized queries. 
+                        <br />(Not necessary for query synthesis)">
+            <span data-label-placement="">Connect to Database</span> <span className='caret'></span>
+          </label>;
     return (
       <div id="interactive-panels">
         <div style={{textDecoration: "underline", marginBottom: "5px", marginLeft: "5px"}}>
@@ -301,10 +313,8 @@ class ScytheInterface extends React.Component {
           </ul>
         </div>
         <div className='btn-group' style={{marginLeft: "5px"}}>
-          <label data-toggle='dropdown' className={'btn btn-primary dropdown-toggle ' 
-              + (this.state.panels.length > 0 ? " disabled" : "")}>
-            <span data-label-placement="">Connect to Database</span> <span className='caret'></span>
-          </label>
+          {connectToDBBtn}
+          <ReactTooltip effect="solid" place="right" multiline={true}/>
           <ul className='dropdown-menu'>
             {this.state.databaseList.map((d, i) =>
               <li key={i} onClick={e => 

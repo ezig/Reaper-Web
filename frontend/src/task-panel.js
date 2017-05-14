@@ -2,6 +2,7 @@ import Util from "./util.js";
 import Charts from "./charts.js";
 import EditableTable from "./editable-table.js";
 import React from 'react';
+import ReactTooltip from 'react-tooltip';
 
 class TaskPanel extends React.Component {
   constructor(props) {
@@ -159,6 +160,32 @@ class TaskPanel extends React.Component {
         </label>;
     }
 
+    var runOnDBBtn = null;
+    if (disableSelect || !this.state.connected)
+      runOnDBBtn = 
+        <label className="btn btn-default query-btn disabled" onClick={this.runQueryOnDatabase.bind(this)}>
+          Run on DB
+        </label>;
+    else 
+      runOnDBBtn = 
+        <label className="btn btn-default query-btn" onClick={this.runQueryOnDatabase.bind(this)}
+            data-tip="Execute the query on the selected database">
+          Run on DB
+        </label>;
+        
+    var visualizeBtn = null;
+    if (disableSelect)
+      visualizeBtn = <label className="btn btn-default query-btn disabled"
+              onClick={e => (disableSelect ? (0) : this.updateDisplayOption.bind(this)("type", "vis"))}>
+            Visualize
+          </label>;
+    else
+      visualizeBtn = <label className="btn btn-default query-btn"
+              onClick={e => this.updateDisplayOption.bind(this)("type", "vis")}
+              data-tip="Select the target data and chart type to build visualization.">
+            Visualize
+          </label>;
+
     // Generate the drop down menu in the enhanced drop down fashion
     // When there are multiple note that items in the list should all have the same name
     return <div className='btn-group'>
@@ -179,18 +206,13 @@ class TaskPanel extends React.Component {
               </li>)}
           </ul>
         </div>
-        <label className={"btn btn-default query-btn" 
-                  + ((disableSelect || this.state.connected==false) ? " disabled" : "")}
-               onClick={this.runQueryOnDatabase.bind(this)}>
-          Run on DB
-        </label>
+        {runOnDBBtn}
+        <ReactTooltip effect="solid" place="top" multiline={true}/>
         {showQueryBtn}
         {showQueryResultBtn}
         <div className='btn-group'>
-          <label className={"btn btn-default query-btn" + (disableSelect ? " disabled" : "")}
-              onClick={e => (disableSelect ? (0) : this.updateDisplayOption.bind(this)("type", "vis"))}>
-            Visualize Result
-          </label>
+          {visualizeBtn}
+          <ReactTooltip effect="solid"/>
           <label data-toggle='dropdown' className='btn btn-default dropdown-toggle'
                  data-placeholder="false">
             <span className='caret'></span>
@@ -256,12 +278,12 @@ class TaskPanel extends React.Component {
         if (this.state.synthesisResult.length == 0)
           if (this.state.callingScythe == false) {
             return <div className="pnl display-query" 
-                      style={{display: "flex", alignItems: "center", justifyContent: "center"}}>
+                      style={{display: "flex", alignItems: "center", justifyContent: "center", marginTop: "5px"}}>
                     No query to display yet.
                  </div>;
           } else {
             return <div className="pnl display-query" 
-                      style={{display: "flex", alignItems: "center", justifyContent: "center"}}>
+                      style={{display: "flex", alignItems: "center", justifyContent: "center", marginTop: "5px"}}>
                     <img src="./media/gears.gif" style={{width:"50px", height:"50px"}} />
                  </div>;
           }
@@ -269,7 +291,7 @@ class TaskPanel extends React.Component {
     } else if (this.state.displayOption.type == "vis") {
       //this.state.displayOption = {type: "query", queryId: -1, visDataSrc: "example data"};
       return <div id={this.state.visDivId} className="pnl display-vis" 
-                  style={{display:"block", padding: "10px 5px 5px 5px"}}></div>;
+                  style={{display:"block", marginTop: "5px"}}></div>;
     } else if (this.state.displayOption.type == "data") {
       let content = null;
       if (this.state.displayOption.queryId != -1 
@@ -417,18 +439,24 @@ class TaskPanel extends React.Component {
               </div>
               <div>
                 <div className='input-group input-group-sm input-box constant-panel'>
-                  <span className='input-group-addon' 
+                  <span className='input-group-addon'
                         id={'constant-addon' + panelId}>Constants</span>
                   <input type='text' className='form-control' placeholder='None' 
                          onChange={this.updateConstants.bind(this)} 
                          aria-describedby={'constant-addon' + panelId} />
+                  <span className='input-group-addon' 
+                        data-tip="Constants (e.g., numbers, dates) that may be used in the query.">?</span>
                 </div>
+                <ReactTooltip effect="solid"/>
                 <div className='input-group input-group-sm input-box aggr-func-panel'>
                   <span className='input-group-addon' id={'aggr-addon' + panelId}>Aggregators</span>
                   <input type='text' className='form-control' placeholder='(Optional)' 
                           onChange={this.updateAggrFunc.bind(this)} 
                           aria-describedby={'aggr-addon' + panelId} />
+                  <span className='input-group-addon' 
+                        data-tip="Aggregation functions (e.g., max, min, avg) that may be used in the query.">?</span>
                 </div>
+                <ReactTooltip effect="solid"/>
               </div>
             </td>
             <td style={{width: 20+ "%", verticalAlign:"top"}}>
@@ -459,7 +487,7 @@ class TaskPanel extends React.Component {
             </td>
             <td>
               <div className="buttons" style={{paddingLeft:"10px", paddingRight:"10px"}}>
-                <button className="btn btn-primary btn-block" 
+                <button className="btn btn-primary btn-block"
                         onClick={this.invokeScythe.bind(this)}>Synthesize</button>
               </div>
             </td>
