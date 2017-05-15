@@ -33,20 +33,35 @@
       </header>
 
       <section>
-        <p>Scythe is a programming by example system that aims to help end-users with database querying tasks. Given a pair of input-output table examples, Scythe synthesizes queries that can turn input examples into provided output examples. </p>
+        <p>Scythe is a programming-by-example system that aims to help end-users with database querying tasks. Given a pair of input-output table examples, Scythe synthesizes queries that turn input examples into the provided output example. (<a href="/demo" style="font-weight:bold;">Demo</a>)</p>
 
         <h4 style="text-decoration: underline;">In the past, when a user want to query a database but don't know how ...</h4>
         ... the user would go to Stack Overflow and write a post and wait for experts ...
-        <img src="./media/intro-so.png" style="width:800px; text-align:center;"/>
+        <div style="text-align:center;width:100%"><img src="./media/intro-so.png" style="width:600px;"/></div>
 
         <h4 style="text-decoration: underline;"> Now, use Scythe! </h4>
         ... and the query can be obtained in ease!
-        <img src="./media/intro-scythe.png" style="width:800px; text-align:center;"/>
+        <div style="text-align:center;width:100%"><img src="./media/intro-scythe.png" style="width:600px;"/></div>
+        (The subset of SQL features supported by Scythe now includes <span style="text-decoration: underline;">select, join, group by, aggregtion, outer join, exists and subqueries</span>; features that we are currently working on includes <span style="text-decoration: underline;"> column arithmetics, pivoting and window functions </span>.)
 
-        <p style="text-align:center; margin-top: 10px; margin-bottom:10px;"><a class="btn-primary btn btn-lg" href="/demo">Try Demo!</a></p>
+        <p style="text-align:center; margin-top: 10px; margin-bottom:20px;"><a class="btn-primary btn btn-lg" href="/demo">Try Scythe!</a></p>
 
-        <h4><a id="support-or-contact" class="anchor" href="#support-or-contact" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Contact</h4>
-        <p>We would like to receive suggestions from you about making the system practical. Feel free to drop us a line: <a href="https://github.com/Mestway">https://github.com/Mestway</a>.</p>
+        <h4>How does Scythe work?</h4>
+
+        <p>Scythe is backed by a two-phase search algortihm: given the input-output example, the algorithm will first sketch query skeletons and then infer predicates in them. The two-phase synthesis search algorithm brings Scythe plenty of optimization opportunities to scale up for complex queries. For details, refer to the following papers.</p>
+
+        <ul>
+        <li>Synthesizing Highly Expressive SQL Queries from Input-Output Examples (PLDI 2017) <a href="./media/scythe-pldi.pdf">[pdf]</a>
+        </li>
+        <li>Interactive Query Synthesis from Input-Output Examples (Sigmod Demo 2017) <a href="./media/scythe-demo.pdf">[pdf]</a>
+        </li>
+        </ul>
+
+        <br/>
+
+        <h4><a id="support-or-contact" class="anchor" href="#support-or-contact" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Collaborations</h4>
+        <p>Synthesizing more complex queries (e.g., queries with pivoting, window functions) for data analytic tasks remains a highly challenging task, we would love to collaborate with you to make Scythe better! <a href="mailto:clwang@cs.washington.edu">Drop us a line!</a></p>
+
       </section>
 
       <footer>
