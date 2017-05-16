@@ -161,7 +161,7 @@ class TaskPanel extends React.Component {
     }
 
     var runOnDBBtn = null;
-    if (disableSelect || !this.state.connected)
+    if (disableSelect)
       runOnDBBtn = 
         <label className="btn btn-default query-btn disabled" onClick={this.runQueryOnDatabase.bind(this)}>
           Run on DB

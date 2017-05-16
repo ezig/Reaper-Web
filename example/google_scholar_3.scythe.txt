@@ -1,6 +1,6 @@
 #description
 
-Compuare the career span and career peak of computer scientists.
+Compute the career span and career peak of computer scientists.
 
 #input:career_span
 

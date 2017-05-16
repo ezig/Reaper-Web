@@ -8,16 +8,26 @@ class Charts {
    return [{
       value: "hist-1", label: "Histogram (c1)",
       filter: function (table) { return table["header"].length >= 2; }, 
-      render: function (el, data) { genHistogram(data, el, "hist-1"); }},
+      render: function (el, data) { 
+        //genHistogram(data, el, "hist-1"); 
+        customHistogram(data, el, "hist-1");
+      }
+    },
     {
       value: "hist-2", label: "Histogram (c2)",
       filter: function (table) { return table["header"].length >= 3; },
-      render: function (el, data) { genHistogram(data, el, "hist-2"); }
+      render: function (el, data) { 
+        //genHistogram(data, el, "hist-2"); 
+        customHistogram(data, el, "hist-2");
+      }
     },
     {
       value: "hist-3", label: "Histogram (c2-c1)",
       filter: function (table) { return table["header"].length >= 3; },
-      render: function (el, data) { genHistogram(data, el, "hist-3"); }
+      render: function (el, data) { 
+        //genHistogram(data, el, "hist-3"); 
+        customHistogram(data, el, "hist-3");
+      }
     },
     {
       value: "2dhist-1", label: "2D Histogram (c1,c2)", 
@@ -28,7 +38,7 @@ class Charts {
       value: "2dhist-2", label: "2D Histogram (c2-c1,c3-1)",
       filter: function (table) { return table["header"].length >= 4; },
       render: function (el, data) { gen2DHistogram(data, el, "2dhist-2"); }
-    }/*,
+    },
     {
       value: "vega-test", label: "Vega Test",
       filter: function (table) { return true; },
@@ -37,13 +47,33 @@ class Charts {
         vega.embed(el, spec, {"actions" : false});
       }
     },
-    {value: "vega-test-2", label: "Compassql Test",
-      filter: function (table) {return true; },
-      render: function (el, data) { 
-        var spec = "https://raw.githubusercontent.com/vega/vega/master/test/specs-valid/bar.vg.json";
-        vega.embed(el, spec, {"actions" : false});
+    {
+      value: "vega-bar-chart", label: "Vega Bar Chart",
+      filter: function (table) { return table["header"].length >= 2; },
+      render: function (el, data) { vegaBarChart(el, Util.tableToVegaObject(data), data.header); }
+    },
+    {
+      value: "vega-histogram", label: "Vega Histogram",
+      filter: function (table) { return true; },
+      render: function (el, data) {
+        var histMap = {};
+        for (var i = 0; i < data.content.length; i ++) {
+          if (data.content[i][0] in histMap)
+            histMap[data.content[i][0]] += 1;
+          else 
+            histMap[data.content[i][0]] = 1;
+        }
+        var visData = [];
+        for (var i in histMap) {
+          var rowData = {};
+          rowData[data.header[0]] = i;
+          rowData["count"] = histMap[i];
+          visData.push(rowData);
+        }
+        console.log(visData);
+        vegaBarChart(el, visData, [data.header[0], "count"]);
       }
-    }*/]
+    }]
   }
 
   static render (el, data, chartType) {
@@ -380,5 +410,219 @@ function gen2DHistogram(table, divId, chartType) {
     .style("text-anchor", "middle")
     .text(yAxisLabel);
 }
+
+function vegaBarChart(el, vegaData, header) {
+  var schema = cql.schema.build(vegaData);
+  var spec = {
+    "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+    "description": "Building bar chart from the example.",
+    "data": {
+      "values": vegaData
+    },
+    "mark": "bar",
+    "encoding": {
+      "x": {"field": header[0], "type": schema._fieldSchemas[0].type},
+      "y": {"field": header[1], "type": schema._fieldSchemas[1].type}
+    }
+  }
+  vega.embed(el, spec, {"actions" : false});
+}
+
+// creating histogram from a table datastructure
+// supported features include histogram on c1, c2, or c2-c1
+function customHistogram(table, divId, chartType) {
+  
+  var chartTypeId = 0;
+  if (chartType == "hist-1") chartTypeId = 1;
+  else if (chartType == "hist-2") chartTypeId = 2;
+  else if (chartType == "hist-3") chartTypeId = 3;
+
+  var maxBinNum = 60;
+  var histTable = tableToHistTable(table, chartTypeId, maxBinNum);
+  var numbins = histTable.content.length;
+  
+  // whitespace on either side of the bars in units of MPG
+  var binmargin = 0.5; 
+  var margin = {top: 40, right: 20, bottom: 40, left: 50};
+  var height = $(divId).height() - margin.top - margin.bottom;
+  var maxChartWidth = Math.min($(divId).width() - margin.left - margin.right, 
+                       $(divId).height() + 200 - margin.left - margin.right);
+
+  // width of the bins
+  var binWidth = Math.min(maxChartWidth / numbins - 2 * binmargin, 15);
+  // width of the graph
+  var width = (numbins + 2) * (binWidth + 2 * binmargin);
+
+  var minbin = 0;
+  var maxbin = numbins;
+  // Set the limits of the x axis
+  var xmin = 0;
+  var xmax = numbins;
+
+  var xAxisLabel = histTable.header[0];
+  
+  var ymax = 0;
+  var histdata = [];
+  for (var i = 0; i < histTable.content.length; i ++) {
+    var dt = { 
+      numfill: histTable.content[i][1], 
+      meta: i,
+      label: histTable.content[i][0]
+    };
+    if (dt.numfill > ymax)
+      ymax = dt.numfill;
+    histdata.push(dt);
+  }
+
+  // This scale is for determining the widths of the histogram bars
+  // Must start at 0 or else x(binsize a.k.a dx) will be negative
+  var x = d3.scaleLinear().domain([-1, (xmax - xmin) + 1]).range([0, width]);
+
+  // Scale for the placement of the bars
+  var y = d3.scaleLinear().domain([0, ymax]).range([height, 0]);
+  /*.domain([0, d3.max(histdata, function(d) { return d.numfill; })])*/
+
+  var xAxis = d3.axisBottom().scale(x).ticks(Math.min(10, numbins));
+  var yAxis = d3.axisLeft().scale(y).ticks(8);
+
+  var tip = d3.tip()
+  .attr('class', 'd3-tip')
+  .direction('e')
+  .offset([0, 20])
+  .html(function(d) {
+    return '<table id="tiptable">' + "<tr><td>Label: "
+            + d.label + "</td></tr><tr><td> Count: " + d.numfill + "</td></tr></table>";
+  });
+
+  // put the graph in the "mpg" div
+  var svg = d3.select(divId).append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  svg.call(tip);
+
+  // set up the bars
+  var bar = svg.selectAll(".bar")
+    .data(histdata)
+    .enter().append("g")
+    .attr("class", "bar")
+    .attr("transform", function(d, i) { 
+      return "translate(" + (x(d.meta) - binWidth / 2) + "," + y(d.numfill) + ")"; 
+    })
+    .on('mouseover', tip.show)
+    .on('mouseout', tip.hide);
+
+  // add rectangles of correct size at correct location
+  bar.append("rect")
+//    .attr("x",)
+    .attr("width", binWidth)
+    .style("fill", function(d) {
+      if (!isNaN(d.meta)) return "#337ab7";
+      else return "#d9534f";
+    })
+    .attr("height", function(d) { return height - y(d.numfill); });
+
+  // add the x axis and x-label
+  svg.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + height + ")")
+    .call(xAxis);
+
+  svg.append("text")
+    .attr("class", "xlabel")
+    .attr("text-anchor", "middle")
+    .attr("x", width / 2)
+    .attr("y", height + margin.bottom - 5)
+    .text(xAxisLabel);//.text("c3 - c2");
+
+  // add the y axis and y-label
+  svg.append("g")
+      .attr("class", "y axis")
+      .attr("transform", "translate(0,0)")
+      .call(yAxis);
+
+  svg.append("text")
+    .attr("class", "ylabel")
+    .attr("y", 0 - margin.left) // x and y switched due to rotation
+    .attr("x", 0 - (height / 2))
+    .attr("dy", "1em")
+    .attr("transform", "rotate(-90)")
+    .style("text-anchor", "middle")
+    .text("count");//.text("Count");
+}
+
+function tableToHistTable(table, chartType, maxBinNum) {
+  var newTable = {header: [], content: [], name: "hist"};
+  var histMap = {};
+
+  if (chartType == 0 || chartType == 1 || chartType == 2) {
+    newTable.header.push(table.header[chartType]);
+    newTable.header.push("count");
+  } else {
+    newTable.header.push(table.header[2] + " - " + table.header[1]);
+    newTable.header.push("count");
+  }
+  
+  var rawHist = [];
+  for (var i = 0; i < table.content.length; i ++) {
+    // the target field to be aggregated
+    var targetVal = 0;
+    if (chartType == 0 || chartType == 1 || chartType == 2) 
+      targetVal = table.content[i][chartType];
+    else if (chartType == 3)
+      targetVal = table.content[i][2] - table.content[i][1];
+
+    if (targetVal in histMap)
+      histMap[targetVal] += 1;
+    else 
+      histMap[targetVal] = 1;
+  }
+
+  var visData = [];
+  for (var i in histMap) {
+    var rowData = [];
+    if (isNaN(i))
+     rowData.push(i);
+    else 
+      rowData.push(Number.parseInt(i));
+    rowData.push(histMap[i]);
+    rawHist.push(rowData);
+  }
+
+  var binNum = maxBinNum;
+  if (rawHist.length < maxBinNum)
+    binNum = rawHist.length;
+
+  rawHist = rawHist.sort((a, b) => { 
+    if (a[0] < b[0]) return -1;
+    if (a[0] > b[0]) return 1;
+    return 0;
+  });
+
+  console.log("rawHist");
+  console.log(rawHist);
+
+  var binWidth = Number.parseInt(rawHist.length / binNum);
+  for (var i = 0; i < binNum; i ++) {
+    var sumCnt = 0;
+    var label = "";
+    for (var j = 0; j < binWidth; j ++) {
+      var index = i * binWidth + j;
+      if (index >= rawHist.length)
+        break;
+      sumCnt += rawHist[index][1];
+      label += (label == "" ? rawHist[index][0] : (", " + rawHist[index][0]));
+    }
+    var newRow = [];
+    newRow.push(label);
+    newRow.push(sumCnt);
+    newTable.content.push(newRow);
+  }
+
+  return newTable;
+}
+
 
 export default Charts;

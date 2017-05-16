@@ -56,6 +56,18 @@ class Util {
     return {name: name, content: content, header: header};
   }
 
+  static tableToVegaObject(table) {
+    var vegaTable = [];
+    for (var i = 0; i < table.content.length; i ++) {
+      var rowObject = {};
+      for (var j = 0; j < table.header.length; j ++) {
+        rowObject[table.header[j]] = table.content[i][j];
+      }
+      vegaTable.push(rowObject);
+    }
+    return vegaTable;
+  }
+
   static parseScytheExample(str) {
     var content = str.split(/\r?\n/);
     var i = 0;
