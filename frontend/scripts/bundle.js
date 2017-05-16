@@ -27524,7 +27524,7 @@ var TaskPanel = function (_React$Component) {
     // stores json objects of form {query: XXX, data: XXX}, data field is null by default
     _this.state.synthesisResult = [];
     _this.state.displayOption = { type: "query", queryId: -1,
-      visDataSrc: "example data", chartType: "hist" };
+      visDataSrc: "example data", chartType: "hist-1" };
 
     // a dumb field used to identify stuff...
     _this.state.visDivId = "vis" + _util2.default.makeid();
@@ -27623,7 +27623,7 @@ var TaskPanel = function (_React$Component) {
       var visTargetDropDown = [{ value: "example data", label: "Visualize Output Example", tempId: _util2.default.makeid(), disabled: false,
         checked: this.state.displayOption.visDataSrc == "example data" }, { value: "query result", label: "Visualize Query Result", tempId: _util2.default.makeid(),
         checked: this.state.displayOption.visDataSrc == "query result",
-        disabled: disableSelect }];
+        disabled: disableSelect || this.state.displayOption.queryId || this.state.synthesisResult[this.state.displayOption.queryId].data == null }];
 
       // chartTypeDropDown are created from chartOptions
       var chartTypeChoiceName = _util2.default.makeid();
@@ -27711,7 +27711,8 @@ var TaskPanel = function (_React$Component) {
                 _react2.default.createElement("input", { type: "radio", id: d.tempId, name: querySelectorName,
                   value: i, checked: _this3.state.displayOption.visDataSrc == d.value,
                   onChange: function onChange(e) {
-                    return _this3.updateDisplayOption.bind(_this3)("queryId", parseInt(e.target.value));
+                    _this3.updateDisplayOption.bind(_this3)("queryId", parseInt(e.target.value));
+                    _this3.updateDisplayOption.bind(_this3)("type", "query");
                   } }),
                 _react2.default.createElement(
                   "label",
@@ -27745,9 +27746,10 @@ var TaskPanel = function (_React$Component) {
                 "li",
                 { key: i },
                 _react2.default.createElement("input", { className: d.disabled ? "disabled" : "", type: "radio", id: d.tempId,
-                  name: visTargetChoiceName, value: d.value, checked: d.checked,
+                  name: visTargetChoiceName, value: d.value, checked: d.checked, disabled: d.disabled,
                   onChange: function onChange(e) {
-                    return _this3.updateDisplayOption.bind(_this3)("visDataSrc", e.target.value);
+                    _this3.updateDisplayOption.bind(_this3)("visDataSrc", e.target.value);
+                    _this3.updateDisplayOption.bind(_this3)("type", "vis");
                   } }),
                 _react2.default.createElement(
                   "label",
@@ -27764,9 +27766,10 @@ var TaskPanel = function (_React$Component) {
                 "li",
                 { key: i },
                 _react2.default.createElement("input", { type: "radio", id: d.tempId, name: chartTypeChoiceName, value: d.value,
-                  checked: d.checked,
+                  checked: d.value == _this3.state.displayOption.chartType,
                   onChange: function onChange(e) {
-                    return _this3.updateDisplayOption.bind(_this3)("chartType", e.target.value);
+                    _this3.updateDisplayOption.bind(_this3)("chartType", e.target.value);
+                    _this3.updateDisplayOption.bind(_this3)("type", "vis");
                   } }),
                 _react2.default.createElement(
                   "label",
@@ -28240,44 +28243,42 @@ var Charts = function () {
         render: function render(el, data) {
           gen2DHistogram(data, el, "2dhist-2");
         }
-      }, {
-        value: "vega-test", label: "Vega Test",
-        filter: function filter(table) {
-          return true;
+      } /*,
+        {
+         value: "vega-test", label: "Vega Test",
+         filter: function (table) { return true; },
+         render: function (el, data) { 
+           var spec = "https://raw.githubusercontent.com/vega/vega/master/test/specs-valid/bar.vg.json";
+           vega.embed(el, spec, {"actions" : false});
+         }
         },
-        render: function render(el, data) {
-          var spec = "https://raw.githubusercontent.com/vega/vega/master/test/specs-valid/bar.vg.json";
-          vega.embed(el, spec, { "actions": false });
-        }
-      }, {
-        value: "vega-bar-chart", label: "Vega Bar Chart",
-        filter: function filter(table) {
-          return table["header"].length >= 2;
+        {
+         value: "vega-bar-chart", label: "Vega Bar Chart",
+         filter: function (table) { return table["header"].length >= 2; },
+         render: function (el, data) { vegaBarChart(el, Util.tableToVegaObject(data), data.header); }
         },
-        render: function render(el, data) {
-          vegaBarChart(el, _util2.default.tableToVegaObject(data), data.header);
-        }
-      }, {
-        value: "vega-histogram", label: "Vega Histogram",
-        filter: function filter(table) {
-          return true;
-        },
-        render: function render(el, data) {
-          var histMap = {};
-          for (var i = 0; i < data.content.length; i++) {
-            if (data.content[i][0] in histMap) histMap[data.content[i][0]] += 1;else histMap[data.content[i][0]] = 1;
-          }
-          var visData = [];
-          for (var i in histMap) {
-            var rowData = {};
-            rowData[data.header[0]] = i;
-            rowData["count"] = histMap[i];
-            visData.push(rowData);
-          }
-          console.log(visData);
-          vegaBarChart(el, visData, [data.header[0], "count"]);
-        }
-      }];
+        {
+         value: "vega-histogram", label: "Vega Histogram",
+         filter: function (table) { return true; },
+         render: function (el, data) {
+           var histMap = {};
+           for (var i = 0; i < data.content.length; i ++) {
+             if (data.content[i][0] in histMap)
+               histMap[data.content[i][0]] += 1;
+             else 
+               histMap[data.content[i][0]] = 1;
+           }
+           var visData = [];
+           for (var i in histMap) {
+             var rowData = {};
+             rowData[data.header[0]] = i;
+             rowData["count"] = histMap[i];
+             visData.push(rowData);
+           }
+           console.log(visData);
+           vegaBarChart(el, visData, [data.header[0], "count"]);
+         }
+        }*/];
     }
   }, {
     key: "render",
@@ -28568,10 +28569,11 @@ function customHistogram(table, divId, chartType) {
   var binmargin = 0.5;
   var margin = { top: 40, right: 20, bottom: 40, left: 50 };
   var height = $(divId).height() - margin.top - margin.bottom;
-  var maxWidth = Math.min($(divId).width() - margin.left - margin.right, $(divId).height() + 200 - margin.left - margin.right);
+  var maxChartWidth = Math.min($(divId).width() - margin.left - margin.right, $(divId).height() + 200 - margin.left - margin.right);
 
-  var binWidth = Math.min(maxWidth / numbins - 2 * binmargin, 15);
-
+  // width of the bins
+  var binWidth = Math.min(maxChartWidth / numbins - 2 * binmargin, 15);
+  // width of the graph
   var width = (numbins + 2) * (binWidth + 2 * binmargin);
 
   var minbin = 0;
@@ -28594,19 +28596,13 @@ function customHistogram(table, divId, chartType) {
     histdata.push(dt);
   }
 
-  console.log("hist data");
-  console.log(histdata);
-
   // This scale is for determining the widths of the histogram bars
   // Must start at 0 or else x(binsize a.k.a dx) will be negative
   var x = d3.scaleLinear().domain([-1, xmax - xmin + 1]).range([0, width]);
 
   // Scale for the placement of the bars
-  var y = d3.scaleLinear()
-  /*.domain([0, d3.max(histdata, function(d) { 
-            return d.numfill; 
-          })])*/
-  .domain([0, ymax]).range([height, 0]);
+  var y = d3.scaleLinear().domain([0, ymax]).range([height, 0]);
+  /*.domain([0, d3.max(histdata, function(d) { return d.numfill; })])*/
 
   var xAxis = d3.axisBottom().scale(x).ticks(Math.min(10, numbins));
   var yAxis = d3.axisLeft().scale(y).ticks(8);
@@ -28629,11 +28625,7 @@ function customHistogram(table, divId, chartType) {
   bar.append("rect")
   //    .attr("x",)
   .attr("width", binWidth).style("fill", function (d) {
-    if (!isNaN(d.meta)) {
-      return "#337ab7";
-    } else {
-      return "#d9534f";
-    }
+    if (!isNaN(d.meta)) return "#337ab7";else return "#d9534f";
   }).attr("height", function (d) {
     return height - y(d.numfill);
   });

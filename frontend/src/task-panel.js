@@ -38,7 +38,7 @@ class TaskPanel extends React.Component {
     // stores json objects of form {query: XXX, data: XXX}, data field is null by default
     this.state.synthesisResult = [];
     this.state.displayOption = {type: "query", queryId: -1, 
-                                visDataSrc: "example data", chartType: "hist"};
+                                visDataSrc: "example data", chartType: "hist-1"};
 
     // a dumb field used to identify stuff...
     this.state.visDivId = "vis" + Util.makeid();
@@ -133,7 +133,8 @@ class TaskPanel extends React.Component {
         checked: (this.state.displayOption.visDataSrc == "example data")},
        {value: "query result", label: "Visualize Query Result", tempId: Util.makeid(), 
         checked: (this.state.displayOption.visDataSrc == "query result"), 
-        disabled: (disableSelect)}];
+        disabled: (disableSelect || this.state.displayOption.queryId 
+                    || (this.state.synthesisResult[this.state.displayOption.queryId].data == null))}];
 
     // chartTypeDropDown are created from chartOptions
     var chartTypeChoiceName = Util.makeid();
@@ -200,8 +201,10 @@ class TaskPanel extends React.Component {
               <li key={i}>
                 <input type='radio' id={d.tempId} name={querySelectorName} 
                   value={i} checked={this.state.displayOption.visDataSrc == d.value}
-                onChange={e => 
-                  this.updateDisplayOption.bind(this)("queryId", parseInt(e.target.value))} />
+                onChange={e => {
+                  this.updateDisplayOption.bind(this)("queryId", parseInt(e.target.value));
+                  this.updateDisplayOption.bind(this)("type", "query");
+                }} />
                 <label htmlFor={d.tempId}>{d.label}</label>
               </li>)}
           </ul>
@@ -221,16 +224,22 @@ class TaskPanel extends React.Component {
             {visTargetDropDown.map((d, i) =>
               <li key={i}>
                 <input className={d.disabled? "disabled": ""} type='radio' id={d.tempId} 
-                  name={visTargetChoiceName} value={d.value} checked={d.checked}
-                  onChange={e => this.updateDisplayOption.bind(this)("visDataSrc", e.target.value)}/>
+                  name={visTargetChoiceName} value={d.value} checked={d.checked} disabled={d.disabled}
+                  onChange={e => {
+                    this.updateDisplayOption.bind(this)("visDataSrc", e.target.value);
+                    this.updateDisplayOption.bind(this)("type", "vis")
+                  }}/>
                 <label htmlFor={d.tempId}>{d.label}</label>
               </li>)}
             <li className="divider"></li>
             {chartTypeDropDown.filter((d) => d.filter(this.state.outputTable)).map((d, i) =>
               <li key={i}>
                 <input type='radio' id={d.tempId} name={chartTypeChoiceName} value={d.value} 
-                  checked={d.checked}
-                  onChange={e => this.updateDisplayOption.bind(this)("chartType", e.target.value)}/>
+                  checked={d.value == this.state.displayOption.chartType}
+                  onChange={e => {
+                    this.updateDisplayOption.bind(this)("chartType", e.target.value);
+                    this.updateDisplayOption.bind(this)("type", "vis");
+                  }}/>
                 <label htmlFor={d.tempId}>{d.label}</label>
               </li>)}
           </ul>
