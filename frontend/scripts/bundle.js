@@ -29401,17 +29401,6 @@ var ScytheInterface = function (_React$Component) {
             _react2.default.createElement('li', { className: 'divider' }),
             _react2.default.createElement(
               'li',
-              { onClick: this.createTempDB.bind(this) },
-              _react2.default.createElement('input', { type: 'radio', name: "dbSelect-new", value: "newDB" }),
-              _react2.default.createElement(
-                'label',
-                { htmlFor: "dbSelect-new" },
-                'Create Temp DB'
-              )
-            ),
-            _react2.default.createElement('li', { className: 'divider' }),
-            _react2.default.createElement(
-              'li',
               { onClick: function onClick(e) {
                   return _this4.updateDBKey.bind(_this4)(null, false);
                 } },

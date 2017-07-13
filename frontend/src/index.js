@@ -331,11 +331,11 @@ class ScytheInterface extends React.Component {
                 <label htmlFor={"dbSelect-" + d}>{d}</label>
               </li>)}
             <li className="divider"></li>
-            <li onClick={this.createTempDB.bind(this)}>
-                <input type='radio' name={"dbSelect-new"} value={"newDB"}/>
-                <label htmlFor={"dbSelect-new"}>Create Temp DB</label>
-            </li>
-            <li className="divider"></li>
+            {/*<li onClick={this.createTempDB.bind(this)}>
+                            <input type='radio' name={"dbSelect-new"} value={"newDB"}/>
+                            <label htmlFor={"dbSelect-new"}>Create Temp DB</label>
+                        </li>
+              <li className="divider"></li>*/}
             <li onClick={e => this.updateDBKey.bind(this)(null, false)}>
               <input type='radio' name={"dbSelect-offline"} value={"offline"}/>
               <label htmlFor={"dbSelect-offline"}>Stay Offline</label>
