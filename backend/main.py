@@ -12,7 +12,13 @@ from flask import Flask, render_template, request, jsonify
 
 template_dir = os.path.abspath(os.path.join('..', 'frontend'))
 # all databases are stored in this folder
-database_dir = os.path.abspath(os.path.join('..', 'database'))
+
+if not os.path.isdir(os.path.join('/', 'scythedb')):
+    database_dir = os.path.abspath(os.path.join('..', 'database'))
+else:
+    database_dir = os.path.join('/', 'scythedb')
+
+
 example_dir = os.path.abspath(os.path.join('..', 'example'))
 static_dir = os.path.abspath(os.path.join('..', 'frontend'))
 
