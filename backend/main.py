@@ -8,7 +8,7 @@ import dateutil.parser
 import sqlite3
 import types
 
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, make_response
 
 template_dir = os.path.abspath(os.path.join('..', 'frontend'))
 # all databases are stored in this folder
@@ -104,6 +104,62 @@ def synthesize():
             "message": "Timeout (" + str(synthesizer_time_limit) + " seconds)"
         })
 
+
+# Synthesizer api call
+@app.route('/scythe-plain', methods = ['GET'])
+def synthesize_plain():
+
+    query_str = request.args.get('example')
+
+    print query_str
+
+    if not query_str:
+        return "Request argument \"example\" not provided."
+
+    tempfile_name = "tmp" + (datetime.now().isoformat())
+
+    example = query_str
+    text_file = open(tempfile_name, "w+")
+    text_file.write(example)
+    text_file.close()
+
+    try:
+        output = check_output(['java', '-jar', 'Scythe.jar', tempfile_name, 'StagedEnumerator', '-aggr'], 
+                                stdin=PIPE, stderr=PIPE, timeout=synthesizer_time_limit)
+        # parse the synthesis result to extract queries
+        lines = output.splitlines()
+        queries = []
+        current = ""
+        start_collect = False
+        for line in lines:
+            if "[No." in line:
+                start_collect = True
+                if current != "":
+                    queries.append(current)
+                current = ""
+            elif start_collect:
+                current += line + "\n"
+            else:
+                continue
+        # handle the last query
+        if current != "":
+            queries.append(current)
+
+        os.remove(tempfile_name)
+
+        result = ""
+        for q in queries:
+            result += q
+            result += "\n*********************\n"
+        
+        print result
+        response = make_response(result)
+        response.headers["content-type"] = "text/plain"
+        return response
+
+    except TimeoutExpired:
+        os.remove(tempfile_name)
+        return "Request time out."
 
 ################## Example related services ##############
 
