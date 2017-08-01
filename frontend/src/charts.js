@@ -451,7 +451,7 @@ function customHistogram(table, divId, chartType) {
   // width of the bins
   var binWidth = Math.min(maxChartWidth / numbins - 2 * binmargin, 15);
   // width of the graph
-  var width = (numbins + 2) * (binWidth + 2 * binmargin);
+  var width = (numbins + 1) * (binWidth + 2 * binmargin);
 
   var minbin = 0;
   var maxbin = numbins;
@@ -476,14 +476,22 @@ function customHistogram(table, divId, chartType) {
 
   // This scale is for determining the widths of the histogram bars
   // Must start at 0 or else x(binsize a.k.a dx) will be negative
-  var x = d3.scaleLinear().domain([-1, (xmax - xmin) + 1]).range([0, width]);
+  var x = d3.scaleLinear().domain([-1, (xmax - xmin)]).range([0, width]);
 
   // Scale for the placement of the bars
   var y = d3.scaleLinear().domain([0, ymax]).range([height, 0]);
   /*.domain([0, d3.max(histdata, function(d) { return d.numfill; })])*/
 
-  var xAxis = d3.axisBottom().scale(x).ticks(Math.min(10, numbins));
-  var yAxis = d3.axisLeft().scale(y).ticks(8);
+
+  var xAxis = d3.axisBottom(x)
+                .ticks(Math.min(10, numbins + 1))
+                .tickFormat(function(d) { 
+                  if (d >= 0 && d < histdata.length)
+                    return histdata[d].label; 
+                  else
+                    return ""
+                });
+  var yAxis = d3.axisLeft(y).ticks(8);
 
   var tip = d3.tip()
   .attr('class', 'd3-tip')
@@ -529,6 +537,22 @@ function customHistogram(table, divId, chartType) {
     .attr("class", "x axis")
     .attr("transform", "translate(0," + height + ")")
     .call(xAxis);
+
+  // now rotate text on x axis
+  // solution based on idea here: https://groups.google.com/forum/?fromgroups#!topic/d3-js/heOBPQF3sAY
+  // first move the text left so no longer centered on the tick
+  // then rotate up to get 45 degrees.
+  d3.selectAll(".x .tick text")  // select all the text elements for the xaxis
+    .attr("transform", function(d) {
+      console.log("?")
+      if (d >= 0 && d < histdata.length) {
+        if (histdata[d].label.length > 2)
+          return "translate(" + this.getBBox().height*-1 + "," + (this.getBBox().height-5) + ")rotate(-45)";
+      } else {
+        return "translate(0,0)"
+      }
+      
+   });
 
   svg.append("text")
     .attr("class", "xlabel")
@@ -613,7 +637,7 @@ function tableToHistTable(table, chartType, maxBinNum) {
       if (index >= rawHist.length)
         break;
       sumCnt += rawHist[index][1];
-      label += (label == "" ? rawHist[index][0] : (", " + rawHist[index][0]));
+      label += (label == "" ? rawHist[index][0] : ("/" + rawHist[index][0]));
     }
     var newRow = [];
     newRow.push(label);
