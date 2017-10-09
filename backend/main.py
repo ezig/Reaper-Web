@@ -55,7 +55,7 @@ def upload_file():
 
 @app.route('/view_log', methods=['GET'])
 def view_log():
-    #try:
+    try:
         file_name = request.args.get('file', default="README.md")
         with open(os.path.join(log_dir, file_name), "r") as f:
             lines = f.readlines()
@@ -63,8 +63,8 @@ def view_log():
             for row in lines:
                 yield row + '\n'
         return Response(generate(), mimetype='text/plain')
-    #except:
-        #return ""
+    except:
+        return "Something went wrong... (Please check the file name)"
 
 @app.route('/logs', methods=['GET'])
 def all_log():
