@@ -19,6 +19,7 @@ else:
     database_dir = os.path.join('/', 'scythedb')
 
 
+
 example_dir = os.path.abspath(os.path.join('..', 'example'))
 static_dir = os.path.abspath(os.path.join('..', 'frontend'))
 
@@ -69,7 +70,7 @@ def synthesize():
     text_file.write(example)
     text_file.close()
 
-    log_file = open(os.path.join("log", tempfile_name), "w")
+    log_file = open(os.path.join(database_dir, "log", "log_" + (datetime.now().isoformat())), "w")
     log_file.write(example)
     log_file.close()
 
@@ -127,7 +128,7 @@ def synthesize_plain():
     text_file.write(example)
     text_file.close()
 
-    log_file = open(os.path.join("log", tempfile_name), "w")
+    log_file = open(os.path.join(database_dir, "log", "log_" + (datetime.now().isoformat())), "w")
     log_file.write(example)
     log_file.close()
 
