@@ -69,6 +69,10 @@ def synthesize():
     text_file.write(example)
     text_file.close()
 
+    log_file = open(os.path.join("log", tempfile_name), "w")
+    log_file.write(example)
+    log_file.close()
+
     try:
         output = check_output(['java', '-jar', 'Scythe.jar', tempfile_name, 'StagedEnumerator', '-aggr'], 
                                 stdin=PIPE, stderr=PIPE, timeout=synthesizer_time_limit)
@@ -122,6 +126,10 @@ def synthesize_plain():
     text_file = open(tempfile_name, "w+")
     text_file.write(example)
     text_file.close()
+
+    log_file = open(os.path.join("log", tempfile_name), "w")
+    log_file.write(example)
+    log_file.close()
 
     try:
         output = check_output(['java', '-jar', 'Scythe.jar', tempfile_name, 'StagedEnumerator', '-aggr'], 
