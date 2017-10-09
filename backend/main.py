@@ -20,7 +20,6 @@ else:
     database_dir = os.path.join('/', 'scythedb')
 
 
-
 example_dir = os.path.abspath(os.path.join('..', 'example'))
 static_dir = os.path.abspath(os.path.join('..', 'frontend'))
 log_dir = os.path.abspath(os.path.join('..', 'log'))
@@ -64,10 +63,10 @@ def view_log():
                 yield row + '\n'
         return Response(generate(), mimetype='text/plain')
     except:
-        return "Something went wrong... (Please check the file name)"
+        return list_logs()
 
-@app.route('/logs', methods=['GET'])
-def all_log():
+@app.route('/list_logs', methods=['GET'])
+def list_logs():
     logs = []
     for f in os.listdir(log_dir):
         if os.path.isfile(os.path.join(log_dir, f)):
