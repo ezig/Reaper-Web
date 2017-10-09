@@ -8,7 +8,8 @@ import dateutil.parser
 import sqlite3
 import types
 
-from flask import Flask, render_template, request, jsonify, make_response
+
+from flask import Flask, render_template, request, jsonify, make_response, Response
 
 template_dir = os.path.abspath(os.path.join('..', 'frontend'))
 # all databases are stored in this folder
@@ -22,6 +23,7 @@ else:
 
 example_dir = os.path.abspath(os.path.join('..', 'example'))
 static_dir = os.path.abspath(os.path.join('..', 'frontend'))
+log_dir = os.path.abspath(os.path.join('..', 'log'))
 
 app = Flask(__name__,template_folder=template_dir, static_folder=static_dir)
 app.debug = True
@@ -51,6 +53,27 @@ def upload_file():
     f.write(file_coddntent)
     return file_name
 
+@app.route('/view_log', methods=['GET'])
+def view_log():
+    #try:
+        file_name = request.args.get('file', default="README.md")
+        with open(os.path.join(log_dir, file_name), "r") as f:
+            lines = f.readlines()
+        def generate():
+            for row in lines:
+                yield row + '\n'
+        return Response(generate(), mimetype='text/plain')
+    #except:
+        #return ""
+
+@app.route('/logs', methods=['GET'])
+def all_log():
+    logs = []
+    for f in os.listdir(log_dir):
+        if os.path.isfile(os.path.join(log_dir, f)):
+            logs.append(f)
+    return jsonify({"logs": logs})
+
 # Synthesizer api call
 @app.route('/scythe', methods = ['POST'])
 def synthesize():
@@ -70,7 +93,7 @@ def synthesize():
     text_file.write(example)
     text_file.close()
 
-    log_file = open(os.path.join(database_dir, "log", "log_" + (datetime.now().isoformat())), "w")
+    log_file = open(os.path.join(log_dir, "log_" + (datetime.now().isoformat())), "w")
     log_file.write(example)
     log_file.close()
 
@@ -128,7 +151,7 @@ def synthesize_plain():
     text_file.write(example)
     text_file.close()
 
-    log_file = open(os.path.join(database_dir, "log", "log_" + (datetime.now().isoformat())), "w")
+    log_file = open(os.path.join(log_dir, "log_" + (datetime.now().isoformat())), "w")
     log_file.write(example)
     log_file.close()
 
@@ -199,6 +222,7 @@ def list_database():
         if os.path.isfile(os.path.join(database_dir, f)) and f.endswith(".db"):
             databases.append(f)
     return jsonify({"databases": databases})
+
 
 # check time stamp of all created temporary db and remove those created >30 min ago
 def clean_old_temp_db():
