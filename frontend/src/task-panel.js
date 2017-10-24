@@ -27,7 +27,9 @@ class TaskPanel extends React.Component {
       this.state.taskDescription = this.props.taskDescription;
     }
     
+    this.state.isUpdate = false;
     this.state.constants = "";
+    this.state.uConstants = "";
     this.state.aggrFunc = "";
     this.state.dbKey = this.props.dbKey; // get DB key from the parent
 
@@ -161,6 +163,11 @@ class TaskPanel extends React.Component {
         </label>;
     }
 
+    var queryTypeBtn = <label className="btn btn-default query-btn">
+        Update?
+        <input style={{marginLeft: "10px"}} type="checkbox" checked={this.state.isUpdate} onChange={e => this.setState({isUpdate: !this.state.isUpdate})} />
+      </label>;
+    
     var runOnDBBtn = null;
     if (disableSelect)
       runOnDBBtn = 
@@ -190,6 +197,7 @@ class TaskPanel extends React.Component {
     // Generate the drop down menu in the enhanced drop down fashion
     // When there are multiple note that items in the list should all have the same name
     return <div className='btn-group'>
+      {queryTypeBtn}
         <div className='btn-group'>
           <label data-toggle='dropdown' data-placeholder="false"
                  className={'btn btn-default dropdown-toggle' + (disableSelect ? " disabled" : "")}>
@@ -330,6 +338,9 @@ class TaskPanel extends React.Component {
   updateConstants(evt) {
     this.setState({constants: evt.target.value});
   }
+  updateUpdateConstants(evt) {
+    this.setState({uConstants: evt.target.value});
+  }
   updateAggrFunc(evt) {
     this.setState({aggrFunc: evt.target.value});
   }
@@ -362,12 +373,17 @@ class TaskPanel extends React.Component {
     }
     var scytheInputString = "";
     for (var i = 0; i < this.state.inputTables.length; i++) {
-      scytheInputString += tableToScytheStr(this.state.inputTables[i], "input");
+      var type = "input";
+      if (i == 0 && this.state.isUpdate) {
+        type += "*";
+      }
+      scytheInputString += tableToScytheStr(this.state.inputTables[i], type);
     }
     scytheInputString += tableToScytheStr(this.state.outputTable, "output");
 
     // get constant and aggregation functions from the constraint panel
     var constantStr = this.state.constants;
+    var uStr = this.state.uConstants;
     var aggrFuncStr = this.state.aggrFunc;
 
     // default aggregation functions includes only max, min, and count
@@ -386,10 +402,14 @@ class TaskPanel extends React.Component {
     // the string used as the input to the synthesizer
     scytheInputString += "#constraint\n\n{\n  \"constants\": [" 
                           + parseFormatCommaDelimitedStr(constantStr) + "],\n" 
+                          + " \"updateConstants\": ["
+                          + parseFormatCommaDelimitedStr(uStr) + "],\n"
                           + "  \"aggregation_functions\": [" 
                           + parseFormatCommaDelimitedStr(aggrFuncStr) + "]\n}\n";
 
     console.log(scytheInputString);
+    
+    var isUpdate = this.state.isUpdate;
 
     // make a request to the server
     var scytheRequest = new Request('/scythe', 
@@ -399,7 +419,7 @@ class TaskPanel extends React.Component {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ example: scytheInputString})
+        body: JSON.stringify({ isUpdate: isUpdate, example: scytheInputString })
       });
 
     // handle response from the server
@@ -457,6 +477,17 @@ class TaskPanel extends React.Component {
                         data-tip="Constants (e.g., numbers, dates) that may be used in the query.">?</span>
                 </div>
                 <ReactTooltip effect="solid"/>
+                  {this.state.isUpdate ?
+                  <div className='input-group input-group-sm input-box update-constant-panel'>
+                    <span className='input-group-addon'
+                          id={'update-constant-addon' + panelId}>Update Constants</span>
+                    <input type='text' className='form-control' placeholder='None' 
+                          onChange={this.updateUpdateConstants.bind(this)} 
+                          aria-describedby={'update-constant-addon' + panelId} />
+                    <span className='input-group-addon' 
+                          data-tip="Constants (e.g., numbers, dates) that may be used in the set clauses of an update.">?</span>
+                  </div>
+                   : null}
                 <div className='input-group input-group-sm input-box aggr-func-panel'>
                   <span className='input-group-addon' id={'aggr-addon' + panelId}>Aggregators</span>
                   <input type='text' className='form-control' placeholder='(Optional)' 

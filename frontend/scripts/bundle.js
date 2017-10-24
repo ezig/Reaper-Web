@@ -27513,7 +27513,9 @@ var TaskPanel = function (_React$Component) {
       _this.state.taskDescription = _this.props.taskDescription;
     }
 
+    _this.state.isUpdate = false;
     _this.state.constants = "";
+    _this.state.uConstants = "";
     _this.state.aggrFunc = "";
     _this.state.dbKey = _this.props.dbKey; // get DB key from the parent
 
@@ -27656,6 +27658,15 @@ var TaskPanel = function (_React$Component) {
         );
       }
 
+      var queryTypeBtn = _react2.default.createElement(
+        "label",
+        { className: "btn btn-default query-btn" },
+        "Update?",
+        _react2.default.createElement("input", { style: { marginLeft: "10px" }, type: "checkbox", checked: this.state.isUpdate, onChange: function onChange(e) {
+            return _this3.setState({ isUpdate: !_this3.state.isUpdate });
+          } })
+      );
+
       var runOnDBBtn = null;
       if (disableSelect) runOnDBBtn = _react2.default.createElement(
         "label",
@@ -27691,6 +27702,7 @@ var TaskPanel = function (_React$Component) {
       return _react2.default.createElement(
         "div",
         { className: "btn-group" },
+        queryTypeBtn,
         _react2.default.createElement(
           "div",
           { className: "btn-group" },
@@ -27895,6 +27907,11 @@ var TaskPanel = function (_React$Component) {
       this.setState({ constants: evt.target.value });
     }
   }, {
+    key: "updateUpdateConstants",
+    value: function updateUpdateConstants(evt) {
+      this.setState({ uConstants: evt.target.value });
+    }
+  }, {
     key: "updateAggrFunc",
     value: function updateAggrFunc(evt) {
       this.setState({ aggrFunc: evt.target.value });
@@ -27935,12 +27952,17 @@ var TaskPanel = function (_React$Component) {
       }
       var scytheInputString = "";
       for (var i = 0; i < this.state.inputTables.length; i++) {
-        scytheInputString += tableToScytheStr(this.state.inputTables[i], "input");
+        var type = "input";
+        if (i == 0 && this.state.isUpdate) {
+          type += "*";
+        }
+        scytheInputString += tableToScytheStr(this.state.inputTables[i], type);
       }
       scytheInputString += tableToScytheStr(this.state.outputTable, "output");
 
       // get constant and aggregation functions from the constraint panel
       var constantStr = this.state.constants;
+      var uStr = this.state.uConstants;
       var aggrFuncStr = this.state.aggrFunc;
 
       // default aggregation functions includes only max, min, and count
@@ -27957,9 +27979,11 @@ var TaskPanel = function (_React$Component) {
       }
 
       // the string used as the input to the synthesizer
-      scytheInputString += "#constraint\n\n{\n  \"constants\": [" + parseFormatCommaDelimitedStr(constantStr) + "],\n" + "  \"aggregation_functions\": [" + parseFormatCommaDelimitedStr(aggrFuncStr) + "]\n}\n";
+      scytheInputString += "#constraint\n\n{\n  \"constants\": [" + parseFormatCommaDelimitedStr(constantStr) + "],\n" + " \"updateConstants\": [" + parseFormatCommaDelimitedStr(uStr) + "],\n" + "  \"aggregation_functions\": [" + parseFormatCommaDelimitedStr(aggrFuncStr) + "]\n}\n";
 
       console.log(scytheInputString);
+
+      var isUpdate = this.state.isUpdate;
 
       // make a request to the server
       var scytheRequest = new Request('/scythe', {
@@ -27968,7 +27992,7 @@ var TaskPanel = function (_React$Component) {
           'Accept': 'application/json',
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ example: scytheInputString })
+        body: JSON.stringify({ isUpdate: isUpdate, example: scytheInputString })
       });
 
       // handle response from the server
@@ -28059,6 +28083,25 @@ var TaskPanel = function (_React$Component) {
                     )
                   ),
                   _react2.default.createElement(_reactTooltip2.default, { effect: "solid" }),
+                  this.state.isUpdate ? _react2.default.createElement(
+                    "div",
+                    { className: "input-group input-group-sm input-box update-constant-panel" },
+                    _react2.default.createElement(
+                      "span",
+                      { className: "input-group-addon",
+                        id: 'update-constant-addon' + panelId },
+                      "Update Constants"
+                    ),
+                    _react2.default.createElement("input", { type: "text", className: "form-control", placeholder: "None",
+                      onChange: this.updateUpdateConstants.bind(this),
+                      "aria-describedby": 'update-constant-addon' + panelId }),
+                    _react2.default.createElement(
+                      "span",
+                      { className: "input-group-addon",
+                        "data-tip": "Constants (e.g., numbers, dates) that may be used in the set clauses of an update." },
+                      "?"
+                    )
+                  ) : null,
                   _react2.default.createElement(
                     "div",
                     { className: "input-group input-group-sm input-box aggr-func-panel" },

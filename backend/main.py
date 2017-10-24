@@ -96,8 +96,12 @@ def synthesize():
     log_file.write(example)
     log_file.close()
 
+    updateArg = []
+    if request_data['isUpdate']:
+        updateArg = ['-update']
+
     try:
-        output = check_output(['java', '-jar', 'Scythe.jar', tempfile_name, 'StagedEnumerator', '-aggr'], 
+        output = check_output(['java', '-jar', 'Reaper.jar', tempfile_name, 'StagedEnumerator', '-aggr'] + updateArg, 
                                 stdin=PIPE, stderr=PIPE, timeout=synthesizer_time_limit)
         # parse the synthesis result to extract queries
         lines = output.splitlines()
@@ -155,7 +159,7 @@ def synthesize_plain():
     log_file.close()
 
     try:
-        output = check_output(['java', '-jar', 'Scythe.jar', tempfile_name, 'StagedEnumerator', '-aggr'], 
+        output = check_output(['java', '-jar', 'Reaper.jar', tempfile_name, 'StagedEnumerator', '-aggr'], 
                                 stdin=PIPE, stderr=PIPE, timeout=synthesizer_time_limit)
         # parse the synthesis result to extract queries
         lines = output.splitlines()
